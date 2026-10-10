@@ -1,6 +1,6 @@
 # Phase 3 Plan: Candidate Side
 
-> Status: **DRAFT v2, four questions left (§3).** Updated 2026-10-10 after reading the proposal papers ([Revised Proposal](papers/REVISED_PROPOSAL.md), [Modules and Features](papers/MODULES_AND_FEATURES.md)). Nothing in this plan is built yet.
+> Status: **APPROVED 2026-10-10** (your answers are in §3; three deployment details are still open and don't block building). Checked against the proposal papers ([Revised Proposal](papers/REVISED_PROPOSAL.md), [Modules and Features](papers/MODULES_AND_FEATURES.md)). Next: the step-by-step plan for 3A, then building.
 > Part of: [CONCEPT_PLAN.md](CONCEPT_PLAN.md), build phase 3 of 7
 > Builds on: [PHASE_2_PLAN.md](PHASE_2_PLAN.md) (employers, departments and job postings with structured accommodations)
 > Method: Superpowers brainstorming (this spec, for your review), GSD (state check, `.planning/` setup), Frontend Design (§7).
@@ -13,9 +13,9 @@
 
 **What's next: Phase 3, the candidate side.** The papers' build order (Modules and Features §7) puts **M2 Candidate Profile** and **M5 Search, Filter and Matching** here. Phase 3 is done when "a candidate sees postings ranked by *Matches my needs*". This is OpenDoor's main differentiator and answers **SOP 1**.
 
-**Time left.** The defense is around **October 21–25**, which is 11 to 15 days away. That's enough for the Must-haves if every day counts, so this plan includes a road map to the defense (§1). If you meant November, see question 4.
+**Time left.** The defense is **October 21–25** (confirmed), which is 11 to 15 days away. That's enough for the Must-haves if every day counts, so this plan includes a road map to the defense (§1).
 
-**Where the code is.** The app is on GitHub at [ryujiinnn08/opendoor](https://github.com/ryujiinnn08/opendoor), branch `feature/opendoor-web-app`. The repository's `main` branch holds your System Integration and Architecture Lab 05, so question 1 decides how the two share `main`. Nothing is deployed yet.
+**Where the code is.** GitHub [ryujiinnn08/opendoor](https://github.com/ryujiinnn08/opendoor) is being cleared so it holds only this app (your answer to Q1); the old Lab 05 branches are backed up on this computer. Nothing is deployed yet.
 
 ---
 
@@ -27,7 +27,7 @@
 | Tue Oct 13 – Wed Oct 14 | **Phase 4:** apply (with interview accommodation request), track, withdraw, review, hire or reject, confirm hire | SOP 2 |
 | Thu Oct 15 | **Phase 5:** feedback form, trust score, 3-response minimum, per-accommodation breakdown | SOP 3 |
 | Fri Oct 16 | **Phase 6, Must-have parts:** user management (suspend, reactivate, create admins), posting removal, the three dashboards | SOP 4 |
-| Mon Oct 12 – Fri Oct 16, alongside | **Deployment setup:** Railway (Laravel and MySQL), Cloudflare (domain, frontend, R2 file storage) | Objective 5 |
+| Mon Oct 12 – Fri Oct 16, alongside | **Deployment setup:** your Cloudflare account (domain and frontend), a backend host for Laravel and MySQL, and file storage (§3) | Objective 5 |
 | Sat Oct 17 | **Go live:** deploy, seed demo data with a visible trust score, test on the live site | Objective 5 |
 | Sat Oct 17 – Sun Oct 18 | **Accessibility audit and fixes:** axe, Lighthouse, keyboard, NVDA; the Phase 2B leftovers | SOP 5 |
 | Mon Oct 19 – Tue Oct 20 | **Usability tests:** 5+ PWD and 3+ employer participants on the live site, with SUS | SOP 5 |
@@ -57,40 +57,28 @@
 
 ---
 
-## 3. Questions (four left)
+## 3. Your answers (2026-10-10)
 
-Answer with the letter, or write your own answer.
+| Question | Answer |
+|---|---|
+| Q1. GitHub `main` and Lab 05 | **Clear the repository.** This is an entirely new app, so it replaces the old lab |
+| Q2. Deployment | **You have a Cloudflare account and want to use it now.** Three details are still open (below) |
+| Q3. Digital résumé | **Both:** a built-in résumé page made from the profile, plus an optional PDF upload |
+| Q4. Defense | **October 21–25.** Follow the road map in §1 |
 
-### Q1. How should the app share GitHub's `main` with Lab 05?
+### Still open: three deployment details
 
-GitHub's `main` holds Lab 05, and the app is on its own branch. Cloudflare will deploy from `main`, so the app needs to get there.
+These don't block Phase 3; the code side can be prepared while you decide.
 
-- **A (recommended).** Keep both. I join the lab's history into the app branch and move the lab into `labs/lab-05-microservices/`, so the app owns the top level. Then you merge the pull request into `develop` and `main`, like your earlier PRs. Nothing is lost.
-- **B.** Keep both, with the lab staying at the top level next to the app.
-- **C.** Replace `main` with the app, and keep the lab on `develop` and a `lab-05` tag. This rewrites `main`'s history.
+1. **Domain.** Which domain is on your Cloudflare account? Login needs the website and the API on the same domain (for example `opendoor.ph` and `api.opendoor.ph`).
+2. **Backend host** for Laravel and MySQL (Cloudflare can't run PHP):
+   - **A (recommended):** Railway. About US$5 a month after a trial credit; it never sleeps.
+   - **B:** Render with Aiven. Free, but it sleeps when idle, so it has to be opened a few minutes before each demo.
+3. **File storage** for logos and résumés (the backend host's own disk is wiped on every deploy):
+   - **A (recommended):** a Railway volume. Simplest, and files survive deploys.
+   - **B:** Cloudflare R2, as the proposal says. Free tier, but Cloudflare may ask for a payment method before turning it on.
 
-### Q2. What do I need to deploy?
-
-- The **domain name** the team owns.
-- Who owns the **Cloudflare** and **Railway** accounts, or whether I should guide you through creating them.
-- An OK for **Railway's cost** (a trial credit, then about US$5 a month).
-
-*My recommendation:* set it up Mon Oct 12 to Fri Oct 16, while Phases 3–6 are built, and go live on Sat Oct 17 at the latest. The usability tests must run on the live site.
-
-### Q3. What should the "digital résumé" be?
-
-- **A (recommended). Both:** OpenDoor lays out your profile as a résumé page that you can print or save as PDF, and employers see the same page when you apply. You can also upload your own PDF résumé.
-- **B.** Upload a PDF résumé only. This is what the papers call F2.4.
-- **C.** The profile laid out as a résumé only, with no upload.
-
-*Why A:* the built-in page is screen-reader friendly, which uploaded PDFs often aren't, and Phase 4 needs the same page for employers anyway. The upload covers people who already have a résumé.
-
-### Q4. Is the defense October 21–25, and is the road map in §1 OK?
-
-- **A (recommended).** Yes, October. Follow §1, and cut Should-haves in the listed order if we fall behind.
-- **B.** It's in November. I'll keep the same order and add the Should-haves.
-
-*Default for anything else:* Superpowers keeps writing the step-by-step plans and building; GSD tracks progress and runs the reviews. The two papers stay out of git for now because the repository is public; say "push the papers" if you want them there.
+*Defaults:* Superpowers writes the step-by-step plans and builds; GSD tracks progress and runs the reviews. The two papers stay out of git because the repository is public; say "push the papers" if you want them there.
 
 ---
 
@@ -107,7 +95,7 @@ GitHub's `main` holds Lab 05, and the app is on its own branch. Cloudflare will 
 | Skills | A list, such as "Microsoft Excel, bookkeeping, customer service" |
 | Trainings and certifications | One per line, such as "TESDA Bookkeeping NC III, 2024" |
 | Languages | Such as "Filipino, English, Filipino Sign Language" |
-| Résumé | Question 3: an optional PDF (up to 5 MB) and/or the profile shown as a printable résumé page |
+| Résumé | **Both** (Q3): a built-in **My résumé** page made from the profile (print or save as PDF; employers see the same page in Phase 4), plus an optional uploaded PDF (up to 5 MB) |
 | Private | Disability type (optional, one choice, hidden by default) and "Show my disability type to employers I apply to" (off) |
 
 Every field is optional in Phase 3; Phase 4 decides what must be filled in before applying. The dashboard lists the sections still missing (F2.5): headline, location, contact number, education, skills and accommodation needs.
@@ -174,7 +162,7 @@ Every field is optional in Phase 3; Phase 4 decides what must be filled in befor
 | C2 | Tick 5 needs and save; open **Find jobs** | Matches my needs is on: full matches first ("Meets all 5 of your needs"), then partial ones with what's missing |
 | C3 | Switch to **All jobs** | Every open job appears, and jobs meeting none say so |
 | C4 | Open a partly matching job | **How this job fits your needs** marks each need Provided or Missing |
-| C5 | Fill in My profile with work experience and education, then add the digital résumé (question 3) | The résumé page reads like a résumé and prints cleanly; an uploaded PDF opens only for its owner |
+| C5 | Fill in My profile with work experience and education, open **My résumé**, then upload a PDF | My résumé reads like a résumé and prints cleanly; the uploaded PDF opens only for its owner |
 | C6 | Log in as the employer and the admin | Neither can see the job seeker's needs, profile, résumé or disability type (also covered by server tests) |
 | C7 | The admin retires one of the job seeker's needs | My needs marks it "no longer offered"; matching counts 4 needs |
 | C8 | C1–C5 with the keyboard only at 360 px, and with a screen reader | Counts and changes are read out; nothing needs a mouse |
@@ -227,7 +215,7 @@ The server checks every rule. Hiding something in React is only for convenience.
 | Employer page | The public employer page, inside the portal | 3B |
 | My needs | The grouped checklist, who sees it, **Save my needs** | 3B |
 | My profile | The sections in §4.1. **Save profile** for the form; the résumé uploads on its own, like the company logo | 3B |
-| Résumé preview | The profile laid out as a résumé, with **Print or save as PDF** (question 3) | 3B |
+| My résumé (`/candidate/profile/resume`) | The profile laid out as a résumé, with **Print or save as PDF** | 3B |
 
 ### 6.4 New building blocks (names from the papers' component list)
 
@@ -318,7 +306,7 @@ pages for our clients ...              | (check) Flexible hours: Provided
                                        | At a glance
 ```
 
-**My profile:** one column of sections with headings (§4.1), each easy to jump to. Work experience and education entries are labelled groups ("Work experience 1 of 2") with **Edit** and **Remove**, and an **Add work experience** button. The résumé section shows the file name, upload date, **Replace** and **Remove**, and links to **Preview my résumé**.
+**My profile:** one column of sections with headings (§4.1), each easy to jump to. Work experience and education entries are labelled groups ("Work experience 1 of 2") with **Edit** and **Remove**, and an **Add work experience** button. The résumé section shows the file name, upload date, **Replace** and **Remove**, and links to **My résumé**.
 
 **Checked against generic job-board defaults:**
 
@@ -344,7 +332,7 @@ pages for our clients ...              | (check) Flexible hours: Provided
 | Saved | "Your needs are saved. Find jobs now ranks jobs by them." and "Your profile is saved." |
 | Disability type hint | "Optional. OpenDoor never uses this to match or filter jobs. Employers see it only if you tick the box below and apply to one of their jobs." |
 
-**Accessibility:** each job is a list item with its title as heading and link, and the badge is ordinary text right after it. Every icon has text beside it. The results heading takes focus after a page change; filter changes keep focus and announce the count. Entries and filter groups are fieldsets with legends. Checkboxes keep the 2B 44 px click area. There's no new motion, and the résumé preview has print styles. Everything is checked at 360 px and 200% zoom.
+**Accessibility:** each job is a list item with its title as heading and link, and the badge is ordinary text right after it. Every icon has text beside it. The results heading takes focus after a page change; filter changes keep focus and announce the count. Entries and filter groups are fieldsets with legends. Checkboxes keep the 2B 44 px click area. There's no new motion, and My résumé has print styles. Everything is checked at 360 px and 200% zoom.
 
 ---
 
@@ -369,7 +357,7 @@ pages for our clients ...              | (check) Flexible hours: Provided
 | 1 | Server: open-job rule, search, filters, sort, pages; public posting and employer shapes; demo data | 3A server tests pass |
 | 2 | `JobCard`, `AccommodationFilterPanel`, `Pagination`, `EmptyState`; Browse jobs, Job page, Employer page, Home | Demo J1–J5 work; I show you 3A |
 | 3 | Server: profile, entries, résumé, needs, matching, candidate dashboard; demo job seekers | 3B server tests pass |
-| 4 | My profile, résumé preview, My needs, Find jobs, `NeedsFit`, dashboard | Demo C1–C7 work |
+| 4 | My profile, My résumé, My needs, Find jobs, `NeedsFit`, dashboard | Demo C1–C7 work |
 | 5 | Checks (§4.2); keyboard, 360 px and screen reader pass (J6, C8); README; build notes; commit and push | Phase 3 finished (target: Mon Oct 12) |
 
 ---
@@ -437,10 +425,10 @@ The public addresses read the session if there is one; no login is needed. A sus
 - Policy: `CandidateProfilePolicy`
 - Controllers: `Public\JobPostingController`, `Public\EmployerController`, `Candidate\ProfileController`, `Candidate\AccommodationController`, `Candidate\ResumeController`, `Candidate\DashboardController`
 - Seeders: `DemoEmployerSeeder` (two more companies), `DemoJobPostingSeeder` (more postings), `DemoCandidateSeeder` (two job seekers with profiles)
-- Storage: résumés on the private disk locally, on R2 in production (Revised Proposal §XI); logos move there too at deployment, because Railway's disk is wiped on every deploy
+- Storage: résumés on the private disk locally, and on persistent storage in production (a Railway volume or R2, §3); logos move there too at deployment, because the host's own disk is wiped on every deploy
 
 **Frontend (`frontend/src/`)**
-- Pages: `portals/public/BrowseJobsPage`, `JobPage`, `EmployerPage`, `HomePage` (updated); `portals/candidate/FindJobsPage`, `NeedsPage`, `ProfilePage`, `ResumePreviewPage`, `CandidateDashboard` (updated)
+- Pages: `portals/public/BrowseJobsPage`, `JobPage`, `EmployerPage`, `HomePage` (updated); `portals/candidate/FindJobsPage`, `NeedsPage`, `ProfilePage`, `ResumePage`, `CandidateDashboard` (updated)
 - Components: `components/jobs/JobCard`, `AccommodationFilterPanel`, `MatchBadge`, `NeedsFit`; `components/candidate/ResumeView`, `EntryList`; `components/ui/Pagination`, `EmptyState`
 - Hooks and API: `hooks/useJobSearchParams`, `hooks/useDebouncedValue`; `api/jobs.js`, `api/candidate.js`
 - Router and menus: public and candidate routes; the candidate menu in `portalMenus.js`; **Browse jobs** in `PublicLayout`

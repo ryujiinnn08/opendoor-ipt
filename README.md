@@ -2,7 +2,7 @@
 
 A web-based job matching platform with accommodation-based filtering and post-hire accommodation verification for persons with disabilities.
 
-See [.planning/CONCEPT_PLAN.md](.planning/CONCEPT_PLAN.md) for the concept, architecture and build plan. Phase plans: [Phase 1](.planning/PHASE_1_PLAN.md) (accounts and shared lists, done), [Phase 2](.planning/PHASE_2_PLAN.md) (employers, teams and job postings, done), [Phase 3](.planning/PHASE_3_PLAN.md) (candidate side, draft waiting for decisions).
+See [.planning/CONCEPT_PLAN.md](.planning/CONCEPT_PLAN.md) for the concept, architecture and build plan. Phase plans: [Phase 1](.planning/PHASE_1_PLAN.md) (accounts and shared lists, done), [Phase 2](.planning/PHASE_2_PLAN.md) (employers, teams and job postings, done), [Phase 3](.planning/PHASE_3_PLAN.md) (candidate side, approved; being built).
 
 ## Structure
 
