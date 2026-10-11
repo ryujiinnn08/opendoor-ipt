@@ -3,6 +3,9 @@
 # the approved phase plans are the newest decisions; the papers (revised 2026-10) already include
 # Phase 2's departments and hosting choices, so they rank above the older concept plan.
 docs:
+  - path: .planning/PHASE_3_PLAN.md
+    type: SPEC
+    precedence: 0
   - path: .planning/PHASE_2_PLAN.md
     type: SPEC
     precedence: 0
@@ -23,5 +26,5 @@ docs:
     precedence: 5
 # The two papers are local only (not in git) until the team decides to publish them;
 # the repository is public.
-# Not listed on purpose: .planning/PHASE_3_PLAN.md is a draft with open questions.
+# Not listed on purpose: .planning/PHASE_4_PLAN.md is a draft with open questions.
 # Add it (type SPEC, precedence 0) once it is approved.
