@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\AccommodationGroup;
 use App\Enums\EmploymentType;
 use App\Enums\InterviewFormat;
 use App\Enums\PostingStatus;
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Collection;
 
 class JobPosting extends Model
 {
@@ -72,6 +74,18 @@ class JobPosting extends Model
     public function accommodations(): BelongsToMany
     {
         return $this->belongsToMany(Accommodation::class, 'job_posting_accommodation')->withPivot('note');
+    }
+
+    /**
+     * The accommodations by group order, then group, then name, as every page lists them.
+     *
+     * @return Collection<int, Accommodation>
+     */
+    public function accommodationsInDisplayOrder(): Collection
+    {
+        return $this->accommodations
+            ->sortBy(fn (Accommodation $item) => sprintf('%02d %s %s', AccommodationGroup::sortOrder($item->group_name), $item->group_name, $item->name))
+            ->values();
     }
 
     /**
@@ -138,5 +152,53 @@ class JobPosting extends Model
         if (! $member->isOwner()) {
             $query->where('department_id', $member->department_id);
         }
+    }
+
+    /**
+     * Postings anyone may see: open and not past their closing date in Philippine time.
+     * Open implies approved; soft-deleted postings are already excluded.
+     */
+    public function scopePubliclyVisible(Builder $query): void
+    {
+        $query->inDisplayStatus(PostingStatus::Open);
+    }
+
+    /**
+     * A "contains" search: every word must appear in the title, description, location or
+     * employer name. %, _ and ! are plain characters (escaped with ! so SQLite and MariaDB agree).
+     */
+    public function scopeSearch(Builder $query, ?string $terms): void
+    {
+        $words = array_slice(preg_split('/\s+/u', trim((string) $terms), -1, PREG_SPLIT_NO_EMPTY), 0, 8);
+
+        foreach ($words as $word) {
+            $pattern = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $word).'%';
+
+            $query->where(fn (Builder $query) => $query
+                ->whereRaw("job_postings.title LIKE ? ESCAPE '!'", [$pattern])
+                ->orWhereRaw("job_postings.description LIKE ? ESCAPE '!'", [$pattern])
+                ->orWhereRaw("job_postings.location LIKE ? ESCAPE '!'", [$pattern])
+                ->orWhereHas('employer', fn (Builder $query) => $query->whereRaw("employers.name LIKE ? ESCAPE '!'", [$pattern])));
+        }
+    }
+
+    /**
+     * Postings that provide every one of these accommodations. whereHas with a count, not HAVING,
+     * so SQLite and MariaDB agree.
+     *
+     * @param  list<int>  $accommodationIds
+     */
+    public function scopeProvidingAll(Builder $query, array $accommodationIds): void
+    {
+        if ($accommodationIds === []) {
+            return;
+        }
+
+        $query->whereHas(
+            'accommodations',
+            fn (Builder $query) => $query->whereIn('accommodations.id', $accommodationIds),
+            '>=',
+            count($accommodationIds),
+        );
     }
 }

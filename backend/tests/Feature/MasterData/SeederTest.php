@@ -5,9 +5,14 @@ namespace Tests\Feature\MasterData;
 use App\Enums\Role;
 use App\Models\Accommodation;
 use App\Models\Category;
+use App\Models\Employer;
 use App\Models\JobPosting;
 use App\Models\User;
+use Database\Seeders\AccommodationSeeder;
+use Database\Seeders\CategorySeeder;
 use Database\Seeders\DatabaseSeeder;
+use Database\Seeders\DemoEmployerSeeder;
+use Database\Seeders\DemoJobPostingSeeder;
 use Database\Seeders\UserSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -25,18 +30,43 @@ class SeederTest extends TestCase
 
         $this->assertSame(10, Category::count());
         $this->assertSame(18, Accommodation::count());
-        $this->assertSame(5, User::count());
+        $this->assertSame(7, User::count());
 
-        $this->assertSame(5, JobPosting::count());
+        $this->assertSame(17, JobPosting::count());
         $this->assertSame(
-            ['draft' => 1, 'open' => 3, 'pending' => 1],
+            ['closed' => 1, 'draft' => 1, 'open' => 14, 'pending' => 1],
             JobPosting::pluck('status')->map->value->countBy()->sortKeys()->all(),
         );
 
         // A posting someone deleted is never put back.
         JobPosting::first()->delete();
         $this->seed(DatabaseSeeder::class);
-        $this->assertSame(5, JobPosting::withTrashed()->count());
+        $this->assertSame(17, JobPosting::withTrashed()->count());
+    }
+
+    public function test_demo_jobs_fill_two_pages_and_cover_the_lists(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+        $public = JobPosting::publiclyVisible()->with('accommodations')->get();
+
+        $this->assertCount(13, $public);
+        $this->assertSame(13, $this->getJson('/api/job-postings')->json('meta.total'));
+        $this->assertCount(8, $public->pluck('category_id')->unique());
+        $this->assertCount(18, $public->flatMap->accommodations->pluck('id')->unique());
+        $this->assertCount(3, $public->pluck('work_setup')->unique());
+        $this->assertCount(4, $public->pluck('employment_type')->unique());
+        $this->assertSame('pending', Employer::firstWhere('name', DemoEmployerSeeder::CLINIC_NAME)->verification_status->value);
+    }
+
+    public function test_a_demo_posting_whose_category_is_missing_is_skipped(): void
+    {
+        $this->seed([CategorySeeder::class, AccommodationSeeder::class]);
+        Category::firstWhere('name', 'Healthcare')->update(['name' => 'Health and Wellness']);
+        // Not DatabaseSeeder: CategorySeeder would create "Healthcare" again.
+        $this->seed([UserSeeder::class, DemoEmployerSeeder::class, DemoJobPostingSeeder::class]);
+
+        $this->assertFalse(JobPosting::where('title', 'Pharmacy Aide')->exists());
+        $this->assertTrue(JobPosting::where('title', 'Data Encoder')->exists());
     }
 
     public function test_local_defaults_create_admin_and_demo_accounts(): void
@@ -90,7 +120,7 @@ class SeederTest extends TestCase
         config(['opendoor.seed.demo_password' => 'Strong@Demo1']);
         $this->runUserSeeder();
 
-        $this->assertSame(5, User::count());
+        $this->assertSame(7, User::count());
     }
 
     /**

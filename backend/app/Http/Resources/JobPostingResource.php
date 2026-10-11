@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources;
 
-use App\Enums\AccommodationGroup;
 use App\Enums\PostingStatus;
 use App\Enums\Role;
 use App\Models\Accommodation;
@@ -58,16 +57,13 @@ class JobPostingResource extends JsonResource
                 'verification_status' => $this->employer->verification_status->value,
             ],
             'created_by' => $this->creator ? ['name' => $this->creator->name] : null,
-            'accommodations' => $this->accommodations
-                ->sortBy(fn (Accommodation $item) => sprintf('%02d %s %s', AccommodationGroup::sortOrder($item->group_name), $item->group_name, $item->name))
-                ->values()
-                ->map(fn (Accommodation $item) => [
-                    'id' => $item->id,
-                    'name' => $item->name,
-                    'group_name' => $item->group_name,
-                    'note' => $item->pivot->note,
-                    'is_active' => $item->is_active,
-                ]),
+            'accommodations' => $this->accommodationsInDisplayOrder()->map(fn (Accommodation $item) => [
+                'id' => $item->id,
+                'name' => $item->name,
+                'group_name' => $item->group_name,
+                'note' => $item->pivot->note,
+                'is_active' => $item->is_active,
+            ]),
             'actions' => $this->when(
                 $request->user()?->role === Role::Employer,
                 fn () => app(JobPostingWorkflow::class)->actionsFor($this->resource),

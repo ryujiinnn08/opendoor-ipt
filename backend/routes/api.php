@@ -28,6 +28,13 @@ Route::get('/health', function () {
 Route::get('/categories', [Public\CategoryController::class, 'index']);
 Route::get('/accommodations', [Public\AccommodationController::class, 'index']);
 
+// Open jobs and public employer pages (M5, Phase 3A).
+Route::middleware('throttle:120,1')->group(function () {
+    Route::get('/job-postings', [Public\JobPostingController::class, 'index']);
+    Route::get('/job-postings/{id}', [Public\JobPostingController::class, 'show'])->whereNumber('id');
+    Route::get('/employers/{id}', [Public\EmployerController::class, 'show'])->whereNumber('id');
+});
+
 // Employer logos (M3) and team invites (Phase 2A).
 Route::get('/employers/{employer}/logo', [Public\EmployerLogoController::class, 'show'])->name('employers.logo');
 Route::get('/invites/{code}', [Public\InviteController::class, 'show'])->middleware('throttle:30,1');

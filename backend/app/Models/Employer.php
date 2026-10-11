@@ -47,6 +47,11 @@ class Employer extends Model
         return $this->hasMany(Department::class)->orderBy('name');
     }
 
+    public function jobPostings(): HasMany
+    {
+        return $this->hasMany(JobPosting::class);
+    }
+
     public function isCompany(): bool
     {
         return $this->type === EmployerType::Company;

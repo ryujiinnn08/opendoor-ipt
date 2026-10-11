@@ -30,6 +30,12 @@ class UserSeeder extends Seeder
 
     public const DEMO_INDIVIDUAL_EMAIL = 'individual@opendoor.test';
 
+    /** Owner of the second demo company, a verified contact center (Phase 3A). */
+    public const DEMO_EMPLOYER2_EMAIL = 'employer2@opendoor.test';
+
+    /** Owner of the third demo company, a clinic waiting for verification (Phase 3A). */
+    public const DEMO_EMPLOYER3_EMAIL = 'employer3@opendoor.test';
+
     public function run(): void
     {
         $production = app()->isProduction();
@@ -56,6 +62,8 @@ class UserSeeder extends Seeder
         $this->createAccount(self::DEMO_EMPLOYER_EMAIL, 'Demo Employer', Role::Employer, $demoPassword);
         $this->createAccount(self::DEMO_HR_EMAIL, 'Demo HR Officer', Role::Employer, $demoPassword);
         $this->createAccount(self::DEMO_INDIVIDUAL_EMAIL, 'Demo Individual', Role::Employer, $demoPassword);
+        $this->createAccount(self::DEMO_EMPLOYER2_EMAIL, 'Demo Contact Center Owner', Role::Employer, $demoPassword);
+        $this->createAccount(self::DEMO_EMPLOYER3_EMAIL, 'Demo Clinic Owner', Role::Employer, $demoPassword);
     }
 
     private function createAccount(string $email, string $name, Role $role, string $password): void
