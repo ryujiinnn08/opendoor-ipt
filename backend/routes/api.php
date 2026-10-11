@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Candidate;
 use App\Http\Controllers\Employer;
 use App\Http\Controllers\Public;
 use Illuminate\Support\Facades\DB;
@@ -50,6 +51,18 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::middleware('active')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
+
+        // Candidate portal (M2, Phase 3B): only the logged-in job seeker's own data.
+        Route::middleware('role:candidate')->prefix('candidate')->group(function () {
+            Route::get('profile', [Candidate\ProfileController::class, 'show']);
+            Route::put('profile', [Candidate\ProfileController::class, 'update']);
+            Route::get('accommodations', [Candidate\NeedsController::class, 'index']);
+            Route::put('accommodations', [Candidate\NeedsController::class, 'update']);
+            Route::get('resume', [Candidate\ResumeController::class, 'show']);
+            Route::post('resume', [Candidate\ResumeController::class, 'store']);
+            Route::delete('resume', [Candidate\ResumeController::class, 'destroy']);
+            Route::get('dashboard', [Candidate\DashboardController::class, 'show']);
+        });
 
         // Employer portal (M3): company or individual profile, verification and team.
         Route::middleware('role:employer')->prefix('employer')->group(function () {

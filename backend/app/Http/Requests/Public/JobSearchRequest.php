@@ -48,14 +48,15 @@ class JobSearchRequest extends FormRequest
             'accommodations' => ['nullable', 'array', 'max:50'],
             'accommodations.*' => ['integer', 'distinct', 'exists:accommodations,id'],
             'employer' => ['nullable', 'integer'],
-            'sort' => ['nullable', 'in:newest,closing'],
+            'sort' => ['nullable', 'in:newest,closing,match'],
+            'match' => ['nullable', 'boolean'],
             'page' => ['nullable', 'integer', 'min:1', 'max:'.self::MAX_PAGE],
             'per_page' => ['nullable', 'integer', 'between:1,'.self::PER_PAGE],
         ];
     }
 
     /**
-     * @return array{q: ?string, category: ?int, accommodations: list<int>, employer: ?int, sort: string, per_page: int}
+     * @return array{q: ?string, category: ?int, accommodations: list<int>, employer: ?int, sort: string, per_page: int, match: bool}
      */
     public function filters(): array
     {
@@ -68,6 +69,7 @@ class JobSearchRequest extends FormRequest
             'employer' => $this->filled('employer') ? (int) $this->validated('employer') : null,
             'sort' => $this->validated('sort') ?? 'newest',
             'per_page' => (int) ($this->validated('per_page') ?? self::PER_PAGE),
+            'match' => $this->boolean('match'),
         ];
     }
 }

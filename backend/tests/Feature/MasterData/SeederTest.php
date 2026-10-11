@@ -11,6 +11,7 @@ use App\Models\User;
 use Database\Seeders\AccommodationSeeder;
 use Database\Seeders\CategorySeeder;
 use Database\Seeders\DatabaseSeeder;
+use Database\Seeders\DemoCandidateSeeder;
 use Database\Seeders\DemoEmployerSeeder;
 use Database\Seeders\DemoJobPostingSeeder;
 use Database\Seeders\UserSeeder;
@@ -30,7 +31,7 @@ class SeederTest extends TestCase
 
         $this->assertSame(10, Category::count());
         $this->assertSame(18, Accommodation::count());
-        $this->assertSame(7, User::count());
+        $this->assertSame(8, User::count());
 
         $this->assertSame(17, JobPosting::count());
         $this->assertSame(
@@ -68,6 +69,45 @@ class SeederTest extends TestCase
 
         $this->assertSame(17, JobPosting::count());
         $this->assertSame(13, JobPosting::publiclyVisible()->count());
+    }
+
+    public function test_demo_job_seekers_rank_the_same_jobs_differently(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+        $this->seed(DatabaseSeeder::class);
+        $expect = [
+            UserSeeder::DEMO_CANDIDATE_EMAIL => [['Customer Support Associate', 'Data Encoder'], ['Sales Coordinator', 'Pharmacy Aide'], 5],
+            UserSeeder::DEMO_CANDIDATE2_EMAIL => [['Chat Support Specialist', 'Front Desk Assistant'], ['Sales Coordinator', 'Medical Records Clerk', 'Pharmacy Aide'], 3],
+        ];
+
+        foreach ($expect as $email => [$fullMatches, $noMatch, $needs]) {
+            $seeker = User::firstWhere('email', $email);
+            $this->assertSame($needs, $seeker->needs()->count());
+            $this->assertSame(1, $seeker->educations()->count());
+
+            // Each demo account logs in to its own session (Sanctum checks the password hash per session).
+            $this->flushSession();
+            $jobs = $this->actingAs($seeker, 'web')->getJson('/api/job-postings?match=1&sort=match')->json('data');
+            $top = array_slice($jobs, 0, 2);
+            $this->assertEqualsCanonicalizing($fullMatches, array_column($top, 'title'));
+            foreach ($top as $job) {
+                $this->assertSame($job['match']['needs_total'], $job['match']['needs_met']);
+            }
+            $this->assertEmpty(array_intersect($noMatch, array_column($jobs, 'title')));
+        }
+    }
+
+    public function test_demo_job_seekers_are_left_alone_once_they_have_needs(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+        $seeker = User::firstWhere('email', UserSeeder::DEMO_CANDIDATE_EMAIL);
+        $seeker->needs()->detach();
+        $seeker->candidateProfile->update(['headline' => 'My own words']);
+
+        $this->seed(DemoCandidateSeeder::class);
+
+        $this->assertSame('My own words', $seeker->candidateProfile->fresh()->headline);
+        $this->assertSame(0, $seeker->needs()->count());
     }
 
     public function test_a_demo_posting_whose_category_is_missing_is_skipped(): void
@@ -132,7 +172,7 @@ class SeederTest extends TestCase
         config(['opendoor.seed.demo_password' => 'Strong@Demo1']);
         $this->runUserSeeder();
 
-        $this->assertSame(7, User::count());
+        $this->assertSame(8, User::count());
     }
 
     /**

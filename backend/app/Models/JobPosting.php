@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\AccommodationGroup;
 use App\Enums\EmploymentType;
 use App\Enums\InterviewFormat;
 use App\Enums\PostingStatus;
@@ -21,6 +20,14 @@ class JobPosting extends Model
 
     /** Words a job search may have (spec PHASE_3 §8). */
     public const SEARCH_MAX_WORDS = 8;
+
+    /**
+     * How this job meets the viewing job seeker's needs, set by JobSearch (CandidateNeeds::matchFor).
+     * Not a column; never stored.
+     *
+     * @var array<string, mixed>|null
+     */
+    public ?array $match = null;
 
     /**
      * The status, employer, department, author and approval dates are set by
@@ -86,9 +93,7 @@ class JobPosting extends Model
      */
     public function accommodationsInDisplayOrder(): Collection
     {
-        return $this->accommodations
-            ->sortBy(fn (Accommodation $item) => sprintf('%02d %s %s', AccommodationGroup::sortOrder($item->group_name), $item->group_name, $item->name))
-            ->values();
+        return Accommodation::inDisplayOrder($this->accommodations);
     }
 
     /**

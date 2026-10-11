@@ -22,6 +22,9 @@ class UserSeeder extends Seeder
 
     public const DEMO_CANDIDATE_EMAIL = 'candidate@opendoor.test';
 
+    /** A second demo job seeker with different needs, so the same jobs rank differently (Phase 3B). */
+    public const DEMO_CANDIDATE2_EMAIL = 'candidate2@opendoor.test';
+
     /** Owner of the demo company. */
     public const DEMO_EMPLOYER_EMAIL = 'employer@opendoor.test';
 
@@ -59,6 +62,7 @@ class UserSeeder extends Seeder
         }
 
         $this->createAccount(self::DEMO_CANDIDATE_EMAIL, 'Demo Candidate', Role::Candidate, $demoPassword);
+        $this->createAccount(self::DEMO_CANDIDATE2_EMAIL, 'Demo Candidate Two', Role::Candidate, $demoPassword);
         $this->createAccount(self::DEMO_EMPLOYER_EMAIL, 'Demo Employer', Role::Employer, $demoPassword);
         $this->createAccount(self::DEMO_HR_EMAIL, 'Demo HR Officer', Role::Employer, $demoPassword);
         $this->createAccount(self::DEMO_INDIVIDUAL_EMAIL, 'Demo Individual', Role::Employer, $demoPassword);

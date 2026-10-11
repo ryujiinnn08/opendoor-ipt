@@ -49,6 +49,8 @@ class PublicJobPostingResource extends JsonResource
                 'group_name' => $item->group_name,
                 'note' => $item->pivot->note,
             ]),
+            // Only for a logged-in job seeker with needs (CandidateNeeds).
+            'match' => $this->when($this->resource->match !== null, fn () => $this->resource->match),
         ];
     }
 }
