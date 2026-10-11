@@ -3,7 +3,8 @@ import { describedBy, inputClasses } from './fieldStyles.js'
 /**
  * A labelled input with optional hint and error. The error is linked to the input with
  * aria-describedby and marked with aria-invalid so screen readers announce it.
- * Pass `as="textarea"` for multi-line text.
+ * Pass `as="textarea"` for multi-line text. A bottom margin in `className` (e.g., mb-0)
+ * replaces the usual mb-6 rather than competing with it.
  */
 export default function FormField({
   id,
@@ -18,9 +19,10 @@ export default function FormField({
 }) {
   const hintId = hint ? `${id}-hint` : null
   const errorId = error ? `${id}-error` : null
+  const margin = /(^|\s)mb-/.test(className) ? '' : 'mb-6'
 
   return (
-    <div className={`mb-6 ${className}`}>
+    <div className={`${margin} ${className}`.trim()}>
       <label htmlFor={id} className="block font-bold">
         {label}
         {optional && <span className="font-normal text-muted"> (optional)</span>}

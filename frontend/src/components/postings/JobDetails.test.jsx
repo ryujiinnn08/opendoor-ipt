@@ -1,7 +1,9 @@
 import { render, screen, within } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import { axe } from 'vitest-axe'
 import { postingFixture as posting } from '../../test/postingFixture.js'
+import { publicJobFixture } from '../../test/publicJobFixture.js'
 import JobDetails from './JobDetails.jsx'
 
 describe('JobDetails', () => {
@@ -21,6 +23,25 @@ describe('JobDetails', () => {
     expect(within(glance).getByText('Remote')).toBeInTheDocument()
     expect(within(glance).getByText('Full-time')).toBeInTheDocument()
     expect(within(glance).getByText('November 30, 2026')).toBeInTheDocument()
+  })
+
+  it('links the employer when given an address', () => {
+    render(<JobDetails posting={posting} employerHref="/employers/1" />, { wrapper: MemoryRouter })
+
+    expect(screen.getByRole('link', { name: 'Acme Corp.' })).toHaveAttribute('href', '/employers/1')
+  })
+
+  it('shows the Verified badge from the public shape', () => {
+    render(<JobDetails posting={publicJobFixture} />)
+
+    expect(screen.getByText('Verified company')).toBeInTheDocument()
+  })
+
+  it('shows no badge for an unverified company in the public shape', () => {
+    render(<JobDetails posting={{ ...publicJobFixture, employer: { ...publicJobFixture.employer, is_verified: false } }} />)
+
+    expect(screen.queryByText('Not verified')).not.toBeInTheDocument()
+    expect(screen.queryByText('Verified company')).not.toBeInTheDocument()
   })
 
   it('says when the employer is an individual', () => {

@@ -28,11 +28,12 @@ Route::get('/health', function () {
 Route::get('/categories', [Public\CategoryController::class, 'index']);
 Route::get('/accommodations', [Public\AccommodationController::class, 'index']);
 
-// Open jobs and public employer pages (M5, Phase 3A).
-Route::middleware('throttle:120,1')->group(function () {
+// Open jobs and public employer pages (M5, Phase 3A). Their own rate-limit counter, so browsing
+// never uses up the registration or invite limits; ids longer than 18 digits can't be a row.
+Route::middleware('throttle:120,1,public-jobs')->group(function () {
     Route::get('/job-postings', [Public\JobPostingController::class, 'index']);
-    Route::get('/job-postings/{id}', [Public\JobPostingController::class, 'show'])->whereNumber('id');
-    Route::get('/employers/{id}', [Public\EmployerController::class, 'show'])->whereNumber('id');
+    Route::get('/job-postings/{id}', [Public\JobPostingController::class, 'show'])->where('id', '[0-9]{1,18}');
+    Route::get('/employers/{id}', [Public\EmployerController::class, 'show'])->where('id', '[0-9]{1,18}');
 });
 
 // Employer logos (M3) and team invites (Phase 2A).

@@ -23,4 +23,19 @@ describe('FormField', () => {
 
     expect(screen.getByLabelText('Description (optional)')).toBeInTheDocument()
   })
+
+  it('lets the caller replace the bottom margin', () => {
+    // Both mb-6 and mb-0 on one element: the stylesheet order, not the caller, would decide.
+    render(<FormField id="search" label="Search jobs" className="mb-0 flex-1" />)
+
+    const wrapper = screen.getByLabelText('Search jobs').parentElement
+    expect(wrapper).toHaveClass('mb-0')
+    expect(wrapper).not.toHaveClass('mb-6')
+  })
+
+  it('keeps the usual bottom margin by default', () => {
+    render(<FormField id="name" label="Full name" />)
+
+    expect(screen.getByLabelText('Full name').parentElement).toHaveClass('mb-6')
+  })
 })

@@ -155,7 +155,45 @@ class PublicJobSearchTest extends TestCase
     public function test_the_public_list_is_rate_limited(): void
     {
         $route = app('router')->getRoutes()->match(Request::create('/api/job-postings', 'GET'));
-        $this->assertContains('throttle:120,1', $route->gatherMiddleware());
+        $this->assertContains('throttle:120,1,public-jobs', $route->gatherMiddleware());
+    }
+
+    public function test_browsing_jobs_does_not_use_up_the_registration_limit(): void
+    {
+        foreach (range(1, 10) as $request) {
+            $this->getJson('/api/job-postings')->assertOk();
+        }
+
+        // Registration allows 10 a minute per address; job browsing has its own counter.
+        $this->postJson('/api/register', [])->assertUnprocessable();
+    }
+
+    public function test_search_text_that_is_not_valid_utf8_is_refused(): void
+    {
+        $this->getJson('/api/job-postings?q=%FF%FE')->assertUnprocessable()->assertJsonValidationErrors('q');
+    }
+
+    public function test_search_treats_a_backslash_as_a_plain_character(): void
+    {
+        $slash = JobPosting::factory()->open()->create(['title' => 'Encoder for A\\B files']);
+        JobPosting::factory()->open()->create(['title' => 'Sales Representative']);
+
+        $this->assertSame([$slash->id], $this->getJson('/api/job-postings?q='.urlencode('\\'))->json('data.*.id'));
+    }
+
+    public function test_ids_and_pages_too_large_for_a_number_are_handled(): void
+    {
+        $this->getJson('/api/job-postings/99999999999999999999')->assertNotFound();
+        $this->getJson('/api/employers/99999999999999999999')->assertNotFound();
+        $this->getJson('/api/job-postings?page=9223372036854775807')->assertUnprocessable();
+    }
+
+    public function test_closing_soon_puts_jobs_without_a_closing_date_last(): void
+    {
+        $noDate = JobPosting::factory()->open()->create(['closes_on' => null]);
+        $soon = JobPosting::factory()->open()->create(['closes_on' => Carbon::parse(JobPosting::today())->addDays(2)->toDateString()]);
+
+        $this->assertSame([$soon->id, $noDate->id], $this->getJson('/api/job-postings?sort=closing')->json('data.*.id'));
     }
 
     public function test_listing_does_not_query_per_job(): void

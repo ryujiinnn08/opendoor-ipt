@@ -3,7 +3,7 @@ import Icon from './Icon.jsx'
 // Tinted, borderless pills, so a status never looks like a (bordered) button.
 const TONES = {
   success: { classes: 'bg-success-soft text-success', icon: 'check' },
-  neutral: { classes: 'bg-neutral-soft text-muted', icon: 'slash' },
+  neutral: { classes: 'bg-neutral-soft text-muted', icon: 'minus' },
   danger: { classes: 'bg-danger-soft text-danger', icon: 'cross' },
   info: { classes: 'bg-primary-soft text-primary', icon: 'clock' },
 }

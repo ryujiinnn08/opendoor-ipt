@@ -22,7 +22,10 @@ import JobPostingsPage from './portals/employer/JobPostingsPage.jsx'
 import SetupPage from './portals/employer/SetupPage.jsx'
 import TeamPage from './portals/employer/TeamPage.jsx'
 import AccessibilityPage from './portals/public/AccessibilityPage.jsx'
+import BrowseJobsPage from './portals/public/BrowseJobsPage.jsx'
+import EmployerPage from './portals/public/EmployerPage.jsx'
 import HomePage from './portals/public/HomePage.jsx'
+import JobPage from './portals/public/JobPage.jsx'
 import JoinPage from './portals/public/JoinPage.jsx'
 import LoginPage from './portals/public/LoginPage.jsx'
 import NotFoundPage from './portals/public/NotFoundPage.jsx'
@@ -50,6 +53,9 @@ export const routes = [
           { path: '/privacy', element: <PrivacyPage /> },
           { path: '/accessibility', element: <AccessibilityPage /> },
           { path: '/join/:code', element: <JoinPage /> },
+          { path: '/jobs', element: <BrowseJobsPage /> },
+          { path: '/jobs/:id', element: <JobPage /> },
+          { path: '/employers/:id', element: <EmployerPage /> },
           {
             element: <GuestRoute />,
             children: [

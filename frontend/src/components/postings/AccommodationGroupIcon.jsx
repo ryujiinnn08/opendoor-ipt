@@ -10,5 +10,5 @@ const ICONS = {
 }
 
 export default function AccommodationGroupIcon({ group, className = 'size-5' }) {
-  return <Icon name={ICONS[group] ?? 'dot'} className={className} />
+  return <Icon name={ICONS[group] ?? 'circle'} className={className} />
 }

@@ -1,8 +1,14 @@
-import { Link, useLocation } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { searchJobs } from '../../api/jobs.js'
 import { useAuth } from '../../auth/authContext.js'
 import { dashboardFor } from '../../auth/redirects.js'
+import JobCard from '../../components/jobs/JobCard.jsx'
+import Button from '../../components/ui/Button.jsx'
+import FormField from '../../components/ui/FormField.jsx'
 import Notice from '../../components/ui/Notice.jsx'
 import PageHeading from '../../components/ui/PageHeading.jsx'
+import { TEXT_LINK } from '../../components/ui/buttonLinkStyles.js'
 
 const primaryLink =
   'inline-flex min-h-11 items-center rounded-md bg-primary px-5 py-2 font-bold text-on-primary hover:bg-primary-hover'
@@ -27,6 +33,26 @@ const STEPS = [
 export default function HomePage() {
   const { status, role } = useAuth()
   const location = useLocation()
+  const navigate = useNavigate()
+  const [search, setSearch] = useState('')
+  const [featured, setFeatured] = useState(null)
+
+  // The newest three open jobs. If they can't load, Home simply leaves the section out.
+  useEffect(() => {
+    let active = true
+    searchJobs({ sort: 'newest', perPage: 3 })
+      .then(({ jobs }) => active && setFeatured(jobs))
+      .catch(() => {})
+    return () => {
+      active = false
+    }
+  }, [])
+
+  function startSearch(event) {
+    event.preventDefault()
+    const words = search.trim()
+    navigate(words ? `/jobs?${new URLSearchParams({ q: words })}` : '/jobs')
+  }
 
   return (
     <>
@@ -42,6 +68,20 @@ export default function HomePage() {
           OpenDoor is a job platform for persons with disabilities in the Philippines. Tell us what you need once, and
           see which openings provide it.
         </p>
+        <form role="search" onSubmit={startSearch} className="mt-6 flex max-w-2xl flex-wrap items-end gap-3">
+          <FormField
+            id="home-search"
+            label="Search jobs"
+            hint="Job title, skill, company or place"
+            type="search"
+            maxLength={100}
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            className="mb-0 min-w-0 flex-1 basis-64"
+            inputClassName="w-full"
+          />
+          <Button type="submit">Search</Button>
+        </form>
         <div className="mt-6 flex flex-wrap gap-3">
           {status === 'authenticated' ? (
             <Link to={dashboardFor(role)} className={primaryLink}>
@@ -67,6 +107,24 @@ export default function HomePage() {
           </p>
         )}
       </section>
+
+      {featured?.length > 0 && (
+        <section aria-labelledby="open-jobs" className="mt-12">
+          <h2 id="open-jobs" className="text-2xl font-bold">
+            Open jobs
+          </h2>
+          <ul className="mt-4">
+            {featured.map((job) => (
+              <JobCard key={job.id} job={job} to={`/jobs/${job.id}`} />
+            ))}
+          </ul>
+          <p className="mt-4">
+            <Link to="/jobs" className={TEXT_LINK}>
+              Browse all jobs
+            </Link>
+          </p>
+        </section>
+      )}
 
       <section aria-labelledby="how-it-works" className="mt-12">
         <h2 id="how-it-works" className="text-2xl font-bold">

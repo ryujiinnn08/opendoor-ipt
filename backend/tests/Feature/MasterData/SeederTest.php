@@ -58,6 +58,18 @@ class SeederTest extends TestCase
         $this->assertSame('pending', Employer::firstWhere('name', DemoEmployerSeeder::CLINIC_NAME)->verification_status->value);
     }
 
+    public function test_a_database_seeded_before_phase_3a_gets_the_new_demo_company_jobs(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+        // A Phase 2 database: the demo company already had postings, but not these two.
+        JobPosting::withTrashed()->whereIn('title', ['Graphic Designer', 'Office Clerk'])->forceDelete();
+
+        $this->seed(DatabaseSeeder::class);
+
+        $this->assertSame(17, JobPosting::count());
+        $this->assertSame(13, JobPosting::publiclyVisible()->count());
+    }
+
     public function test_a_demo_posting_whose_category_is_missing_is_skipped(): void
     {
         $this->seed([CategorySeeder::class, AccommodationSeeder::class]);

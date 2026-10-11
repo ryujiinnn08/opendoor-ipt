@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { checkPassword } from '../../lib/passwordRules.js'
 import { useAnnounce } from './announcerContext.js'
+import Icon from './Icon.jsx'
 import { FieldError } from './FormField.jsx'
 import { describedBy, inputClasses } from './fieldStyles.js'
 
@@ -66,9 +67,7 @@ export default function PasswordField({ id, label, hint, error, value, onChange,
           <ul className="mt-1 space-y-1">
             {rules.map((rule) => (
               <li key={rule.id} className={`flex items-center gap-2 ${rule.met ? 'text-success' : 'text-muted'}`}>
-                <span aria-hidden="true" className="inline-block w-5 text-center font-bold">
-                  {rule.met ? '✓' : '○'}
-                </span>
+                <Icon name={rule.met ? 'check' : 'circle'} className="size-5" />
                 <span>
                   {rule.label} <span className="sr-only">{rule.met ? '(done)' : '(not done yet)'}</span>
                 </span>

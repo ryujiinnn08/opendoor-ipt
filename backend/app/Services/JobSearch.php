@@ -25,7 +25,8 @@ class JobSearch
             ->providingAll($filters['accommodations']);
 
         if ($filters['sort'] === 'closing') {
-            $query->orderBy('closes_on')->orderBy('id');
+            // A job without a closing date never closes, so it goes last (nulls sort first otherwise).
+            $query->orderByRaw('closes_on IS NULL')->orderBy('closes_on')->orderBy('id');
         } else {
             $query->orderByDesc('approved_at')->orderByDesc('id');
         }

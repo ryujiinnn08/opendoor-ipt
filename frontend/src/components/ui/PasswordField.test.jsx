@@ -46,4 +46,13 @@ describe('PasswordField', () => {
 
     expect(await axe(container)).toHaveNoViolations()
   })
+
+  it('marks each rule with an icon, not a text symbol', async () => {
+    const { container } = render(<PasswordField id="password" label="Password" value="Abcdefgh" onChange={() => {}} showRules />)
+
+    const icons = [...container.querySelectorAll('[data-icon]')].map((icon) => icon.dataset.icon)
+    expect(icons.length).toBeGreaterThan(0)
+    expect(icons.every((name) => name === 'check' || name === 'circle')).toBe(true)
+    expect(container.textContent).not.toMatch(/[✓○]/)
+  })
 })

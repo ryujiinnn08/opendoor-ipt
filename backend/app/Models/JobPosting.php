@@ -19,6 +19,9 @@ class JobPosting extends Model
 {
     use HasFactory, SoftDeletes;
 
+    /** Words a job search may have (spec PHASE_3 §8). */
+    public const SEARCH_MAX_WORDS = 8;
+
     /**
      * The status, employer, department, author and approval dates are set by
      * JobPostingWorkflow, never from request input.
@@ -169,7 +172,8 @@ class JobPosting extends Model
      */
     public function scopeSearch(Builder $query, ?string $terms): void
     {
-        $words = array_slice(preg_split('/\s+/u', trim((string) $terms), -1, PREG_SPLIT_NO_EMPTY), 0, 8);
+        // preg_split returns false for text that isn't valid UTF-8; JobSearchRequest refuses it first.
+        $words = array_slice(preg_split('/\s+/u', trim((string) $terms), -1, PREG_SPLIT_NO_EMPTY) ?: [], 0, self::SEARCH_MAX_WORDS);
 
         foreach ($words as $word) {
             $pattern = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $word).'%';

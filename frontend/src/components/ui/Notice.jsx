@@ -1,7 +1,9 @@
+import Icon from './Icon.jsx'
+
 const TONES = {
-  success: { classes: 'border-success', icon: '✓' },
-  info: { classes: 'border-primary', icon: 'ℹ' },
-  error: { classes: 'border-danger', icon: '!' },
+  success: { classes: 'border-success', icon: 'check' },
+  info: { classes: 'border-primary', icon: 'info' },
+  error: { classes: 'border-danger', icon: 'alert' },
 }
 
 /**
@@ -13,9 +15,7 @@ export default function Notice({ tone = 'info', children, className = '' }) {
 
   return (
     <div className={`flex gap-3 rounded-md border-l-8 bg-surface p-4 ${classes} ${className}`}>
-      <span aria-hidden="true" className="font-bold">
-        {icon}
-      </span>
+      <Icon name={icon} className="mt-0.5 size-5" />
       <div className="max-w-prose">{children}</div>
     </div>
   )

@@ -1,6 +1,6 @@
 # Phase 3 Plan: Candidate Side
 
-> Status: **APPROVED 2026-10-10** (your answers are in §3; three deployment details are still open and don't block building). Checked against the proposal papers ([Revised Proposal](papers/REVISED_PROPOSAL.md), [Modules and Features](papers/MODULES_AND_FEATURES.md)). Next: the step-by-step plan for 3A, then building.
+> Status: **3A built 2026-10-11** (demo steps J1–J6 verified in the browser; 185 server and 193 page tests pass). APPROVED 2026-10-10 (your answers are in §3; three deployment details are still open and don't block building). Checked against the proposal papers ([Revised Proposal](papers/REVISED_PROPOSAL.md), [Modules and Features](papers/MODULES_AND_FEATURES.md)). Next: the step-by-step plan for 3B, then building.
 > Part of: [CONCEPT_PLAN.md](CONCEPT_PLAN.md), build phase 3 of 7
 > Builds on: [PHASE_2_PLAN.md](PHASE_2_PLAN.md) (employers, departments and job postings with structured accommodations)
 > Method: Superpowers brainstorming (this spec, for your review), GSD (state check, `.planning/` setup), Frontend Design (§7).
@@ -342,7 +342,7 @@ pages for our clients ...              | (check) Flexible hours: Provided
 |---|---|---|
 | Unpublished postings reachable publicly | One "open job" rule for the list, job page and employer page; anything else answers "not found" | 3A |
 | Employer registration details leaked | Separate public shapes with only public fields | 3A |
-| Search abuse | `%`, `_` and `\` treated as plain characters; 100 characters and 8 words at most; 120 requests a minute per IP address | 3A |
+| Search abuse | `%`, `_` and `\` treated as plain characters (escaped with `!`, which works the same on SQLite and MariaDB); text that isn't valid UTF-8 is refused; 100 characters and 8 words at most; 120 requests a minute per IP address, counted apart from registration and invites | 3A |
 | Needs, profile, résumé or disability type leaked | Read only from the logged-in job seeker's session; tests for what every other role receives | 3B |
 | Résumé upload abuse | PDF only (file type and extension checked), 5 MB, a random stored name, never in a public folder, downloaded only by its owner (Phase 4: employers with an application) | 3B |
 | Oversized profiles | At most 10 work and 10 education entries, with length limits on every field | 3B |
@@ -459,3 +459,30 @@ JobPosting::publiclyVisible()                    // open, closes_on >= today in 
     ->orderByDesc('needs_met')->orderByDesc('approved_at')->orderBy('title')   // sort=match
     ->paginate(12);
 ```
+
+---
+
+## Phase 3A build notes (2026-10-11)
+
+Checked before finishing (§4.2): a Superpowers code review, plus GSD's code review, UI audit and security audit (verdict: secured; all 3A rows of §8 are handled). Demo steps J1–J6 were walked through in the browser at 1024 px and 360 px on a separate copy of the database (`opendoor_verify`, XAMPP MariaDB), so the `opendoor` demo data stayed as it was. J6 was done with the keyboard only; no page scrolls sideways at 360 px, also with large text.
+
+Found and fixed:
+- **Browsing jobs used up the registration limit.** The job pages shared one per-address counter with registration (10 a minute), so a guest who browsed and then registered could be refused. Job pages now have their own counter.
+- **Ticking a filter jumped the page to the top.** Filters, sort and search now keep the scroll position (focus already stayed put).
+- **Each pause while typing added a Back step.** One search is now one history entry.
+- **Hand-edited addresses:** search text that isn't valid UTF-8, ids too long to be a number and enormous page numbers gave server errors; they're now refused or "not found". A shared link to a category that no longer exists says "Some filters in this address don't exist any more." with **Clear all filters**. Addresses like `/jobs/..%2Fme` are never sent to the server.
+- **Focus:** after **Clear all filters** (the button disappears with the filters) focus moves to the results heading; after a page change it moves to the results heading even in a background tab.
+- **Errors:** failed loads are read out; the job and employer pages say "Job" / "Employer" (not "not open") for network or server errors and offer **Try again**.
+- **Closing soon** listed jobs without a closing date first; they're now last.
+- **Demo data:** a database seeded in Phase 2 now also gets Demo Corp.'s two new postings from `db:seed`, so everyone sees 13 open jobs on two pages.
+- **Icons (your request):** every icon is now from Icons8 in one style, Fluency Systems Regular, replacing the hand-drawn icons and the text symbols (✓ ℹ ! ○ + −) in message boxes, the password checklist and the Filters toggle. They take the text colour, so amber, purple and the high-contrast theme still work; the footer has the "Icons by Icons8" link the free licence asks for.
+- **From the visual pass:** the Search button lines up with the search box (a shared form field ignored a caller's margin); job rows on the employer's own page no longer repeat the employer; on phones each job fact has its own line and long accommodation names wrap.
+
+Left for later (most go to the audit days, Oct 17–18):
+- **Icons on job rows:** the UI audit found four amber icons in one "Provides" line (a check plus a group icon per accommodation); keeping only the group icons would be calmer.
+- **Type and colour:** page titles are 32 px on phones (§7 says 34–42); two text sizes are one-off values; list headings are 24 and 26 px; the header shows the current page only by dropping the underline.
+- **Small things:** "No open jobs right now." is a heading; a 429 reads "Too Many Attempts."; Previous on a page past the end leads to another empty page; "Back to jobs" forgets the search; a retired accommodation in a shared link can't be unticked; if the very first load fails, later counts aren't read out; a page change reads the count twice.
+- **Deployment:** the per-address limit trusts any proxy (`trustProxies('*')`); behind Cloudflare and Railway it must trust only their addresses, or every visitor shares one counter. The employer logo address still answers for employers without a public page, and an individual employer's city is free text that anyone can read.
+- **Decided:** an employer keeps their public page after a posting was once approved, even if it's later sent back or rejected (it then says there are no open jobs). Say if you'd rather hide it.
+- The JavaScript bundle is 583 kB (Vite warns above 500 kB; the 16 icons add about 27 kB because they are built in); loading each page's code separately would fix it.
+

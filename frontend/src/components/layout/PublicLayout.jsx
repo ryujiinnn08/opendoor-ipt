@@ -1,4 +1,4 @@
-import { Link, Outlet } from 'react-router-dom'
+import { Link, NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../../auth/authContext.js'
 import { dashboardFor } from '../../auth/redirects.js'
 import BrandLink from './BrandLink.jsx'
@@ -15,7 +15,18 @@ export default function PublicLayout() {
       <SkipLink />
       <header className="border-b border-border bg-surface">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-3">
-          <BrandLink />
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+            <BrandLink />
+            <nav aria-label="Main">
+              <ul className="flex flex-wrap gap-2">
+                <li>
+                  <NavLink to="/jobs" end className={`${buttonLink} text-primary underline underline-offset-4 hover:no-underline aria-[current=page]:no-underline`}>
+                    Browse jobs
+                  </NavLink>
+                </li>
+              </ul>
+            </nav>
+          </div>
           <nav aria-label="Account">
             <ul className="flex flex-wrap gap-2">
               {status === 'authenticated' ? (

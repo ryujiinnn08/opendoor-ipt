@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Public;
 
+use App\Models\JobPosting;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -13,7 +14,8 @@ class JobSearchRequest extends FormRequest
 {
     public const PER_PAGE = 12;
 
-    public const MAX_WORDS = 8;
+    /** Far beyond any real list; keeps the offset inside a 64-bit number. */
+    public const MAX_PAGE = 10000;
 
     public function authorize(): bool
     {
@@ -29,8 +31,16 @@ class JobSearchRequest extends FormRequest
             'q' => [
                 'nullable', 'string', 'max:100',
                 function (string $attribute, mixed $value, Closure $fail) {
-                    if (is_string($value) && count(preg_split('/\s+/u', trim($value), -1, PREG_SPLIT_NO_EMPTY)) > self::MAX_WORDS) {
-                        $fail('Search with '.self::MAX_WORDS.' words or fewer.');
+                    if (! is_string($value)) {
+                        return;
+                    }
+                    if (! mb_check_encoding($value, 'UTF-8')) {
+                        $fail('Search with letters, numbers and spaces.');
+
+                        return;
+                    }
+                    if (count(preg_split('/\s+/u', trim($value), -1, PREG_SPLIT_NO_EMPTY)) > JobPosting::SEARCH_MAX_WORDS) {
+                        $fail('Search with '.JobPosting::SEARCH_MAX_WORDS.' words or fewer.');
                     }
                 },
             ],
@@ -39,7 +49,7 @@ class JobSearchRequest extends FormRequest
             'accommodations.*' => ['integer', 'distinct', 'exists:accommodations,id'],
             'employer' => ['nullable', 'integer'],
             'sort' => ['nullable', 'in:newest,closing'],
-            'page' => ['nullable', 'integer', 'min:1'],
+            'page' => ['nullable', 'integer', 'min:1', 'max:'.self::MAX_PAGE],
             'per_page' => ['nullable', 'integer', 'between:1,'.self::PER_PAGE],
         ];
     }

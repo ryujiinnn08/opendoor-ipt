@@ -35,6 +35,11 @@ class DemoJobPostingSeeder extends Seeder
             $this->command?->line('  Demo job postings created for '.$company->name);
         }
 
+        if ($owner && $company?->isCompany() && ! $this->hasAnyTitled($company, ['Graphic Designer', 'Office Clerk'])) {
+            $this->postPhase3CompanyJobs($company, $owner);
+            $this->command?->line('  Phase 3A demo job postings created for '.$company->name);
+        }
+
         $individual = User::firstWhere('email', UserSeeder::DEMO_INDIVIDUAL_EMAIL);
         $employer = $individual?->membership?->employer;
 
@@ -72,6 +77,48 @@ class DemoJobPostingSeeder extends Seeder
             $post($company, $company->departments()->first(), $owner);
             $this->command?->line('  Demo job postings created for '.$company->name);
         }
+    }
+
+    /**
+     * Demo Corp.'s two Phase 3A postings. Added on their own, so a database seeded in Phase 2
+     * (when the company already had postings) gets them too; skipped if either title exists,
+     * deleted ones included.
+     */
+    private function postPhase3CompanyJobs(Employer $company, User $owner): void
+    {
+        $hrOfficer = User::firstWhere('email', UserSeeder::DEMO_HR_EMAIL) ?? $owner;
+        $humanResources = $company->departments()->firstWhere('name', 'Human Resources') ?? $company->departments()->first();
+        $it = $company->departments()->firstWhere('name', 'IT') ?? $humanResources;
+
+        $this->post($company, $it, $owner, PostingStatus::Open, [
+            'title' => 'Graphic Designer',
+            'description' => 'Design social media graphics, slides and simple brochures for our clients. You get clear briefs and one round of feedback for each piece.',
+            'category' => 'Creative & Design',
+            'location' => 'Anywhere in the Philippines',
+            'work_setup' => WorkSetup::Remote,
+            'employment_type' => EmploymentType::Contract,
+            'interview_format' => InterviewFormat::Online,
+            'closes_in' => 35,
+        ], [
+            'Remote work' => null,
+            'Flexible hours' => 'Work any hours as long as deadlines are met.',
+            'Screen reader software provided' => null,
+        ]);
+
+        // Closed early by the employer: it must never appear on the job board.
+        $this->post($company, $humanResources, $hrOfficer, PostingStatus::Closed, [
+            'title' => 'Office Clerk',
+            'description' => 'Sort mail, keep office supplies stocked and file documents for the HR team. The position was filled before its closing date.',
+            'category' => 'Administrative & Clerical',
+            'location' => 'Makati City, Metro Manila',
+            'work_setup' => WorkSetup::OnSite,
+            'employment_type' => EmploymentType::FullTime,
+            'interview_format' => InterviewFormat::OnSite,
+            'closes_in' => 20,
+        ], [
+            'Wheelchair-accessible entrance' => null,
+            'Accessible restroom' => null,
+        ]);
     }
 
     private function postContactCenterJobs(Employer $company, ?Department $operations, User $owner): void
@@ -292,36 +339,6 @@ class DemoJobPostingSeeder extends Seeder
             'Written or captioned meetings' => null,
         ]);
 
-        $this->post($company, $it, $owner, PostingStatus::Open, [
-            'title' => 'Graphic Designer',
-            'description' => 'Design social media graphics, slides and simple brochures for our clients. You get clear briefs and one round of feedback for each piece.',
-            'category' => 'Creative & Design',
-            'location' => 'Anywhere in the Philippines',
-            'work_setup' => WorkSetup::Remote,
-            'employment_type' => EmploymentType::Contract,
-            'interview_format' => InterviewFormat::Online,
-            'closes_in' => 35,
-        ], [
-            'Remote work' => null,
-            'Flexible hours' => 'Work any hours as long as deadlines are met.',
-            'Screen reader software provided' => null,
-        ]);
-
-        // Closed early by the employer: it must never appear on the job board.
-        $this->post($company, $humanResources, $hrOfficer, PostingStatus::Closed, [
-            'title' => 'Office Clerk',
-            'description' => 'Sort mail, keep office supplies stocked and file documents for the HR team. The position was filled before its closing date.',
-            'category' => 'Administrative & Clerical',
-            'location' => 'Makati City, Metro Manila',
-            'work_setup' => WorkSetup::OnSite,
-            'employment_type' => EmploymentType::FullTime,
-            'interview_format' => InterviewFormat::OnSite,
-            'closes_in' => 20,
-        ], [
-            'Wheelchair-accessible entrance' => null,
-            'Accessible restroom' => null,
-        ]);
-
         // A draft saved before it was finished: no types, closing date or accommodations yet.
         $this->post($company, $it, $owner, PostingStatus::Draft, [
             'title' => 'IT Support Specialist',
@@ -370,6 +387,14 @@ class DemoJobPostingSeeder extends Seeder
                 ->mapWithKeys(fn ($note, $name) => [$ids[$name] => ['note' => $note]])
                 ->all(),
         );
+    }
+
+    /**
+     * @param  list<string>  $titles
+     */
+    private function hasAnyTitled(Employer $employer, array $titles): bool
+    {
+        return JobPosting::withTrashed()->where('employer_id', $employer->id)->whereIn('title', $titles)->exists();
     }
 
     private function hasNoPostings(Employer $employer): bool

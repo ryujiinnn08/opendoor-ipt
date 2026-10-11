@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { formatDay } from '../../lib/format.js'
 import { EMPLOYMENT_TYPES, INTERVIEW_FORMATS, optionLabel, WORK_SETUPS } from '../../lib/postingOptions.js'
 import Icon from '../ui/Icon.jsx'
@@ -29,8 +30,10 @@ function Detail({ label, children }) {
  * Review and Phase 3's public job page. Accommodations come first, before the description.
  * The page around it supplies the title (h1) and the status. `markRetired` labels retired
  * accommodation types for admins (decision 31); job seekers still see them as provided.
+ * With `employerHref` (the public job page), the employer's name links to their page. The
+ * public shape has no verification_status, only is_verified.
  */
-export default function JobDetails({ posting, showVerificationStatus = false, markRetired = false }) {
+export default function JobDetails({ posting, showVerificationStatus = false, markRetired = false, employerHref }) {
   const { employer } = posting
   const company = employer.type === 'company'
   const groups = byGroup(posting.accommodations ?? [])
@@ -46,9 +49,17 @@ export default function JobDetails({ posting, showVerificationStatus = false, ma
         {employer.logo_url && (
           <img src={employer.logo_url} alt="" className="size-12 rounded-md border border-border bg-surface object-contain" />
         )}
-        <p className="text-lg font-bold">{employer.name}</p>
+        <p className="text-lg font-bold">
+          {employerHref ? (
+            <Link to={employerHref} className="inline-flex min-h-11 items-center text-primary underline underline-offset-4 hover:no-underline">
+              {employer.name}
+            </Link>
+          ) : (
+            employer.name
+          )}
+        </p>
         {company && (showVerificationStatus || employer.is_verified) && (
-          <VerificationBadge status={employer.verification_status} />
+          <VerificationBadge status={employer.verification_status ?? (employer.is_verified ? 'verified' : 'not_submitted')} />
         )}
         {!company && <p className="text-muted">Individual employer</p>}
       </div>
