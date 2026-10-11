@@ -15,7 +15,7 @@
 
 **Time left.** The defense is **October 21–25** (confirmed), which is 11 to 15 days away. That's enough for the Must-haves if every day counts, so this plan includes a road map to the defense (§1).
 
-**Where the code is.** GitHub [ryujiinnn08/opendoor](https://github.com/ryujiinnn08/opendoor) is being cleared so it holds only this app (your answer to Q1); the old Lab 05 branches are backed up on this computer. Nothing is deployed yet.
+**Where the code is.** GitHub [ryujiinnn08/opendoor-ipt](https://github.com/ryujiinnn08/opendoor-ipt), a fresh repository that holds only this app (your answer to Q1; created 2026-10-11). The old [ryujiinnn08/opendoor](https://github.com/ryujiinnn08/opendoor) still holds the Lab 05 work and is left as it is. Nothing is deployed yet.
 
 ---
 
