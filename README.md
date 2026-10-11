@@ -2,7 +2,7 @@
 
 A web-based job matching platform with accommodation-based filtering and post-hire accommodation verification for persons with disabilities.
 
-See [.planning/CONCEPT_PLAN.md](.planning/CONCEPT_PLAN.md) for the concept, architecture and build plan. Phase plans: [Phase 1](.planning/PHASE_1_PLAN.md) (accounts and shared lists, done), [Phase 2](.planning/PHASE_2_PLAN.md) (employers, teams and job postings, done), [Phase 3](.planning/PHASE_3_PLAN.md) (candidate side: 3A public job board done, 3B profile and matching being built).
+See [.planning/CONCEPT_PLAN.md](.planning/CONCEPT_PLAN.md) for the concept, architecture and build plan. Phase plans: [Phase 1](.planning/PHASE_1_PLAN.md) (accounts and shared lists, done), [Phase 2](.planning/PHASE_2_PLAN.md) (employers, teams and job postings, done), [Phase 3](.planning/PHASE_3_PLAN.md) (candidate side: public job board, profile, résumé and matching, done).
 
 ## Structure
 
@@ -36,6 +36,8 @@ php artisan migrate --seed
 php artisan serve --host=localhost --port=8000
 ```
 
+Résumé uploads go up to 5 MB, so PHP must accept them: XAMPP's `php.ini` already allows 40 MB. With another PHP (for example Homebrew's, used by `php artisan serve` on a Mac), set `upload_max_filesize = 6M` and `post_max_size = 8M` in the `php.ini` that `php --ini` shows.
+
 `--seed` loads the job categories, the accommodation types, the starting accounts, three demo companies, an individual employer and 17 sample job postings. It is safe to run `php artisan db:seed` again later; nothing is duplicated and no password is reset.
 
 Frontend (http://localhost:5173):
@@ -48,6 +50,8 @@ npm run dev
 
 Open http://localhost:5173. Both apps must run on `localhost` (not `127.0.0.1`) so the Sanctum session cookie is shared between them.
 
+Job seekers get **Find jobs** (`/candidate/jobs`): jobs ranked by how many of their accommodation needs each one meets ("Meets 4 of 5 of your needs", with what's missing), starting with the jobs that meet at least one, and a switch to all jobs. They fill in **My needs**, **My profile** (work experience, education, skills and an optional PDF résumé) and print **My résumé**. Nobody else can see a job seeker's needs, profile, résumé or disability type.
+
 Anyone can open **Browse jobs** (`/jobs`) from the header: keyword search, category and accommodation filters, sort, 12 jobs a page, with the filters kept in the address. Each job has its own page (`/jobs/:id`), and each employer with a published job has one too (`/employers/:id`). Home has a job search box and the three newest jobs.
 
 ## Demo logins (local only)
@@ -57,7 +61,8 @@ When the `SEED_*` settings in `backend/.env` are left blank, the seeder creates 
 | Role | Email | Password | What it shows |
 |---|---|---|---|
 | Administrator | `admin@opendoor.test` | `Admin_1234` | Employer verification, posting approvals, settings, shared lists |
-| Job seeker | `candidate@opendoor.test` | `Demo_1234` | Candidate portal |
+| Job seeker | `candidate@opendoor.test` | `Demo_1234` | A wheelchair user with 5 needs (Wheelchair-accessible entrance, Accessible restroom, Elevator or ground-floor workspace, Adjustable workstation, Flexible hours) and a filled-in profile; Find jobs ranks *Data Encoder* and *Customer Support Associate* first |
+| Job seeker | `candidate2@opendoor.test` | `Demo_1234` | A Deaf job seeker with 3 needs (Sign language interpreter, Written or captioned meetings, Flexible hours); the same jobs rank differently: *Chat Support Specialist* and *Front Desk Assistant* first |
 | Company owner | `employer@opendoor.test` | `Demo_1234` | Owner of the verified **OpenDoor Demo Corp.** (departments Human Resources and IT); sees and manages every department's job postings |
 | HR officer | `hr@opendoor.test` | `Demo_1234` | HR officer in OpenDoor Demo Corp.'s Human Resources department; sees only that department's job postings |
 | Individual employer | `individual@opendoor.test` | `Demo_1234` | Employer hiring for themselves (no departments), with one open job posting |

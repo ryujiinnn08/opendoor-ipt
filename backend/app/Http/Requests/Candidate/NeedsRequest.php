@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Candidate;
 
 use App\Models\Accommodation;
+use App\Rules\WholeId;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
@@ -28,7 +29,7 @@ class NeedsRequest extends FormRequest
 
         // Each item costs a query, so an oversized list is refused without checking its items.
         if (! $this->tooMany()) {
-            $rules['accommodations.*'] = ['integer', 'distinct', 'exists:accommodations,id'];
+            $rules['accommodations.*'] = ['bail', new WholeId, 'distinct', 'exists:accommodations,id'];
         }
 
         return $rules;

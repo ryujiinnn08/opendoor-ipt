@@ -23,7 +23,12 @@ const EMPLOYER_MENUS = {
 const PORTALS = {
   candidate: {
     name: 'Candidate portal',
-    menu: [{ to: '/candidate/dashboard', label: 'Dashboard' }],
+    menu: [
+      { to: '/candidate/dashboard', label: 'Dashboard' },
+      { to: '/candidate/jobs', label: 'Find jobs', end: false },
+      { to: '/candidate/needs', label: 'My needs' },
+      { to: '/candidate/profile', label: 'My profile', end: false },
+    ],
   },
   admin: {
     name: 'Admin portal',

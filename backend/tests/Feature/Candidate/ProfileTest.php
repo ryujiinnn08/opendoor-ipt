@@ -4,6 +4,7 @@ namespace Tests\Feature\Candidate;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 class ProfileTest extends TestCase
@@ -89,6 +90,16 @@ class ProfileTest extends TestCase
             ->assertJsonValidationErrors('educations.0.level');
         $this->putJson('/api/candidate/profile', ['name' => 'Ana', 'educations' => [['level' => 'college', 'school' => 'UP', 'year_finished' => 1900]]])
             ->assertJsonValidationErrors('educations.0.year_finished');
+    }
+
+    public function test_this_month_and_year_are_counted_in_philippine_time(): void
+    {
+        Carbon::setTestNow('2026-12-31 18:00:00'); // UTC; already January 1, 2027 in Manila
+        $this->actingAs(User::factory()->create(), 'web')->putJson('/api/candidate/profile', [
+            'name' => 'Ana',
+            'experiences' => [['job_title' => 'Clerk', 'company' => 'Acme', 'started_on' => '2027-01', 'is_current' => true]],
+            'educations' => [['level' => 'college', 'school' => 'TUP', 'year_finished' => 2027]],
+        ])->assertOk();
     }
 
     public function test_the_current_job_needs_no_end_and_studying_needs_no_year(): void

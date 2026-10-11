@@ -65,6 +65,25 @@ describe('JobPage', () => {
     expect(document.activeElement).toBe(heading)
   })
 
+  it('shows how the job fits a job seeker’s needs above the accommodations', async () => {
+    getJob.mockResolvedValue({
+      ...job,
+      match: {
+        needs_total: 2,
+        needs_met: 1,
+        missing: ['Accessible restroom'],
+        needs: [
+          { id: 10, name: 'Remote work', group_name: 'Work arrangement', provided: true, note: null },
+          { id: 20, name: 'Accessible restroom', group_name: 'Physical access', provided: false, note: null },
+        ],
+      },
+    })
+    renderRoutes(routes, { path: '/jobs/2' })
+
+    expect(await screen.findByRole('heading', { name: 'How this job fits your needs' })).toBeInTheDocument()
+    expect(screen.getByText('Accessible restroom: Missing. You can ask the employer about it.')).toBeInTheDocument()
+  })
+
   it('uses the base paths it is given', async () => {
     getJob.mockResolvedValue(job)
     renderRoutes([{ path: '/candidate/jobs/:id', element: <JobPage basePath="/candidate/jobs" employerBasePath="/candidate/employers" /> }], {

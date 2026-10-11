@@ -48,3 +48,15 @@
 :root[data-text='large'] {
   --od-font-size: 1.3125rem; /* 21px base */
 }
+
+/* Printing (My résumé): black on white in every theme, since browsers leave out backgrounds. */
+@media print {
+  :root,
+  :root[data-theme='high-contrast'] {
+    --od-bg: #ffffff;
+    --od-surface: #ffffff;
+    --od-text: #000000;
+    --od-text-muted: #000000;
+    --od-border: #000000;
+  }
+}

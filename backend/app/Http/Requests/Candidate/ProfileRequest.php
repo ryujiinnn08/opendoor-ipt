@@ -5,6 +5,7 @@ namespace App\Http\Requests\Candidate;
 use App\Enums\DisabilityType;
 use App\Enums\EducationLevel;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
@@ -51,7 +52,7 @@ class ProfileRequest extends FormRequest
             'educations.*.level' => ['required', Rule::enum(EducationLevel::class)],
             'educations.*.school' => ['required', 'string', 'max:200'],
             'educations.*.course' => ['nullable', 'string', 'max:150'],
-            'educations.*.year_finished' => ['nullable', 'integer', 'between:1950,'.now()->year],
+            'educations.*.year_finished' => ['nullable', 'integer', 'between:1950,'.$this->now()->year],
             'educations.*.is_studying' => ['sometimes', 'boolean'],
         ];
     }
@@ -66,7 +67,7 @@ class ProfileRequest extends FormRequest
     {
         return [
             function (Validator $validator) {
-                $thisMonth = now()->format('Y-m');
+                $thisMonth = $this->now()->format('Y-m');
 
                 foreach ((array) $this->input('experiences', []) as $index => $entry) {
                     if (! is_array($entry) || $validator->errors()->has("experiences.{$index}.started_on")) {
@@ -89,6 +90,14 @@ class ProfileRequest extends FormRequest
                 }
             },
         ];
+    }
+
+    /**
+     * Now in Philippine time: "this month" and "this year" are counted there, not in UTC.
+     */
+    private function now(): Carbon
+    {
+        return now(config('opendoor.postings.timezone'));
     }
 
     /**

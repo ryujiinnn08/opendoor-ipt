@@ -33,7 +33,7 @@ export default function PortalLayout() {
   return (
     <div className="flex min-h-screen flex-col">
       <SkipLink />
-      <header className="border-b border-border bg-surface">
+      <header className="border-b border-border bg-surface print:hidden">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-3">
           <div className="flex flex-wrap items-baseline gap-x-3">
             <BrandLink to={dashboardFor(role)} />
@@ -72,7 +72,9 @@ export default function PortalLayout() {
         <Outlet />
       </main>
 
-      <SiteFooter />
+      <div className="print:hidden">
+        <SiteFooter />
+      </div>
     </div>
   )
 }

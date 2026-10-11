@@ -4,13 +4,19 @@ import { describe, expect, it } from 'vitest'
 import useJobSearchParams from './useJobSearchParams.js'
 
 /** Renders the hook at `path` and returns the router plus the latest hook value. */
-function setup(path) {
+function setup(path, options) {
   const current = {}
   function Probe() {
-    Object.assign(current, useJobSearchParams())
+    Object.assign(current, useJobSearchParams(options))
     return null
   }
-  const router = createMemoryRouter([{ path: '/jobs', element: <Probe /> }], { initialEntries: [path] })
+  const router = createMemoryRouter(
+    [
+      { path: '/jobs', element: <Probe /> },
+      { path: '/candidate/jobs', element: <Probe /> },
+    ],
+    { initialEntries: [path] },
+  )
   render(<RouterProvider router={router} />)
   return { router, current }
 }
@@ -63,5 +69,37 @@ describe('useJobSearchParams', () => {
     const { router, current } = setup('/jobs?q=web&category=4&accommodations=1&sort=closing')
     act(() => current.clearFilters())
     expect(router.state.location.search).toBe('?q=web&sort=closing')
+  })
+
+  describe('matching mode (Find jobs)', () => {
+    it('starts in Matches my needs, best match first', () => {
+      const { current } = setup('/candidate/jobs', { matching: true })
+      expect(current.filters).toMatchObject({ show: 'matches', sort: 'match' })
+    })
+
+    it('reads All jobs and another sort from the address', () => {
+      const { current } = setup('/candidate/jobs?show=all&sort=newest', { matching: true })
+      expect(current.filters).toMatchObject({ show: 'all', sort: 'newest' })
+    })
+
+    it('writes only what differs from the defaults', () => {
+      const { router, current } = setup('/candidate/jobs?page=2', { matching: true })
+      act(() => current.setFilters({ show: 'all' }))
+      expect(router.state.location.search).toBe('?show=all')
+      act(() => current.setFilters({ sort: 'newest' }))
+      expect(router.state.location.search).toBe('?sort=newest&show=all')
+    })
+
+    it('keeps the search words, sort and Show switch when clearing filters', () => {
+      const { router, current } = setup('/candidate/jobs?q=web&category=4&sort=closing&show=all', { matching: true })
+      act(() => current.clearFilters())
+      expect(router.state.location.search).toBe('?q=web&sort=closing&show=all')
+    })
+
+    it('ignores the matching values outside Find jobs', () => {
+      const { current } = setup('/jobs?sort=match&show=all')
+      expect(current.filters.sort).toBe('newest')
+      expect(current.filters).not.toHaveProperty('show')
+    })
   })
 })

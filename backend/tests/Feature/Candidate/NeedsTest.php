@@ -39,6 +39,17 @@ class NeedsTest extends TestCase
             ->assertJsonValidationErrors(['accommodations.1' => "\"{$other->name}\" is no longer offered. Untick it to continue."]);
     }
 
+    public function test_a_true_or_decimal_id_is_not_read_as_a_number(): void
+    {
+        $retired = Accommodation::factory()->create(['is_active' => false]);
+        $this->actingAs(User::factory()->create(), 'web');
+
+        foreach ([true, 1.0, '1.0'] as $id) {
+            $this->putJson('/api/candidate/accommodations', ['accommodations' => [$id]])->assertJsonValidationErrors('accommodations.0');
+        }
+        $this->assertSame(1, $retired->id);
+    }
+
     public function test_unknown_and_oversized_lists_are_refused(): void
     {
         $this->actingAs(User::factory()->create(), 'web');

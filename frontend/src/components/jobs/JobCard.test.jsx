@@ -59,6 +59,19 @@ describe('JobCard', () => {
     expect(screen.getByText('Work setup: Remote')).toBeInTheDocument()
   })
 
+  it('shows how the job meets the job seeker’s needs', () => {
+    renderCard({ job: { ...job, match: { needs_total: 5, needs_met: 4, missing: ['Adjustable workstation'] } } })
+
+    expect(screen.getByText('Meets 4 of 5 of your needs')).toBeInTheDocument()
+    expect(screen.getByText('Missing: Adjustable workstation')).toBeInTheDocument()
+  })
+
+  it('shows no match without needs', () => {
+    renderCard()
+
+    expect(screen.queryByText(/of your needs/)).not.toBeInTheDocument()
+  })
+
   it('says when a job lists no accommodations', () => {
     renderCard({ job: { ...job, accommodations: [] } })
 

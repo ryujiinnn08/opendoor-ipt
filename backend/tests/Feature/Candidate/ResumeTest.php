@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Mockery;
 use Tests\TestCase;
 
 class ResumeTest extends TestCase
@@ -65,6 +66,33 @@ class ResumeTest extends TestCase
         $this->post('/api/candidate/resume', [], ['Accept' => 'application/json'])->assertJsonValidationErrors(['resume' => 'Choose a PDF file.']);
     }
 
+    public function test_a_file_the_server_could_not_receive_gets_a_clear_message(): void
+    {
+        $this->actingAs(User::factory()->create(), 'web');
+        // PHP's own upload limit (upload_max_filesize) refused it before Laravel saw it.
+        $path = tempnam(sys_get_temp_dir(), 'resume');
+        file_put_contents($path, "%PDF-1.4\n");
+        $file = new UploadedFile($path, 'cv.pdf', 'application/pdf', UPLOAD_ERR_INI_SIZE, true);
+
+        $this->upload($file)->assertJsonValidationErrors(['resume' => "The file couldn't be uploaded. Make sure it's a PDF smaller than 5 MB."]);
+    }
+
+    public function test_a_failed_save_keeps_the_old_resume(): void
+    {
+        $seeker = User::factory()->create();
+        $this->actingAs($seeker, 'web');
+        $this->upload($this->pdf('first.pdf'));
+        $first = $seeker->fresh()->candidateProfile->resume_path;
+
+        $disk = Mockery::mock(Storage::disk('local'))->makePartial();
+        $disk->shouldReceive('putFileAs')->andReturn(false);
+        Storage::set('local', $disk);
+
+        $this->upload($this->pdf('second.pdf'))->assertStatus(500)->assertJsonPath('message', "We couldn't save your résumé. Please try again.");
+        $this->assertSame($first, $seeker->fresh()->candidateProfile->resume_path);
+        $this->assertTrue(Storage::disk('local')->exists($first));
+    }
+
     public function test_only_the_owner_can_open_it(): void
     {
         $seeker = User::factory()->create();
@@ -86,6 +114,8 @@ class ResumeTest extends TestCase
     public function test_guests_cannot_open_it(): void
     {
         $this->getJson('/api/candidate/resume')->assertUnauthorized();
+        // "Open my résumé" in a new tab after the session ended: a browser request, not JSON.
+        $this->get('/api/candidate/resume')->assertUnauthorized()->assertJsonPath('message', 'Unauthenticated.');
     }
 
     public function test_replacing_and_removing_delete_the_old_file(): void

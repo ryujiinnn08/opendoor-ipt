@@ -31,9 +31,10 @@ function Detail({ label, children }) {
  * The page around it supplies the title (h1) and the status. `markRetired` labels retired
  * accommodation types for admins (decision 31); job seekers still see them as provided.
  * With `employerHref` (the public job page), the employer's name links to their page. The
- * public shape has no verification_status, only is_verified.
+ * public shape has no verification_status, only is_verified. `fit` (a job seeker's
+ * NeedsFit) goes above the accommodations panel.
  */
-export default function JobDetails({ posting, showVerificationStatus = false, markRetired = false, employerHref }) {
+export default function JobDetails({ posting, showVerificationStatus = false, markRetired = false, employerHref, fit }) {
   const { employer } = posting
   const company = employer.type === 'company'
   const groups = byGroup(posting.accommodations ?? [])
@@ -67,6 +68,7 @@ export default function JobDetails({ posting, showVerificationStatus = false, ma
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="space-y-10 lg:col-start-2 lg:row-start-1">
+          {fit}
           <section aria-labelledby={ids.accommodations} className="border-l-4 border-accent pl-5">
             <h2 id={ids.accommodations} className="text-2xl font-bold">
               Accommodations provided

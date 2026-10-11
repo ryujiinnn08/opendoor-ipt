@@ -12,6 +12,13 @@ export function formatDay(day) {
   return day ? dayFormat.format(new Date(`${day}T00:00:00Z`)) : ''
 }
 
+const monthFormat = new Intl.DateTimeFormat('en-PH', { year: 'numeric', month: 'long', timeZone: 'UTC' })
+
+/** "June 2023" for a month stored as 'YYYY-MM'. */
+export function formatMonth(month) {
+  return month ? monthFormat.format(new Date(`${month}-01T00:00:00Z`)) : ''
+}
+
 export const REGISTRATION_TYPES = [
   { value: 'dti', label: 'DTI', text: 'Department of Trade and Industry: sole proprietorships' },
   { value: 'sec', label: 'SEC', text: 'Securities and Exchange Commission: corporations and partnerships' },

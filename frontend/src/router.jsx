@@ -13,6 +13,10 @@ import PostingApprovalsPage from './portals/admin/PostingApprovalsPage.jsx'
 import PostingReviewPage from './portals/admin/PostingReviewPage.jsx'
 import SettingsPage from './portals/admin/SettingsPage.jsx'
 import CandidateDashboard from './portals/candidate/CandidateDashboard.jsx'
+import FindJobsPage from './portals/candidate/FindJobsPage.jsx'
+import NeedsPage from './portals/candidate/NeedsPage.jsx'
+import ProfilePage from './portals/candidate/ProfilePage.jsx'
+import ResumePage from './portals/candidate/ResumePage.jsx'
 import CompanyPage from './portals/employer/CompanyPage.jsx'
 import EmployerDashboard from './portals/employer/EmployerDashboard.jsx'
 import IndividualProfilePage from './portals/employer/IndividualProfilePage.jsx'
@@ -66,7 +70,15 @@ export const routes = [
           { path: '*', element: <NotFoundPage /> },
         ],
       },
-      portal('candidate', [{ path: '/candidate/dashboard', element: <CandidateDashboard /> }]),
+      portal('candidate', [
+        { path: '/candidate/dashboard', element: <CandidateDashboard /> },
+        { path: '/candidate/needs', element: <NeedsPage /> },
+        { path: '/candidate/profile', element: <ProfilePage /> },
+        { path: '/candidate/profile/resume', element: <ResumePage /> },
+        { path: '/candidate/jobs', element: <FindJobsPage /> },
+        { path: '/candidate/jobs/:id', element: <JobPage basePath="/candidate/jobs" employerBasePath="/candidate/employers" /> },
+        { path: '/candidate/employers/:id', element: <EmployerPage basePath="/candidate/jobs" /> },
+      ]),
       portal('employer', [
         { element: <RequireNoEmployerProfile />, children: [{ path: '/employer/setup', element: <SetupPage /> }] },
         {

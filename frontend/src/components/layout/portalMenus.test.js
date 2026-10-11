@@ -24,6 +24,10 @@ describe('portalFor', () => {
     expect(labels({ role: 'employer', membership: null })).toEqual(['Set up your profile'])
   })
 
+  it('gives job seekers their four pages', () => {
+    expect(labels({ role: 'candidate' })).toEqual(['Dashboard', 'Find jobs', 'My needs', 'My profile'])
+  })
+
   it('includes the new admin pages', () => {
     expect(labels({ role: 'admin' })).toContain('Employer verification')
     expect(labels({ role: 'admin' })).toContain('Settings')

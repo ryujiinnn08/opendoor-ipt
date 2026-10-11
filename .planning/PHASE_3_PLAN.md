@@ -1,6 +1,6 @@
 # Phase 3 Plan: Candidate Side
 
-> Status: **3A built 2026-10-11** (demo steps J1–J6 verified in the browser; 185 server and 193 page tests pass). APPROVED 2026-10-10 (your answers are in §3; three deployment details are still open and don't block building). Checked against the proposal papers ([Revised Proposal](papers/REVISED_PROPOSAL.md), [Modules and Features](papers/MODULES_AND_FEATURES.md)). Next: the step-by-step plan for 3B, then building.
+> Status: **Phase 3 built.** 3A (2026-10-11): demo steps J1–J6 verified in the browser. 3B (2026-10-12): demo steps C1–C8 verified in the browser; 223 server and 260 page tests pass. APPROVED 2026-10-10 (your answers are in §3; the three deployment details are still open). Checked against the proposal papers ([Revised Proposal](papers/REVISED_PROPOSAL.md), [Modules and Features](papers/MODULES_AND_FEATURES.md)). Next: Phase 4, apply and track.
 > Part of: [CONCEPT_PLAN.md](CONCEPT_PLAN.md), build phase 3 of 7
 > Builds on: [PHASE_2_PLAN.md](PHASE_2_PLAN.md) (employers, departments and job postings with structured accommodations)
 > Method: Superpowers brainstorming (this spec, for your review), GSD (state check, `.planning/` setup), Frontend Design (§7).
@@ -485,4 +485,27 @@ Left for later (most go to the audit days, Oct 17–18):
 - **Deployment:** the per-address limit trusts any proxy (`trustProxies('*')`); behind Cloudflare and Railway it must trust only their addresses, or every visitor shares one counter. The employer logo address still answers for employers without a public page, and an individual employer's city is free text that anyone can read.
 - **Decided:** an employer keeps their public page after a posting was once approved, even if it's later sent back or rejected (it then says there are no open jobs). Say if you'd rather hide it.
 - The JavaScript bundle is 583 kB (Vite warns above 500 kB; the 16 icons add about 27 kB because they are built in); loading each page's code separately would fix it.
+
+## Phase 3B build notes (2026-10-12)
+
+Your answers to the 3B plan's questions: work experience and education entries are always open with **Remove** (no Edit step); My résumé shows the disability type only when it's shown to employers; a logged-in job seeker also sees match badges on the public job pages.
+
+Checked before finishing (§4.2): a Superpowers code review, plus GSD's code review, UI audit and security audit (no leak of needs, profile, résumé or disability type to anyone else). Demo steps C1–C8 were walked through in the browser at 1024 px and 360 px on `opendoor_verify` (XAMPP MariaDB), with a newly registered job seeker; C8 used the keyboard only and also large text. Still to do: a groupmate runs NVDA on Windows through Find jobs (§4.2).
+
+Found and fixed:
+- **"Open my résumé" didn't open for its owner.** A plain link in a new tab may not tell the server which page it came from, so the session wasn't recognised. The button now fetches the PDF through the app and shows it in a new tab.
+- **A logged-out browser tab opening the résumé got a server error**; it now gets "Unauthenticated" like every other request.
+- **Résumé uploads:** a failed save no longer loses the previous résumé; a file PHP itself refuses (its upload limit) gets "The file couldn't be uploaded. Make sure it's a PDF smaller than 5 MB." (README: set `upload_max_filesize` if your PHP allows less than 6 MB); a PDF the browser doesn't recognise is no longer refused before upload; uploads and removals are read out.
+- **Hand-made requests:** an accommodation id sent as `true` or `1.0` is refused (it was read as 1, which could add a retired type), here and in 2B's posting form.
+- **Dates:** "this month" and "this year" are counted in Philippine time.
+- **My profile:** a hidden end month or year (current job, still studying) is no longer sent, and entry errors are cleared when an entry is added or removed, so none points at the wrong entry.
+- **Find jobs:** **Show all jobs** keeps focus (on the results heading); a failed load of your needs says so with **Try again** instead of asking for needs.
+- **Look:** "Meets none of your 5 needs" uses the muted circle, since amber is only for needs a job meets; My needs shows "Your needs are saved" next to the button; My résumé prints black on white in every theme.
+
+Left for later (most go to the audit days, Oct 17–18):
+- **Words and look:** the dashboard says "Browse all jobs" where §7 says "Show all jobs"; "Disability type (optional)" and its hint both say optional; the coming-soon "My applications" tile is a boxed card; the résumé file field's text is small; a few print spacing details.
+- **Feedback:** **Try again** on My profile, My needs and the dashboard doesn't clear the old message first, and their load errors aren't read out; the entry that takes focus after **Remove** shows no focus ring.
+- **Server hardening:** check very large entry lists faster; rate-limit the candidate pages; turn off Laravel's unused signed file routes on the private disk (`'serve' => false`); delete résumé files if accounts can ever be deleted; tighter month and phone-number limits.
+- **Phase 4:** when employers open applicants' résumés, serve them with a sandbox header or as a download.
+- From 3A, still open: page titles are 32 px on phones; the bundle is 610 kB (Vite warns above 500 kB).
 

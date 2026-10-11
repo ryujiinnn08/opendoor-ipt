@@ -44,6 +44,14 @@ describe('JobDetails', () => {
     expect(screen.queryByText('Verified company')).not.toBeInTheDocument()
   })
 
+  it('puts the job seeker’s fit above the accommodations', () => {
+    render(<JobDetails posting={publicJobFixture} fit={<section aria-label="How this job fits your needs">Fit</section>} />)
+
+    const fit = screen.getByRole('region', { name: 'How this job fits your needs' })
+    const accommodations = screen.getByRole('region', { name: 'Accommodations provided' })
+    expect(fit.compareDocumentPosition(accommodations) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
   it('says when the employer is an individual', () => {
     render(<JobDetails posting={{ ...posting, employer: { ...posting.employer, type: 'individual' }, department: null }} />)
 

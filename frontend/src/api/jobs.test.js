@@ -17,6 +17,15 @@ describe('jobs api', () => {
     expect(result).toEqual({ jobs: [{ id: 1 }], meta: { total: 1, last_page: 1, current_page: 1, per_page: 3 } })
   })
 
+  it('asks for Matches my needs only when match is on', async () => {
+    client.get.mockResolvedValue({ data: { data: [], meta: {} } })
+
+    await searchJobs({ match: true, sort: 'match' })
+    expect(client.get).toHaveBeenLastCalledWith('/api/job-postings', { params: { match: 1, sort: 'match' } })
+    await searchJobs({ match: false, sort: 'match' })
+    expect(client.get).toHaveBeenLastCalledWith('/api/job-postings', { params: { sort: 'match' } })
+  })
+
   it('loads one job and one employer', async () => {
     client.get.mockResolvedValue({ data: { data: { id: 7 } } })
     expect(await getJob(7)).toEqual({ id: 7 })

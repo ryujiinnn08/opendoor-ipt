@@ -102,6 +102,16 @@ class JobPostingTest extends TestCase
         $this->assertContains($retired->id, $posting->accommodations()->pluck('accommodations.id')->all());
     }
 
+    public function test_an_accommodation_id_of_true_is_not_read_as_1(): void
+    {
+        [$individual] = $this->individualEmployer();
+        $payload = $this->completePosting();
+        $payload['accommodations'] = [['id' => true, 'note' => null]];
+
+        $this->actingAs($individual, 'web')->postJson('/api/employer/job-postings', $payload)
+            ->assertJsonValidationErrors('accommodations.0.id');
+    }
+
     public function test_the_same_accommodation_cannot_be_chosen_twice(): void
     {
         [$individual] = $this->individualEmployer();

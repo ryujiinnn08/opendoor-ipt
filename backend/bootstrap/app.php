@@ -3,10 +3,10 @@
 use App\Http\Middleware\EnsureEmployerProfile;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\EnsureUserIsActive;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -23,6 +23,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Requests arrive through Cloudflare and Railway's proxy.
         $middleware->trustProxies(at: '*');
+
+        // The login page lives in the React app, so a guest is never redirected: any request,
+        // even a browser tab opening the résumé after the session ended, gets a JSON 401.
+        $middleware->redirectGuestsTo(fn () => null);
 
         $middleware->alias([
             'role' => EnsureUserHasRole::class,

@@ -36,7 +36,8 @@ class ResumeRequest extends FormRequest
             'resume.mimes' => 'The résumé must be a PDF file.',
             'resume.mimetypes' => 'The résumé must be a PDF file.',
             'resume.max' => 'The résumé must be smaller than 5 MB.',
-            'resume.uploaded' => 'The résumé must be smaller than 5 MB.',
+            // PHP refused the file before Laravel saw it (often its own upload size limit).
+            'resume.uploaded' => "The file couldn't be uploaded. Make sure it's a PDF smaller than 5 MB.",
         ];
     }
 }

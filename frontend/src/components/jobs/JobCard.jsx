@@ -3,6 +3,7 @@ import { formatDay } from '../../lib/format.js'
 import { providesParts } from '../../lib/jobText.js'
 import { EMPLOYMENT_TYPES, optionLabel, WORK_SETUPS } from '../../lib/postingOptions.js'
 import AccommodationGroupIcon from '../postings/AccommodationGroupIcon.jsx'
+import MatchBadge from './MatchBadge.jsx'
 import Icon from '../ui/Icon.jsx'
 import VerificationBadge from '../ui/VerificationBadge.jsx'
 
@@ -39,6 +40,8 @@ export default function JobCard({ job, to, showEmployer = true }) {
           {employer.type !== 'company' && <p className="text-muted">Individual employer</p>}
         </div>
       )}
+
+      {job.match && <MatchBadge match={job.match} />}
 
       {/* On phones each fact gets its own line (spec PHASE_3 §7). */}
       <ul className="mt-2 flex flex-col gap-y-1 text-muted sm:flex-row sm:flex-wrap sm:gap-x-6">

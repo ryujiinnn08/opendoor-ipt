@@ -23,12 +23,18 @@ class ResumeController extends Controller
         $profile = $user->candidateProfile()->firstOrCreate();
 
         $path = $file->store('resumes', 'local');
-        $this->deleteFile($profile->resume_path);
+        if ($path === false) {
+            abort(response()->json(['message' => "We couldn't save your résumé. Please try again."], 500));
+        }
+
+        // The old file is deleted only once the new one is saved.
+        $oldPath = $profile->resume_path;
         $profile->forceFill([
             'resume_path' => $path,
             'resume_name' => Str::limit(basename($file->getClientOriginalName()), 255, ''),
             'resume_uploaded_at' => now(),
         ])->save();
+        $this->deleteFile($oldPath);
 
         return new CandidateProfileResource($user->fresh());
     }

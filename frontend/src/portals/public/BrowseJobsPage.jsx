@@ -26,6 +26,13 @@ const SORTS = [
   { value: 'newest', label: 'Newest' },
   { value: 'closing', label: 'Closing soon' },
 ]
+const MATCHING_SORTS = [{ value: 'match', label: 'Best match' }, ...SORTS]
+const PUBLIC_INTRO = 'Find open jobs and see which accommodations each one provides.'
+const NO_MATCHES = 'No open jobs meet your needs yet.'
+const SHOW_OPTIONS = [
+  ['matches', 'Matches my needs'],
+  ['all', 'All jobs'],
+]
 
 /** Every filter except the page, to tell a page change from a filter change. */
 function withoutPage({ page: _page, ...rest }) {
@@ -35,13 +42,18 @@ function withoutPage({ page: _page, ...rest }) {
 /**
  * Browse jobs (plan PHASE_3 §6.3): search, filters and sort kept in the address, 12 jobs a
  * page. Typing searches after a 300 ms pause (Enter at once); filters apply at once and keep
- * focus; the new count is read out. Phase 3B mounts it inside the candidate portal with its
- * own basePath.
+ * focus; the new count is read out.
+ *
+ * Find jobs (Phase 3B) mounts the same page with `matching`: `{ needsCount: undefined }` while
+ * the job seeker's needs load (the heading stays, nothing is fetched yet), then the count. With
+ * needs it adds the Show switch (Matches my needs / All jobs) and the Best match sort.
  */
-export default function BrowseJobsPage({ basePath = '/jobs' }) {
+export default function BrowseJobsPage({ basePath = '/jobs', title = 'Browse jobs', intro = PUBLIC_INTRO, matching }) {
   const { status } = useAuth()
   const announce = useAnnounce()
-  const { filters, setFilters, clearFilters, hrefForPage, activeFilterCount } = useJobSearchParams()
+  const waiting = matching !== undefined && matching.needsCount === undefined
+  const matchMode = Boolean(matching?.needsCount)
+  const { filters, setFilters, clearFilters, hrefForPage, activeFilterCount } = useJobSearchParams({ matching: matchMode })
   const { key: locationKey } = useLocation()
 
   // The search box keeps its own text; the address gets it after a pause or on Enter.
@@ -101,9 +113,10 @@ export default function BrowseJobsPage({ basePath = '/jobs' }) {
   }, [])
 
   useEffect(() => {
+    if (waiting) return
     // Only the latest request may update the list; an earlier, slower one is ignored.
     const request = ++latestRequest.current
-    searchJobs(filters)
+    searchJobs(matchMode ? { ...filters, match: filters.show === 'matches' } : filters)
       .then(({ jobs, meta }) => {
         if (request !== latestRequest.current) return
         const previous = loadedFilters.current
@@ -125,7 +138,7 @@ export default function BrowseJobsPage({ basePath = '/jobs' }) {
         setLoadError({ general, q, staleFilters, filters })
         announce(q ?? (staleFilters ? STALE_FILTERS : general))
       })
-  }, [filters, attempt, announce])
+  }, [filters, attempt, announce, waiting, matchMode])
 
   useEffect(() => {
     if (!focusResultsOnLoad.current) return
@@ -151,18 +164,75 @@ export default function BrowseJobsPage({ basePath = '/jobs' }) {
   }
 
   const retry = useCallback(() => setAttempt((count) => count + 1), [])
-  const somethingOn = Boolean(filters.q.trim()) || activeFilterCount > 0
   const clearButton = activeFilterCount > 0 && (
     <Button variant="secondary" onClick={clearAndKeepPlace}>
       Clear all filters
     </Button>
   )
 
+  const showSwitch = matchMode && (
+    <fieldset className="mt-6">
+      <legend className="font-bold">Show</legend>
+      <div className="mt-1 flex flex-wrap gap-x-6">
+        {SHOW_OPTIONS.map(([value, label]) => (
+          <label key={value} className="inline-flex min-h-11 items-center gap-3 font-bold">
+            <input
+              type="radio"
+              name="show"
+              value={value}
+              checked={filters.show === value}
+              onChange={() => setFilters({ show: value })}
+              className="size-6 accent-primary"
+            />
+            {label}
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  )
+
+  // Find jobs keeps this heading while the needs load, so a focused <h1> isn't replaced.
+  if (waiting) {
+    return (
+      <div>
+        <PageHeader title={title} intro={intro} />
+        {matching.error ? (
+          <Notice tone="error" className="mt-6">
+            <p>{matching.error}</p>
+            <Button variant="secondary" className="mt-3" onClick={matching.onRetry}>
+              Try again
+            </Button>
+          </Notice>
+        ) : (
+          <LoadingMessage>Loading your needs…</LoadingMessage>
+        )}
+      </div>
+    )
+  }
+
+  // The empty-list text describes the list on screen, not a newer one that's still loading.
+  const shown = results?.filters ?? filters
+  const shownSomethingOn = Boolean(shown.q.trim()) || shown.category !== '' || shown.accommodations.length > 0
+  function showAllJobs() {
+    // The Show all jobs button goes away with the empty list; start at the results heading.
+    resultsHeading.current?.focus()
+    setFilters({ show: 'all' })
+  }
+
   return (
     <div>
-      <PageHeader title="Browse jobs" intro="Find open jobs and see which accommodations each one provides." />
+      <PageHeader title={title} intro={intro} />
 
-      {status === 'guest' && (
+      {matching && !matchMode && (
+        <p className="mt-4 max-w-prose">
+          <Link to="/candidate/needs" className="font-bold text-primary underline underline-offset-4 hover:no-underline">
+            Tell us what you need
+          </Link>{' '}
+          to see how well each job fits you.
+        </p>
+      )}
+
+      {!matching && status === 'guest' && (
         <p className="mt-4 max-w-prose">
           Have accommodation needs?{' '}
           <Link to="/register?type=candidate" className="font-bold text-primary underline underline-offset-4 hover:no-underline">
@@ -188,6 +258,8 @@ export default function BrowseJobsPage({ basePath = '/jobs' }) {
         <Button type="submit">Search</Button>
       </form>
 
+      {showSwitch}
+
       <div className="mt-8 grid gap-8 lg:grid-cols-[18rem_minmax(0,1fr)]">
         <AccommodationFilterPanel
           filters={filters}
@@ -203,7 +275,7 @@ export default function BrowseJobsPage({ basePath = '/jobs' }) {
           <SelectField
             id="job-sort"
             label="Sort by"
-            options={SORTS}
+            options={matchMode ? MATCHING_SORTS : SORTS}
             value={filters.sort}
             onChange={(event) => setFilters({ sort: event.target.value })}
           />
@@ -258,7 +330,17 @@ export default function BrowseJobsPage({ basePath = '/jobs' }) {
                     >
                       This page is past the end of the list.
                     </EmptyState>
-                  ) : somethingOn ? (
+                  ) : matchMode && shown.show === 'matches' && !shownSomethingOn ? (
+                    <EmptyState
+                      action={
+                        <Button variant="secondary" onClick={showAllJobs}>
+                          Show all jobs
+                        </Button>
+                      }
+                    >
+                      {NO_MATCHES}
+                    </EmptyState>
+                  ) : shownSomethingOn ? (
                     <EmptyState action={clearButton}>No jobs match these filters. Try fewer filters or different words.</EmptyState>
                   ) : (
                     <EmptyState>No open jobs right now. Check back soon.</EmptyState>

@@ -9,6 +9,7 @@ use App\Enums\WorkSetup;
 use App\Models\Accommodation;
 use App\Models\JobPosting;
 use App\Rules\ClosingDate;
+use App\Rules\WholeId;
 use Illuminate\Auth\Access\Response;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Gate;
@@ -71,7 +72,7 @@ class JobPostingRequest extends FormRequest
 
         // Each item costs a query, so an oversized list is refused without checking its items.
         if (! $this->tooManyAccommodations()) {
-            $rules['accommodations.*.id'] = ['required', 'integer', 'distinct', 'exists:accommodations,id'];
+            $rules['accommodations.*.id'] = ['bail', 'required', new WholeId, 'distinct', 'exists:accommodations,id'];
             $rules['accommodations.*.note'] = ['nullable', 'string', 'max:255'];
         }
 
