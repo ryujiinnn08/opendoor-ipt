@@ -107,6 +107,14 @@ class User extends Authenticatable
     }
 
     /**
+     * A job seeker's applications (Phase 4).
+     */
+    public function applications(): HasMany
+    {
+        return $this->hasMany(Application::class);
+    }
+
+    /**
      * The accommodations this job seeker needs (Phase 3B). Retired ones stay until removed.
      */
     public function needs(): BelongsToMany

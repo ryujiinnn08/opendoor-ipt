@@ -78,6 +78,13 @@ The sample job postings give **Browse jobs** 13 open jobs (two pages) across 8 c
 
 The closed, draft, waiting and past-date postings never appear on Browse jobs. Sample postings are only ever added, never changed: a company's set is skipped once it has postings, and Demo Corp.'s *Graphic Designer* and *Office Clerk* are skipped if either one exists (or was deleted). A database seeded in Phase 2 therefore gets the full set from `php artisan db:seed`.
 
+The sample applications (Phase 4) are all to OpenDoor Demo Corp.'s jobs:
+
+- **`candidate@`:** *Junior Web Developer* (Pending, with a cover note), *Graphic Designer* (Reviewed), *HR Assistant* (Rejected) and *Office Clerk* (**Hired 31 days ago**, so the Phase 5 feedback form is open during the demo).
+- **`candidate2@`:** *HR Assistant* (Pending, asking for a sign language interpreter at the interview, so the HR officer has a waiting applicant) and *Junior Web Developer* (Withdrawn).
+
+They're added only for a demo job seeker who hasn't applied anywhere yet.
+
 These defaults exist only outside production. On the live site the admin email and password must be set in the server's environment, and demo accounts are created only when `SEED_DEMO_PASSWORD` is set (see [.planning/PHASE_1_PLAN.md §3.1](.planning/PHASE_1_PLAN.md)). Running `php artisan db:seed` again never changes an account that already exists.
 
 ## Changing the OpenDoor logo

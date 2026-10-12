@@ -3,6 +3,7 @@
 namespace Tests\Feature\Candidate;
 
 use App\Models\Accommodation;
+use App\Models\Application;
 use App\Models\JobPosting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -18,6 +19,22 @@ class DashboardTest extends TestCase
             ->assertJsonPath('data.needs_count', 0)
             ->assertJsonPath('data.top_matches', [])
             ->assertJsonPath('data.missing_sections', ['headline', 'location', 'contact_number', 'education', 'skills', 'needs']);
+    }
+
+    public function test_counts_applications_by_filter(): void
+    {
+        $seeker = User::factory()->create();
+        $this->actingAs($seeker, 'web')->getJson('/api/candidate/dashboard')
+            ->assertJsonPath('data.applications', ['all' => 0, 'waiting' => 0, 'hired' => 0, 'closed' => 0]);
+
+        Application::factory()->create(['user_id' => $seeker->id]);
+        foreach (['reviewed', 'hired', 'rejected', 'withdrawn'] as $state) {
+            Application::factory()->{$state}()->create(['user_id' => $seeker->id]);
+        }
+        Application::factory()->hired()->create();
+
+        $this->getJson('/api/candidate/dashboard')
+            ->assertJsonPath('data.applications', ['all' => 5, 'waiting' => 2, 'hired' => 1, 'closed' => 2]);
     }
 
     public function test_a_complete_profile_misses_nothing(): void

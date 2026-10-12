@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Candidate;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PublicJobPostingResource;
+use App\Models\Application;
 use App\Models\User;
 use App\Services\CandidateNeeds;
 use App\Services\JobSearch;
@@ -11,8 +12,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * The job seeker's dashboard (F8.1, F2.5): their three best matches and the profile sections
- * still missing.
+ * The job seeker's dashboard (F8.1, F2.5): their three best matches, their applications by
+ * filter and the profile sections still missing.
  */
 class DashboardController extends Controller
 {
@@ -35,6 +36,7 @@ class DashboardController extends Controller
 
         return response()->json(['data' => [
             'needs_count' => $needs?->count() ?? 0,
+            'applications' => Application::countsFor($user),
             'top_matches' => PublicJobPostingResource::collection($topMatches)->resolve($request),
             'missing_sections' => $this->missingSections($user, $needs),
         ]]);

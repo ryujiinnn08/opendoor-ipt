@@ -5,6 +5,8 @@ namespace Tests\Feature\Candidate;
 use App\Models\Accommodation;
 use App\Models\JobPosting;
 use App\Models\User;
+use Database\Seeders\DatabaseSeeder;
+use Database\Seeders\UserSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -63,5 +65,29 @@ class PrivacyTest extends TestCase
                 $this->assertStringNotContainsString('psychosocial', $body);
             }
         }
+    }
+
+    public function test_applications_stay_with_their_job_seeker(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+        $owner = User::firstWhere('email', UserSeeder::DEMO_CANDIDATE_EMAIL);
+        $application = $owner->applications()->whereNotNull('cover_note')->firstOrFail();
+        $others = [
+            User::firstWhere('email', UserSeeder::DEMO_CANDIDATE2_EMAIL),
+            User::firstWhere('email', UserSeeder::DEMO_EMPLOYER_EMAIL),
+            User::firstWhere('email', UserSeeder::LOCAL_ADMIN_EMAIL),
+        ];
+
+        foreach ($others as $other) {
+            $this->flushSession();
+            $this->actingAs($other, 'web');
+            $this->getJson("/api/applications/{$application->id}")->assertForbidden();
+            $this->patchJson("/api/applications/{$application->id}/status", ['status' => 'withdrawn', 'expected_status' => 'pending'])->assertForbidden();
+            $response = $this->getJson("/api/job-postings/{$application->job_posting_id}")->assertOk();
+            // candidate2@ applied to the same demo job; she sees only her own application.
+            $this->assertNotSame($application->id, $response->json('data.my_application.id'));
+            $this->assertStringNotContainsString($application->cover_note, $response->getContent());
+        }
+        $this->assertSame('pending', $application->fresh()->status->value);
     }
 }

@@ -51,6 +51,8 @@ class PublicJobPostingResource extends JsonResource
             ]),
             // Only for a logged-in job seeker with needs (CandidateNeeds).
             'match' => $this->when($this->resource->match !== null, fn () => $this->resource->match),
+            // Only for the job seeker who applied (Phase 4).
+            'my_application' => $this->when($this->resource->myApplication !== null, fn () => $this->resource->myApplication),
         ];
     }
 }

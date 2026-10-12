@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
 
@@ -28,6 +29,13 @@ class JobPosting extends Model
      * @var array<string, mixed>|null
      */
     public ?array $match = null;
+
+    /**
+     * The viewing job seeker's application to this job, set by the public job page. Not a column.
+     *
+     * @var array<string, mixed>|null
+     */
+    public ?array $myApplication = null;
 
     /**
      * The status, employer, department, author and approval dates are set by
@@ -84,6 +92,11 @@ class JobPosting extends Model
     public function accommodations(): BelongsToMany
     {
         return $this->belongsToMany(Accommodation::class, 'job_posting_accommodation')->withPivot('note');
+    }
+
+    public function applications(): HasMany
+    {
+        return $this->hasMany(Application::class);
     }
 
     /**

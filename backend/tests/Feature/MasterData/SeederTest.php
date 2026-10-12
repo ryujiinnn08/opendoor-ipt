@@ -4,10 +4,12 @@ namespace Tests\Feature\MasterData;
 
 use App\Enums\Role;
 use App\Models\Accommodation;
+use App\Models\Application;
 use App\Models\Category;
 use App\Models\Employer;
 use App\Models\JobPosting;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Database\Seeders\AccommodationSeeder;
 use Database\Seeders\CategorySeeder;
 use Database\Seeders\DatabaseSeeder;
@@ -32,6 +34,7 @@ class SeederTest extends TestCase
         $this->assertSame(10, Category::count());
         $this->assertSame(18, Accommodation::count());
         $this->assertSame(8, User::count());
+        $this->assertSame(6, Application::count());
 
         $this->assertSame(17, JobPosting::count());
         $this->assertSame(
@@ -62,7 +65,8 @@ class SeederTest extends TestCase
     public function test_a_database_seeded_before_phase_3a_gets_the_new_demo_company_jobs(): void
     {
         $this->seed(DatabaseSeeder::class);
-        // A Phase 2 database: the demo company already had postings, but not these two.
+        // A Phase 2 database: the demo company already had postings, but not these two, and nobody had applied.
+        Application::query()->delete();
         JobPosting::withTrashed()->whereIn('title', ['Graphic Designer', 'Office Clerk'])->forceDelete();
 
         $this->seed(DatabaseSeeder::class);
@@ -95,6 +99,27 @@ class SeederTest extends TestCase
             }
             $this->assertEmpty(array_intersect($noMatch, array_column($jobs, 'title')));
         }
+    }
+
+    public function test_demo_applications(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+        $this->seed(DatabaseSeeder::class);
+        $statuses = fn (string $email) => User::firstWhere('email', $email)->applications()->with('jobPosting')->get()
+            ->mapWithKeys(fn (Application $application) => [$application->jobPosting->title => $application->status->value])->sortKeys()->all();
+
+        $this->assertSame(6, Application::count());
+        $this->assertSame(
+            ['Graphic Designer' => 'reviewed', 'HR Assistant' => 'rejected', 'Junior Web Developer' => 'pending', 'Office Clerk' => 'hired'],
+            $statuses(UserSeeder::DEMO_CANDIDATE_EMAIL),
+        );
+        $this->assertSame(['HR Assistant' => 'pending', 'Junior Web Developer' => 'withdrawn'], $statuses(UserSeeder::DEMO_CANDIDATE2_EMAIL));
+
+        $hired = Application::where('status', 'hired')->sole();
+        $this->assertSame(CarbonImmutable::parse(JobPosting::today())->subDays(31)->toDateString(), $hired->hired_at->toDateString());
+        $this->assertSame('employer', $hired->hire_confirmed_by->value);
+        $this->assertNotEmpty($hired->hiredAccommodations);
+        $this->assertStringContainsString('sign language interpreter', Application::where('status', 'pending')->whereNotNull('interview_request')->sole()->interview_request);
     }
 
     public function test_demo_job_seekers_are_left_alone_once_they_have_needs(): void
