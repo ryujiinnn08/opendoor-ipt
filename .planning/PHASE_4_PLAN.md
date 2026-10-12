@@ -1,6 +1,6 @@
 # Phase 4 Plan: Apply and Track
 
-> Status: **DRAFT, waiting for your answers** (2026-10-12). The ten questions are in §3, each with a recommendation; "the other recommendations are OK" is enough. Checked against the proposal papers ([Revised Proposal](papers/REVISED_PROPOSAL.md) §VII-E and Table 1, [Modules and Features](papers/MODULES_AND_FEATURES.md) M6, M2, M8, M9 and §5). The "(tracked changes)" Word files you attached are the redline from the original papers to the revised ones; their accepted text is what `.planning/papers/` already holds, so nothing changes here.
+> Status: **APPROVED 2026-10-12** with every recommendation in §3 ("Yep go with phase 4A"). 4A is being built from [the 4A implementation plan](superpowers/plans/2026-10-12-phase-4a-apply-and-track.md). Checked against the proposal papers ([Revised Proposal](papers/REVISED_PROPOSAL.md) §VII-E and Table 1, [Modules and Features](papers/MODULES_AND_FEATURES.md) M6, M2, M8, M9 and §5). The "(tracked changes)" Word files you attached are the redline from the original papers to the revised ones; their accepted text is what `.planning/papers/` already holds, so nothing changes here.
 > Part of: [CONCEPT_PLAN.md](CONCEPT_PLAN.md), build phase 4 of 7
 > Builds on: [PHASE_3_PLAN.md](PHASE_3_PLAN.md) (profile, résumé, needs and matching)
 > Method: Superpowers brainstorming (this spec, for your review), then Superpowers writing-plans for 4A and 4B; Frontend Design (§7); GSD code review, UI review and security audit before finishing (§9, step 5).
@@ -163,7 +163,7 @@ Every forbidden move in §2 (for example Rejected → Hired, Pending → Rejecte
 | Table | What it holds | Part |
 |---|---|---|
 | `applications` (new) | Job posting, job seeker (user), status, cover note, interview request, **reviewed_at, hired_at, rejected_at, withdrawn_at**, hire confirmed by (employer or candidate), who decided, timestamps. Unique (job posting, job seeker); indexes on (job posting, status) and (job seeker, created) | 4A |
-| `application_accommodation` (new) | The job's accommodations and notes copied at the moment of hire (application, accommodation, note) | 4B |
+| `application_accommodation` (new) | The job's accommodations and notes copied at the moment of hire (application, accommodation, note) | 4A (a job seeker's **I was hired** needs it) |
 | `notifications` (Laravel's table, Q6) | The recorded events | 4B |
 
 The papers' `applications.candidate_profile_id` becomes the job seeker's **user id**, because a profile row only exists once it's first saved (the same choice Phase 3 made for needs). The dates of each step are kept so the path can show them.
@@ -297,7 +297,7 @@ On phones, one column in this order: name and status, interview request, needs, 
 | Status | Look | Job seeker's next-step sentence |
 |---|---|---|
 | Pending | Purple tint, clock | "Sent. The employer hasn't opened it yet." |
-| Reviewed | Purple tint, open eye | "The employer has opened your application. If they want to interview you, they'll contact you by email or phone." |
+| Reviewed | Purple tint, open door (Icons8 "door opened", already in the app) | "The employer has opened your application. If they want to interview you, they'll contact you by email or phone." |
 | Hired | Green tint, check | "Congratulations. About 30 days after your hire date, we'll ask whether each accommodation was provided." |
 | Rejected | Grey tint, minus | "The employer chose other applicants for this job. Your other applications aren't affected." |
 | Withdrawn | Grey tint, minus | "You withdrew this application." |
@@ -356,7 +356,7 @@ Rejected is grey, not red: it isn't the person's error. Phase 3 made the same ch
 |---|---|---|
 | 1 | Server: `applications` table, `ApplicationStatus`, `Application` model, `ApplicationPolicy`, `ApplicationWorkflow` service, apply, list, show, withdraw, I was hired; job page and dashboard additions; demo applications | 4A server tests pass |
 | 2 | `ApplicationStatusBadge`, `ApplicationPath`, `ApplicationRow`, `ApplyBox`, `WhatEmployersSee`; Apply, My applications, Application pages; dashboard tile; menu | Demo A1–A6 work; I show you 4A and continue unless you stop me |
-| 3 | Server: applicants list and page (marks Reviewed), hire and reject, hire copy of accommodations, résumé for employers, counts, dashboard, delete guard, notifications | 4B server tests pass |
+| 3 | Server: applicants list and page (marks Reviewed), hire and reject, résumé for employers, counts, dashboard, delete guard, notifications (recorded from the one workflow service, so 4A's withdraw and I was hired are covered too) | 4B server tests pass |
 | 4 | Applicants and Applicant pages; Job postings counts; employer dashboard | Demo E1–E8 work |
 | 5 | Checks (as in PHASE_3 §4.2: Superpowers code review; GSD code review, UI review and security audit; browser walk-through); A7 and E9; README; build notes; commit and push | Phase 4 finished (target: Wed Oct 14) |
 
