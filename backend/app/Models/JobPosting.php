@@ -4,9 +4,11 @@ namespace App\Models;
 
 use App\Enums\EmploymentType;
 use App\Enums\InterviewFormat;
+use App\Enums\MemberRole;
 use App\Enums\PostingStatus;
 use App\Enums\WorkSetup;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -97,6 +99,24 @@ class JobPosting extends Model
     public function applications(): HasMany
     {
         return $this->hasMany(Application::class);
+    }
+
+    /**
+     * The active people who manage this posting's applicants: the employer's owner, and the HR
+     * officers of its department (decision 3c).
+     *
+     * @return EloquentCollection<int, User>
+     */
+    public function managers(): EloquentCollection
+    {
+        return User::query()
+            ->where('is_active', true)
+            ->whereHas('membership', fn (Builder $query) => $query
+                ->where('employer_id', $this->employer_id)
+                ->where(fn (Builder $query) => $query
+                    ->where('role', MemberRole::Owner)
+                    ->when($this->department_id !== null, fn (Builder $query) => $query->orWhere('department_id', $this->department_id))))
+            ->get();
     }
 
     /**

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin;
+use App\Http\Controllers\ApplicantResumeController;
 use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\ApplicationStatusController;
 use App\Http\Controllers\Auth\AuthController;
@@ -70,6 +71,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::middleware('no.store')->group(function () {
             Route::get('applications', [ApplicationController::class, 'index']);
             Route::get('applications/{application}', [ApplicationController::class, 'show'])->where('application', '[0-9]{1,18}');
+            Route::get('applications/{application}/resume', [ApplicantResumeController::class, 'show'])->where('application', '[0-9]{1,18}');
             Route::patch('applications/{application}/status', [ApplicationStatusController::class, 'update'])->where('application', '[0-9]{1,18}');
             Route::post('job-postings/{id}/applications', [ApplicationController::class, 'store'])
                 ->where('id', '[0-9]{1,18}')

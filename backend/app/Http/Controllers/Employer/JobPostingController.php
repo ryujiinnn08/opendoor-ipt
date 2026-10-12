@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Employer;
 
+use App\Enums\ApplicationStatus;
 use App\Enums\PostingStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Employer\JobPostingRequest;
@@ -33,6 +34,7 @@ class JobPostingController extends Controller
 
         $postings = JobPosting::visibleTo($request->user())
             ->with(JobPostingResource::RELATIONS)
+            ->withCount(['applications', 'applications as new_applications_count' => fn ($query) => $query->where('status', ApplicationStatus::Pending)])
             ->when($status !== 'all', fn ($query) => $query->inDisplayStatus(PostingStatus::from($status)))
             ->when($ownsCompany && isset($filters['department']), fn ($query) => $query->where('department_id', $filters['department']))
             ->latest('updated_at')
@@ -87,6 +89,13 @@ class JobPostingController extends Controller
     public function destroy(JobPosting $posting): Response
     {
         Gate::authorize('manage', $posting);
+
+        // A waiting applicant would vanish from the employer's view and never get a decision (Q5).
+        $waiting = $posting->applications()->whereIn('status', ApplicationStatus::waiting())->count();
+        if ($waiting > 0) {
+            $who = $waiting === 1 ? '1 applicant is' : "{$waiting} applicants are";
+            abort(response()->json(['message' => "{$who} waiting for your decision. Decide on them or close the posting instead."], 422));
+        }
 
         $posting->delete();
 

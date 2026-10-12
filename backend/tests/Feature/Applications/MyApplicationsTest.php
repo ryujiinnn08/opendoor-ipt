@@ -117,8 +117,10 @@ class MyApplicationsTest extends TestCase
             ->assertForbidden()->assertJsonPath('message', "This application isn't yours.");
         foreach ([User::factory()->employer()->create(), User::factory()->admin()->create()] as $other) {
             $this->actingAs($other, 'web')->getJson($url)->assertForbidden();
-            $this->getJson('/api/applications')->assertForbidden();
         }
+        // Employers list one posting's applicants (job_posting is required); admins have no list.
+        $this->actingAs(User::factory()->employer()->create(), 'web')->getJson('/api/applications')->assertJsonValidationErrors('job_posting');
+        $this->actingAs(User::factory()->admin()->create(), 'web')->getJson('/api/applications')->assertForbidden();
         $this->actingAs($application->candidate, 'web')->getJson($url)->assertOk()->assertJsonPath('data.id', $application->id);
         $this->getJson('/api/applications/999999')->assertNotFound();
     }

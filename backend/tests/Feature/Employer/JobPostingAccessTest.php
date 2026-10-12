@@ -127,7 +127,7 @@ class JobPostingAccessTest extends TestCase
         JobPosting::factory()->in($it)->create();
 
         $this->actingAs($owner, 'web')->getJson('/api/employer/dashboard')
-            ->assertExactJson(['data' => ['postings' => ['draft' => 1, 'pending' => 1, 'open' => 1, 'rejected' => 0, 'closed' => 1]]]);
+            ->assertJsonPath('data.postings', ['draft' => 1, 'pending' => 1, 'open' => 1, 'rejected' => 0, 'closed' => 1]);
         $this->actingAs($this->hrOfficerIn($general), 'web')->getJson('/api/employer/dashboard')
             ->assertJsonPath('data.postings.open', 1)
             ->assertJsonPath('data.postings.pending', 0)

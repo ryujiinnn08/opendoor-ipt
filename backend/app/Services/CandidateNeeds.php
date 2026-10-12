@@ -29,7 +29,11 @@ class CandidateNeeds
             return null;
         }
 
-        $needs = Accommodation::inDisplayOrder($user->needs()->where('is_active', true)->get());
+        // An eager-loaded list (the employer's applicants page) saves a query per job seeker.
+        $active = $user->relationLoaded('needs')
+            ? $user->needs->where('is_active', true)
+            : $user->needs()->where('is_active', true)->get();
+        $needs = Accommodation::inDisplayOrder($active);
 
         return $needs->isEmpty()
             ? null

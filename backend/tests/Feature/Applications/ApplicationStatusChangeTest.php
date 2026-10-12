@@ -116,10 +116,11 @@ class ApplicationStatusChangeTest extends TestCase
         $this->change($application, 'withdrawn')->assertUnauthorized();
         $this->actingAs(User::factory()->create(), 'web');
         $this->change($application, 'withdrawn')->assertForbidden()->assertJsonPath('message', "This application isn't yours.");
-        foreach ([User::factory()->employer()->create(), User::factory()->admin()->create()] as $other) {
-            $this->actingAs($other, 'web');
-            $this->change($application, 'withdrawn')->assertForbidden();
-        }
+        // An employer of another job may only send hired/rejected, and is refused those too.
+        $this->actingAs(User::factory()->employer()->create(), 'web');
+        $this->change($application, 'hired')->assertForbidden();
+        $this->actingAs(User::factory()->admin()->create(), 'web');
+        $this->change($application, 'withdrawn')->assertForbidden();
 
         $this->actingAs($application->candidate, 'web');
         $this->change($application, 'rejected')->assertJsonValidationErrors('status');

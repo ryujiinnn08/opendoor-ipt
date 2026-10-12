@@ -122,6 +122,15 @@ class SeederTest extends TestCase
         $this->assertStringContainsString('sign language interpreter', Application::where('status', 'pending')->whereNotNull('interview_request')->sole()->interview_request);
     }
 
+    public function test_the_demo_hr_officer_has_a_waiting_applicant(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+
+        $this->actingAs(User::firstWhere('email', UserSeeder::DEMO_HR_EMAIL), 'web')->getJson('/api/employer/dashboard')
+            ->assertJsonPath('data.waiting_applicants.postings.*.title', ['HR Assistant'])
+            ->assertJsonPath('data.waiting_applicants.postings.0.new', 1);
+    }
+
     public function test_demo_job_seekers_are_left_alone_once_they_have_needs(): void
     {
         $this->seed(DatabaseSeeder::class);

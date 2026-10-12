@@ -64,6 +64,11 @@ class JobPostingResource extends JsonResource
                 'note' => $item->pivot->note,
                 'is_active' => $item->is_active,
             ]),
+            // On the employer's list only (withCount); "new" means Pending, not yet opened.
+            'applicants' => $this->when(isset($this->resource->applications_count), fn () => [
+                'total' => (int) $this->resource->applications_count,
+                'new' => (int) $this->resource->new_applications_count,
+            ]),
             'actions' => $this->when(
                 $request->user()?->role === Role::Employer,
                 fn () => app(JobPostingWorkflow::class)->actionsFor($this->resource),

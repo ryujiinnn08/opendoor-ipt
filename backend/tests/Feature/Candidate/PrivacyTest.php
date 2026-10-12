@@ -74,7 +74,8 @@ class PrivacyTest extends TestCase
         $application = $owner->applications()->whereNotNull('cover_note')->firstOrFail();
         $others = [
             User::firstWhere('email', UserSeeder::DEMO_CANDIDATE2_EMAIL),
-            User::firstWhere('email', UserSeeder::DEMO_EMPLOYER_EMAIL),
+            // Another company's owner (Demo Corp.'s own owner and HR see their applicants in 4B).
+            User::firstWhere('email', UserSeeder::DEMO_EMPLOYER2_EMAIL),
             User::firstWhere('email', UserSeeder::LOCAL_ADMIN_EMAIL),
         ];
 
@@ -82,7 +83,7 @@ class PrivacyTest extends TestCase
             $this->flushSession();
             $this->actingAs($other, 'web');
             $this->getJson("/api/applications/{$application->id}")->assertForbidden();
-            $this->patchJson("/api/applications/{$application->id}/status", ['status' => 'withdrawn', 'expected_status' => 'pending'])->assertForbidden();
+            $this->patchJson("/api/applications/{$application->id}/status", ['status' => 'hired', 'expected_status' => 'pending'])->assertForbidden();
             $response = $this->getJson("/api/job-postings/{$application->job_posting_id}")->assertOk();
             // candidate2@ applied to the same demo job; she sees only her own application.
             $this->assertNotSame($application->id, $response->json('data.my_application.id'));

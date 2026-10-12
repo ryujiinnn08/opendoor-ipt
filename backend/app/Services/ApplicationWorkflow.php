@@ -8,8 +8,11 @@ use App\Models\Accommodation;
 use App\Models\Application;
 use App\Models\JobPosting;
 use App\Models\User;
+use App\Notifications\ApplicationStatusChanged;
+use App\Notifications\NewApplicant;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 /**
  * The only writer of applications and their status (plan PHASE_4 §2, Appendix C.1).
@@ -48,7 +51,27 @@ class ApplicationWorkflow
             throw new \LogicException('The unique index refused an application that does not exist.');
         }
 
+        $application->setRelation('jobPosting', $job)->setRelation('candidate', $seeker);
+        DB::afterCommit(fn () => Notification::send($job->managers(), new NewApplicant($application)));
+
         return $application;
+    }
+
+    /**
+     * The employer opened the applicant (F6.5): Pending becomes Reviewed, once. Any other status,
+     * including one the job seeker just withdrew, is left as it is; opening never fails.
+     */
+    public function markReviewed(Application $application, User $by): Application
+    {
+        return DB::transaction(function () use ($application) {
+            $current = Application::query()->lockForUpdate()->findOrFail($application->id);
+            if ($current->status === ApplicationStatus::Pending) {
+                $current->forceFill(['status' => ApplicationStatus::Reviewed, 'reviewed_at' => now()])->save();
+                $this->notifyOtherParty($current, ApplicationActor::Employer);
+            }
+
+            return $current;
+        });
     }
 
     /**
@@ -87,8 +110,21 @@ class ApplicationWorkflow
             if ($next === ApplicationStatus::Hired) {
                 $this->copyAdvertisedAccommodations($current);
             }
+            $this->notifyOtherParty($current, $actor);
 
             return $current;
+        });
+    }
+
+    /**
+     * Every status change tells the other party (M6), once the change is committed: the job seeker
+     * when the employer acted, the posting's managers when the job seeker did.
+     */
+    private function notifyOtherParty(Application $application, ApplicationActor $actor): void
+    {
+        DB::afterCommit(function () use ($application, $actor) {
+            $recipients = $actor === ApplicationActor::Employer ? $application->candidate : $application->jobPosting->managers();
+            Notification::send($recipients, new ApplicationStatusChanged($application, $actor));
         });
     }
 
