@@ -41,12 +41,13 @@ function decidedText(applicant) {
 /**
  * The employer's decision on an applicant (F6.6): Mark as hired or Mark as rejected, each
  * confirmed first, only when the server lists it in `actions`. A 409 means the job seeker changed
- * it meanwhile: the dialog says so and `onStale` reloads. `onChanged` runs once the dialog has
- * closed, then `focusAfter`.
+ * it meanwhile: the dialog says so, and once it's closed `onStale` reloads (a withdrawal replaces
+ * this panel, so reloading earlier would sweep the message away). `onChanged` also runs once the
+ * dialog has closed; then `focusAfter`.
  */
 export default function EmployerDecision({ applicant, onChanged, onStale, focusAfter }) {
   const announce = useAnnounce()
-  const [pending, setPending] = useState(null) // { key, open, busy, error, done }
+  const [pending, setPending] = useState(null) // { key, open, busy, error, done, stale }
   const updatedRef = useRef(null)
   const keys = Object.keys(DECISIONS).filter((key) => applicant.actions.includes(key))
   const decision = pending ? DECISIONS[pending.key] : null
@@ -60,8 +61,8 @@ export default function EmployerDecision({ applicant, onChanged, onStale, focusA
       announce(decision.done)
       setPending((current) => current && { ...current, open: false, busy: false, done: true })
     } catch (error) {
-      setPending((current) => current && { ...current, busy: false, error: generalErrorFrom(error) ?? 'Something went wrong. Please try again.' })
-      if (error?.response?.status === 409) onStale?.()
+      const stale = error?.response?.status === 409
+      setPending((current) => current && { ...current, busy: false, stale, error: generalErrorFrom(error) ?? 'Something went wrong. Please try again.' })
     }
   }
 
@@ -70,9 +71,10 @@ export default function EmployerDecision({ applicant, onChanged, onStale, focusA
   }
 
   function afterClose(event) {
-    if (pending?.done) {
+    if (pending?.done || pending?.stale) {
       if (focusAfter) event.preventDefault()
-      onChanged(updatedRef.current)
+      if (pending.done) onChanged(updatedRef.current)
+      else onStale?.()
       focusAfter?.()
     }
     setPending(null)

@@ -1,6 +1,6 @@
 # Phase 4 Plan: Apply and Track
 
-> Status: **4A built (2026-10-12)**: demo steps A1–A7 verified in the browser; 254 server and 312 page tests pass (build notes at the end). APPROVED 2026-10-12 with every recommendation in §3 ("Yep go with phase 4A"), built from [the 4A implementation plan](superpowers/plans/2026-10-12-phase-4a-apply-and-track.md). 4B (the employer side) is being built from [the 4B implementation plan](superpowers/plans/2026-10-12-phase-4b-review-and-decide.md). Checked against the proposal papers ([Revised Proposal](papers/REVISED_PROPOSAL.md) §VII-E and Table 1, [Modules and Features](papers/MODULES_AND_FEATURES.md) M6, M2, M8, M9 and §5). The "(tracked changes)" Word files you attached are the redline from the original papers to the revised ones; their accepted text is what `.planning/papers/` already holds, so nothing changes here.
+> Status: **Phase 4 built (2026-10-12).** 4A: demo steps A1–A7 verified; 4B: demo steps E1–E9 verified in the browser. 285 server and 341 page tests pass (build notes at the end). APPROVED 2026-10-12 with every recommendation in §3, built from the [4A](superpowers/plans/2026-10-12-phase-4a-apply-and-track.md) and [4B](superpowers/plans/2026-10-12-phase-4b-review-and-decide.md) implementation plans. Next: Phase 5, feedback and the trust score.
 > Part of: [CONCEPT_PLAN.md](CONCEPT_PLAN.md), build phase 4 of 7
 > Builds on: [PHASE_3_PLAN.md](PHASE_3_PLAN.md) (profile, résumé, needs and matching)
 > Method: Superpowers brainstorming (this spec, for your review), then Superpowers writing-plans for 4A and 4B; Frontend Design (§7); GSD code review, UI review and security audit before finishing (§9, step 5).
@@ -455,4 +455,30 @@ Left for later (most go to the audit days, Oct 17–18):
 - **Demo data:** sample applications are dated before their postings' approval dates.
 - **From Phase 3, seen again:** at 360 px with 200% text, the dashboard's top matches scroll sideways (long accommodation names don't wrap in job rows). The bundle is now 632 kB.
 - **Tests:** SQLite ignores row locks, so the lock in the status change is checked by reading, not by a test; the GSD reviewer confirmed it holds on MariaDB.
+
+## Phase 4B build notes (2026-10-12)
+
+Checked before finishing: a Superpowers whole-branch review, plus GSD's code review, UI audit (17/24 before fixes) and security audit (**secured**: 9 of 9 checks, probed with every role on every endpoint). Demo steps E1–E8 were walked through in the browser on `opendoor_verify` as `employer@`, `hr@` and `candidate@`; hiring and rejecting were done with the keyboard only; E9 at 360 px and with text at 200% (no page scrolls sideways; on phones the applicant page reads interview request, needs, contact, decision, then cover note and résumé).
+
+Both carried-over rules hold: employers only ever get their own applicant shape (a test pins it), and `apply()` is still not wrapped in a transaction.
+
+Found and fixed:
+- **A decision that lost to a withdrawal swept its message away.** If the job seeker withdrew while the employer was deciding, the page reloaded into the "withdrew" view at once, closing the explanation and dropping keyboard focus. It now reloads once the dialog is closed, and focus goes to the heading.
+- **The applicant's PDF opened outside the server's sandbox.** The browser tab holds a same-origin copy of the file, which the server's protective headers don't reach; it's now always opened as a PDF, so a file from another user can never run as a web page.
+- **Voice control couldn't say "4 applicants".** The Job postings link's spoken name now starts with the words it shows ("4 applicants, 2 new for Junior Web Developer").
+- **The dashboard's "Applicants waiting for review" went blank** when it couldn't load; it now says so with **Try again**.
+- **The applicant page now shows the headline and location under the name**, as §7's mock-up does, before the panels.
+- **Long email addresses** no longer push the page sideways on phones.
+
+Decided (say if you'd like them changed):
+- **Mark as rejected** keeps the red confirm button, like Withdraw in 4A: red marks actions that can't be undone.
+- A job seeker could, in a window of milliseconds, apply between the delete check and the delete itself; that application would stay visible to them as "This job was removed." A lock would close it, if it ever matters.
+- If recording a notification failed after a change was saved, the person would see an error although the change went through. The only way it fails is the database itself.
+- An employer can read a Pending applicant's résumé straight from the server without marking it Reviewed; the app only offers the résumé on the applicant page, which marks it first.
+
+Left for later (most go to the audit days, Oct 17–18):
+- **Words:** filtered empty lists ("No applicants here.") could say more; a suspended applicant's page says "They haven't listed any accommodation needs." although they have; "You marked them as hired" also shows when the other manager decided; a withdrawn row shows no withdrawal date (the page does).
+- **Look:** the résumé's section headings sit at the same level as "Résumé"; on wide screens the keyboard reaches the right column (interview request, decision) before the cover note, on purpose (§7 priority).
+- **Small gaps:** a deleted posting's Applicants page still shows its last status (e.g. Open); the Applicants page briefly keeps the previous posting's title when switching postings; a failed reload after a stale decision is silent; the dashboard lists at most 10 postings without saying so; Job postings still offers **Delete** on postings the guard will refuse (the dialog explains).
+- **Tests to add:** an individual employer end to end; the résumé for an admin and same-department HR; `ApplicationStatusChanged` checked for private details (the security probe found none).
 

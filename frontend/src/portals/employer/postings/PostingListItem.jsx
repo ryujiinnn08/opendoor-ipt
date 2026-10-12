@@ -17,13 +17,14 @@ function applicantsLink(posting) {
   if (total === 0) return 'No applicants yet'
   const text = `${total === 1 ? '1 applicant' : `${total} applicants`}${fresh > 0 ? `, ${fresh} new` : ''}`
 
+  // The spoken name starts with the visible words (WCAG 2.5.3), then names the posting.
   return (
     <Link
       to={`/employer/job-postings/${posting.id}/applicants`}
-      aria-label={`Applicants for ${posting.title}: ${total}${fresh > 0 ? `, ${fresh} new` : ''}`}
       className="inline-flex min-h-11 items-center font-bold text-primary underline underline-offset-4 hover:no-underline"
     >
-      {text}
+      {text}{' '}
+      <span className="sr-only">for {posting.title}</span>
     </Link>
   )
 }

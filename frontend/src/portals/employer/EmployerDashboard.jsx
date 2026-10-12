@@ -85,7 +85,12 @@ function WaitingApplicants({ dashboard }) {
       <h2 id="waiting-heading" className="text-2xl font-bold">
         Applicants waiting for review
       </h2>
-      {!waiting && !dashboard.failed && <p className="mt-2 text-muted">Loading…</p>}
+      {!waiting && !dashboard.failed && <p className="mt-2 text-muted">Loading your applicants…</p>}
+      {dashboard.failed && (
+        <div className="mt-3">
+          <TileLoadError onRetry={dashboard.retry}>We couldn&apos;t load the applicants waiting for review.</TileLoadError>
+        </div>
+      )}
       {waiting && waiting.postings.length === 0 && <p className="mt-2">No applicants are waiting for review.</p>}
       {waiting && waiting.postings.length > 0 && (
         <ul className="mt-3">

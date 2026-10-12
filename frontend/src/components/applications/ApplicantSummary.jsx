@@ -55,7 +55,7 @@ export default function ApplicantSummary({ applicant }) {
         </h2>
         <ul className="mt-2 space-y-1">
           <li>
-            <a href={`mailto:${profile.email}`} className={TEXT_LINK}>
+            <a href={`mailto:${profile.email}`} className={`${TEXT_LINK} break-all`}>
               {profile.email}
             </a>
           </li>

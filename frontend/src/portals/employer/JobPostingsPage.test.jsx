@@ -199,10 +199,10 @@ describe('JobPostingsPage', () => {
     ])
     renderRoutes(routes, { path: '/employer/job-postings', auth: individual })
 
-    const link = await screen.findByRole('link', { name: 'Applicants for Data encoder: 4, 2 new' })
+    // The spoken name starts with the visible words, so voice control can say "4 applicants" (WCAG 2.5.3).
+    const link = await screen.findByRole('link', { name: '4 applicants, 2 new for Data encoder' })
     expect(link).toHaveAttribute('href', '/employer/job-postings/1/applicants')
-    expect(link).toHaveTextContent('4 applicants, 2 new')
-    expect(screen.getByRole('link', { name: 'Applicants for Clerk: 1' })).toHaveTextContent('1 applicant')
+    expect(screen.getByRole('link', { name: '1 applicant for Clerk' })).toBeInTheDocument()
     expect(screen.getByText('No applicants yet')).toBeInTheDocument()
   })
 })

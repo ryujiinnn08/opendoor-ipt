@@ -71,6 +71,8 @@ export default function ApplicantPage() {
 
   const withdrawn = applicant?.status === 'withdrawn'
   const job = applicant?.job
+  // Who this is, under their name (plan PHASE_4 §7), before the panels.
+  const place = [applicant?.profile?.city, applicant?.profile?.province].filter(Boolean).join(', ')
 
   return (
     <>
@@ -95,6 +97,12 @@ export default function ApplicantPage() {
 
       {applicant && (
         <>
+          {!withdrawn && (applicant.profile.headline || place) && (
+            <div className="mt-2">
+              {applicant.profile.headline && <p className="text-xl">{applicant.profile.headline}</p>}
+              {place && <p className="text-muted">{place}</p>}
+            </div>
+          )}
           <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
             <ApplicationStatusBadge status={applicant.status} />
             <p>

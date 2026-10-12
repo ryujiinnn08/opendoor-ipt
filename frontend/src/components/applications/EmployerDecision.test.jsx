@@ -62,7 +62,10 @@ describe('EmployerDecision', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Yes, mark as hired' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('This application changed while you were looking at it.')
-    expect(onStale).toHaveBeenCalled()
+    // The reload waits until the dialog is closed, so the message isn't swept away while being read.
+    expect(onStale).not.toHaveBeenCalled()
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+    await waitFor(() => expect(onStale).toHaveBeenCalled())
     expect(onChanged).not.toHaveBeenCalled()
   })
 

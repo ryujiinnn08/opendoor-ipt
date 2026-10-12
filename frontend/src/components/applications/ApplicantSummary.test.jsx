@@ -20,6 +20,8 @@ describe('ApplicantSummary', () => {
     expect(within(needs).getByText('Start between 7 and 10 a.m.')).toBeInTheDocument()
     expect(within(needs).getByText('Sign language interpreter: Missing')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'maria@example.com' })).toHaveAttribute('href', 'mailto:maria@example.com')
+    // A long address wraps instead of pushing the page sideways at 360 px (WCAG 1.4.10).
+    expect(screen.getByRole('link', { name: 'maria@example.com' })).toHaveClass('break-all')
     expect(screen.getByRole('link', { name: '0917 555 0199' })).toHaveAttribute('href', 'tel:09175550199')
     expect(await axe(container)).toHaveNoViolations()
   })

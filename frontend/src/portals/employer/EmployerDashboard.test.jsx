@@ -100,5 +100,17 @@ describe('EmployerDashboard', () => {
 
     expect(await screen.findByText('No applicants are waiting for review.')).toBeInTheDocument()
   })
-})
 
+  it('says when the applicants waiting for review could not be loaded', async () => {
+    getEmployerDashboard.mockRejectedValueOnce({ response: { status: 500, data: {} } }).mockResolvedValue({
+      postings: { draft: 0, pending: 0, open: 1, rejected: 0, closed: 0 },
+      waiting_applicants: { total: 1, postings: [{ id: 2, title: 'HR Assistant', new: 1 }] },
+    })
+    renderRoutes([{ path: '/', element: <EmployerDashboard /> }], { auth: auth({ role: 'hr', employer: company, department: { id: 5, name: 'HR' } }) })
+
+    const section = (await screen.findByRole('heading', { level: 2, name: 'Applicants waiting for review' })).closest('section')
+    expect(await within(section).findByText("We couldn't load the applicants waiting for review.")).toBeInTheDocument()
+    await userEvent.click(within(section).getByRole('button', { name: 'Try again' }))
+    expect(await within(section).findByRole('link', { name: 'HR Assistant: 1 new' })).toBeInTheDocument()
+  })
+})
