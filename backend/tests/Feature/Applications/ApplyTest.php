@@ -169,4 +169,46 @@ class ApplyTest extends TestCase
         $this->app['auth']->forgetGuards();
         $this->getJson($url)->assertOk()->assertJsonMissingPath('data.my_application');
     }
+
+    public function test_an_unreadable_body_is_refused_not_sent_empty(): void
+    {
+        $job = JobPosting::factory()->open()->create();
+        $this->actingAs(User::factory()->create(), 'web');
+        $url = "/api/job-postings/{$job->id}/applications";
+
+        // A JSON body that can't be decoded (a lone surrogate) must not become an empty application.
+        $this->call('POST', $url, [], [], [], $this->transformHeadersToServerVars([
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json',
+            'Origin' => self::SPA_ORIGIN,
+        ]), '{"cover_note": "Hello \ud800"}')
+            ->assertStatus(422)
+            ->assertJsonPath('message', "We couldn't read your application. Please try again.");
+        // A form body with bytes that aren't UTF-8.
+        $this->post($url, ['cover_note' => "Caf\xE9", 'interview_request' => "\xFF"], ['Accept' => 'application/json'])
+            ->assertJsonValidationErrors(['cover_note', 'interview_request']);
+
+        $this->assertSame(0, Application::count());
+    }
+
+    public function test_application_responses_are_never_stored_by_the_browser(): void
+    {
+        $seeker = User::factory()->create();
+        $job = JobPosting::factory()->open()->create();
+        $this->actingAs($seeker, 'web');
+
+        $created = $this->postJson("/api/job-postings/{$job->id}/applications", ['interview_request' => 'Captions, please.']);
+        $id = $created->json('data.id');
+        $responses = [
+            $created,
+            $this->getJson('/api/applications'),
+            $this->getJson("/api/applications/{$id}"),
+            $this->patchJson("/api/applications/{$id}/status", ['status' => 'withdrawn', 'expected_status' => 'pending']),
+        ];
+
+        foreach ($responses as $response) {
+            $this->assertStringContainsString('no-store', $response->headers->get('Cache-Control'));
+            $this->assertStringContainsString('private', $response->headers->get('Cache-Control'));
+        }
+    }
 }

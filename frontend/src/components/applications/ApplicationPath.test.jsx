@@ -30,6 +30,14 @@ describe('ApplicationPath', () => {
   it('shows a Reviewed application as opened', () => {
     render(<ApplicationPath application={reviewedFixture()} />)
 
+    // The current step looks different from the steps already done, not only to screen readers.
+    const [doneItem, currentItem] = within(screen.getByRole('list', { name: 'Your application' })).getAllByRole('listitem')
+    expect(doneItem.querySelector('[data-icon="check"]')).toBeInTheDocument()
+    expect(currentItem.querySelector('[data-icon="check"]')).not.toBeInTheDocument()
+    expect(currentItem.querySelector('[data-step-marker="current"]')).toBeInTheDocument()
+    expect(within(doneItem).getByText('Sent')).not.toHaveClass('font-bold')
+    expect(within(currentItem).getByText('Opened by the employer')).toHaveClass('font-bold')
+
     const [sent, opened, decision] = steps()
     expect(sent).toContain('Done')
     expect(opened).toContain('Current step')

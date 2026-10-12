@@ -3,14 +3,16 @@ import { Link, useSearchParams } from 'react-router-dom'
 /**
  * Filter links (e.g., Waiting · Verified · Rejected). The active one is marked with
  * aria-current="true" ("current item"; the menu link already marks the current page).
- * Switching keeps the other filters in the address, e.g., the chosen department.
+ * Switching keeps the other filters in the address, e.g., the chosen department, except those in
+ * `resetParams` (e.g., the page number, which belongs to the previous filter).
  */
-export default function FilterTabs({ label, items, current, param = 'status' }) {
+export default function FilterTabs({ label, items, current, param = 'status', resetParams = [] }) {
   const [searchParams] = useSearchParams()
 
   function hrefFor(value) {
     const next = new URLSearchParams(searchParams)
     next.set(param, value)
+    for (const name of resetParams) next.delete(name)
     return `?${next}`
   }
 

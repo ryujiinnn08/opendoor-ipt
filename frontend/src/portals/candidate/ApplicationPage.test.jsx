@@ -81,6 +81,20 @@ describe('ApplicationPage', () => {
     expect(getApplication).toHaveBeenCalledTimes(1)
   })
 
+  it('reloads when the application changed elsewhere', async () => {
+    getApplication
+      .mockResolvedValueOnce(detailed(reviewedFixture()))
+      .mockResolvedValueOnce(detailed(reviewedFixture({ status: 'rejected', status_label: 'Rejected', rejected_at: '2026-10-15T03:00:00+00:00', actions: [] })))
+    changeApplicationStatus.mockRejectedValue({ response: { status: 409, data: { message: 'This application changed while you were looking at it. Reload to see its status.' } } })
+    open()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Withdraw application for Junior Web Developer' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Withdraw application' }))
+
+    expect(await screen.findByText(/The employer chose other applicants/)).toBeInTheDocument()
+    expect(getApplication).toHaveBeenCalledTimes(2)
+  })
+
   it("says it can't find someone else's or a missing application", async () => {
     getApplication.mockRejectedValue({ response: { status: 403, data: { message: "This application isn't yours." } } })
     open()

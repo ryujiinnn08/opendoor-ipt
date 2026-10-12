@@ -49,19 +49,26 @@ export default function ApplicationPath({ application, headingId }) {
                 className={`absolute top-8 bottom-0 left-[0.9375rem] w-0.5 ${step.state === 'done' ? 'bg-text' : 'bg-border'}`}
               />
             )}
-            <span className="relative flex size-8 shrink-0 items-center justify-center">
-              {step.state === 'ahead' ? (
+            <span className="relative flex size-8 shrink-0 items-center justify-center bg-bg">
+              {step.state === 'ahead' && (
                 <span className="text-muted">
                   <Icon name="circle" className="size-7" />
                 </span>
-              ) : (
-                <span className={`flex size-8 items-center justify-center rounded-full bg-text text-surface ${step.state === 'current' ? 'ring-4 ring-primary-soft' : ''}`}>
+              )}
+              {step.state === 'done' && (
+                <span className="flex size-8 items-center justify-center rounded-full bg-text text-surface">
                   <Icon name="check" className="size-5" />
+                </span>
+              )}
+              {/* The current step: a thick ink ring around an ink dot, a different shape from a done step's check. */}
+              {step.state === 'current' && (
+                <span data-step-marker="current" className="flex size-8 items-center justify-center rounded-full border-4 border-text bg-surface">
+                  <span className="size-3 rounded-full bg-text" />
                 </span>
               )}
             </span>
             <span className="min-w-0 pt-0.5">
-              <span className={`block text-lg ${step.state === 'ahead' ? 'text-muted' : 'font-bold'}`}>
+              <span className={`block text-lg ${step.state === 'current' ? 'font-bold' : ''} ${step.state === 'ahead' ? 'text-muted' : ''}`}>
                 {step.label}
                 <span className="sr-only">{`, ${STATE_TEXT[step.state]}`}</span>
               </span>

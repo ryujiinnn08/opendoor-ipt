@@ -60,25 +60,42 @@ describe('ApplyPage', () => {
   })
 
   it('explains an application sent from another tab, keeping the text', async () => {
+    const announce = vi.fn()
     applyForJob.mockRejectedValue({ response: { status: 409, data: { message: "You've already applied for this job.", application_id: 9 } } })
-    open()
+    renderRoutes(routes, { path: '/candidate/jobs/2/apply', auth, announce })
     await fillIn()
     await userEvent.click(screen.getByRole('button', { name: 'Send application' }))
 
     expect(await screen.findByText("You've already applied for this job.")).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'View your application' })).toHaveAttribute('href', '/candidate/applications/9')
     expect(screen.getByLabelText(/Cover note/)).toHaveValue('I have three years of bookkeeping.')
+    expect(announce).toHaveBeenCalledWith("You've already applied for this job.")
+    await waitFor(() => expect(screen.getByText("You've already applied for this job.").closest('[tabindex="-1"]')).toHaveFocus())
+    expect(screen.queryByRole('button', { name: 'Send application' })).not.toBeInTheDocument()
   })
 
   it('explains when the job closed while writing', async () => {
+    const announce = vi.fn()
     applyForJob.mockRejectedValue({ response: { status: 404, data: { message: "This job isn't taking applications." } } })
-    open()
+    renderRoutes(routes, { path: '/candidate/jobs/2/apply', auth, announce })
     await fillIn()
     await userEvent.click(screen.getByRole('button', { name: 'Send application' }))
 
     expect(await screen.findByText("This job isn't taking applications.")).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Browse open jobs' })).toHaveAttribute('href', '/candidate/jobs')
     expect(screen.getByLabelText(/Interview accommodation request/)).toHaveValue('Captions, please.')
+    expect(announce).toHaveBeenCalledWith("This job isn't taking applications.")
+    await waitFor(() => expect(screen.getByText("This job isn't taking applications.").closest('[tabindex="-1"]')).toHaveFocus())
+    // Sending again can only fail the same way.
+    expect(screen.queryByRole('button', { name: 'Send application' })).not.toBeInTheDocument()
+  })
+
+  it("says when the preview of what's shared may be incomplete", async () => {
+    getProfile.mockRejectedValue({ response: { status: 500, data: {} } })
+    open()
+
+    expect(await screen.findByText("We couldn't load your profile, so this list may leave something out. Check My résumé before you send.")).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Send application' })).toBeInTheDocument()
   })
 
   it('shows field errors in a summary', async () => {

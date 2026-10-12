@@ -3,6 +3,7 @@
 use App\Http\Middleware\EnsureEmployerProfile;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\EnsureUserIsActive;
+use App\Http\Middleware\PreventBrowserStorage;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -32,6 +33,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => EnsureUserHasRole::class,
             'active' => EnsureUserIsActive::class,
             'employer.profile' => EnsureEmployerProfile::class,
+            'no.store' => PreventBrowserStorage::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -81,6 +81,20 @@ export default function MyApplicationsPage() {
     shownPage.current = page
   }, [current, page])
 
+  // After a change, focus goes to the application's title, or to the count when it left this
+  // filter. It moves in an effect, once the reloaded list is on screen.
+  // It is used once, so later reloads (another page, another filter) don't move focus again.
+  const focusRequest = useRef(null)
+  const focusApplication = useCallback((id) => {
+    focusRequest.current = id
+  }, [])
+  useEffect(() => {
+    if (focusRequest.current === null || !current) return
+    const link = document.querySelector(`#application-${focusRequest.current} h3 a`)
+    focusRequest.current = null
+    ;(link ?? listHeading.current)?.focus()
+  }, [current])
+
   function hrefForPage(number) {
     const next = new URLSearchParams(searchParams)
     if (number > 1) next.set('page', String(number))
@@ -101,7 +115,7 @@ export default function MyApplicationsPage() {
       )}
 
       <div className="mt-8">
-        <FilterTabs label="Show" items={tabs} current={status} />
+        <FilterTabs label="Show" items={tabs} current={status} resetParams={['page']} />
       </div>
 
       {loadError && (
@@ -121,7 +135,17 @@ export default function MyApplicationsPage() {
           </h2>
           {current.applications.length === 0 ? (
             <div className="mt-4">
-              {status === 'all' ? (
+              {current.meta.total > 0 ? (
+                <EmptyState
+                  action={
+                    <Link to={hrefForPage(1)} className={TEXT_LINK}>
+                      Go to the first page
+                    </Link>
+                  }
+                >
+                  There are no applications on this page.
+                </EmptyState>
+              ) : status === 'all' ? (
                 <EmptyState
                   action={
                     <Link to="/candidate/jobs" className={TEXT_LINK}>
@@ -138,7 +162,7 @@ export default function MyApplicationsPage() {
           ) : (
             <ul className="mt-4">
               {current.applications.map((application) => (
-                <ApplicationRow key={application.id} application={application} onChanged={load} />
+                <ApplicationRow key={application.id} application={application} onChanged={load} onStale={load} focusAfter={focusApplication} />
               ))}
             </ul>
           )}

@@ -66,13 +66,15 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('dashboard', [Candidate\DashboardController::class, 'show']);
         });
 
-        // Applications (M6, Phase 4). Applying has its own per-account limit.
-        Route::get('applications', [ApplicationController::class, 'index']);
-        Route::get('applications/{application}', [ApplicationController::class, 'show'])->where('application', '[0-9]{1,18}');
-        Route::patch('applications/{application}/status', [ApplicationStatusController::class, 'update'])->where('application', '[0-9]{1,18}');
-        Route::post('job-postings/{id}/applications', [ApplicationController::class, 'store'])
-            ->where('id', '[0-9]{1,18}')
-            ->middleware(['role:candidate', 'throttle:10,1,applications']);
+        // Applications (M6, Phase 4): never stored by the browser. Applying has its own per-account limit.
+        Route::middleware('no.store')->group(function () {
+            Route::get('applications', [ApplicationController::class, 'index']);
+            Route::get('applications/{application}', [ApplicationController::class, 'show'])->where('application', '[0-9]{1,18}');
+            Route::patch('applications/{application}/status', [ApplicationStatusController::class, 'update'])->where('application', '[0-9]{1,18}');
+            Route::post('job-postings/{id}/applications', [ApplicationController::class, 'store'])
+                ->where('id', '[0-9]{1,18}')
+                ->middleware(['role:candidate', 'throttle:10,1,applications']);
+        });
 
         // Employer portal (M3): company or individual profile, verification and team.
         Route::middleware('role:employer')->prefix('employer')->group(function () {

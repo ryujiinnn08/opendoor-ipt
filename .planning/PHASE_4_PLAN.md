@@ -1,6 +1,6 @@
 # Phase 4 Plan: Apply and Track
 
-> Status: **APPROVED 2026-10-12** with every recommendation in §3 ("Yep go with phase 4A"). 4A is being built from [the 4A implementation plan](superpowers/plans/2026-10-12-phase-4a-apply-and-track.md). Checked against the proposal papers ([Revised Proposal](papers/REVISED_PROPOSAL.md) §VII-E and Table 1, [Modules and Features](papers/MODULES_AND_FEATURES.md) M6, M2, M8, M9 and §5). The "(tracked changes)" Word files you attached are the redline from the original papers to the revised ones; their accepted text is what `.planning/papers/` already holds, so nothing changes here.
+> Status: **4A built (2026-10-12)**: demo steps A1–A7 verified in the browser; 254 server and 312 page tests pass (build notes at the end). APPROVED 2026-10-12 with every recommendation in §3 ("Yep go with phase 4A"), built from [the 4A implementation plan](superpowers/plans/2026-10-12-phase-4a-apply-and-track.md). Next: 4B, the employer side. Checked against the proposal papers ([Revised Proposal](papers/REVISED_PROPOSAL.md) §VII-E and Table 1, [Modules and Features](papers/MODULES_AND_FEATURES.md) M6, M2, M8, M9 and §5). The "(tracked changes)" Word files you attached are the redline from the original papers to the revised ones; their accepted text is what `.planning/papers/` already holds, so nothing changes here.
 > Part of: [CONCEPT_PLAN.md](CONCEPT_PLAN.md), build phase 4 of 7
 > Builds on: [PHASE_3_PLAN.md](PHASE_3_PLAN.md) (profile, résumé, needs and matching)
 > Method: Superpowers brainstorming (this spec, for your review), then Superpowers writing-plans for 4A and 4B; Frontend Design (§7); GSD code review, UI review and security audit before finishing (§9, step 5).
@@ -422,3 +422,37 @@ Rejected is grey, not red: it isn't the person's error. Phase 3 made the same ch
 4. **Same match calculation.** The employer's "meets 4 of their 5 needs" calls `CandidateNeeds::for($applicant)->matchFor($posting)`, eager-loaded for the list (no query per row).
 5. **Withdrawn trims the resource**, not just the page.
 6. **Philippine dates** for hire dates (`JobPosting::today()` logic), and SQLite/MariaDB-safe queries (`withCount`, no `HAVING` without `GROUP BY`), as in Phase 3.
+
+---
+
+## Phase 4A build notes (2026-10-12)
+
+Checked before finishing: a Superpowers whole-branch review, plus GSD's code review, UI audit (17/24 before fixes) and security audit (**secured**: every 4A row of §8 is handled and tested). Demo steps A1–A6 were walked through in the browser on `opendoor_verify` (XAMPP MariaDB) at 1024 px; A7 at 360 px and with text at 200%, and A4 with the keyboard only (focus returns to the heading; "Application withdrawn." is read out).
+
+Two small changes to the plan: the Reviewed badge uses the "door opened" icon already in the app (no new icon to download), and the copy of the job's accommodations at a hire was built in 4A, because the job seeker's **I was hired** needs it.
+
+Found and fixed:
+- **Sending an unreadable request lost the texts.** A body that wasn't valid JSON was read as empty, so the application was created without the cover note and interview request, and it can't be sent again. It's now refused ("We couldn't read your application. Please try again."); text that isn't UTF-8 is refused too.
+- **Browsers could keep applications on disk.** Application responses (with interview requests) now say `no-store`, which matters on shared computers.
+- **Apply-page refusals were silent.** "You've already applied for this job." and "This job isn't taking applications." are now read out and take focus, and **Send application** goes away, since sending again can only fail; the typed text stays.
+- **My applications:** switching filter kept the page number, which could show an empty page; a page past the end now says "There are no applications on this page." with **Go to the first page**. After a withdrawal under **Waiting**, focus moves to the count instead of being lost. When the application changed elsewhere (409), the list or page reloads to show its real status.
+- **"What the employer will see"** now says when it's still loading or the profile couldn't be loaded, so the list never looks complete when it isn't.
+- **The application's path:** the current step looked like a finished one (its ring was nearly invisible). It now has its own marker (an ink ring around a dot) and is the only bold step.
+- From the walk-through: "Your application was sent to Acme Corp.." (an employer name ending in a full stop); the "ask the employer to open your application" hint repeated on every Pending row (now only on the application page); hired and rejected rows said the job "isn't taking applications".
+
+Decided (say if you'd like them changed):
+- **Withdraw** keeps the red confirm button: §7's grey is for status badges, and red marks every action that can't be undone.
+- A job seeker can confirm **I was hired** after the job closed or was removed. Hiring and then closing the job is the normal order (the demo's *Office Clerk*); 4B's notification to the employer is the safeguard.
+- Someone else's application answers 403 and a missing one 404, which shows only that an id exists, never whose it is or for which job.
+
+For 4B (from the reviews):
+- Employers must get their own applicant shape, never the job seeker's; it leaves out the cover note, interview request and profile after Withdrawn (Q4). Add a test that pins it.
+- If `apply()` is ever wrapped in a transaction, its duplicate check must re-read with a lock, or a double submit gets a 500 instead of "You've already applied".
+
+Left for later (most go to the audit days, Oct 17–18):
+- **Words:** "Nothing" for an empty cover note could be "You didn't add a cover note."; filtered empty lists could each have their own sentence; after sending, the new count isn't read out (only "sent to …"); "Register as a job seeker" in the Apply box doesn't come back to the Apply page.
+- **Look:** "The job" section on the application page uses the amber rule, which §7 keeps for accommodations; on the application page the action buttons' labels repeat the job title; one hand-set offset on the path's line; uneven spacing in a list row.
+- **Demo data:** sample applications are dated before their postings' approval dates.
+- **From Phase 3, seen again:** at 360 px with 200% text, the dashboard's top matches scroll sideways (long accommodation names don't wrap in job rows). The bundle is now 632 kB.
+- **Tests:** SQLite ignores row locks, so the lock in the status change is checked by reading, not by a test; the GSD reviewer confirmed it holds on MariaDB.
+

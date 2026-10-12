@@ -69,6 +69,49 @@ describe('MyApplicationsPage', () => {
     expect(within(rows[1]).queryByText("This job isn't taking applications right now.")).not.toBeInTheDocument()
   })
 
+  it('starts a new filter on its first page', async () => {
+    listApplications.mockResolvedValue(page([reviewedFixture()], { meta: { current_page: 2, last_page: 2, per_page: 12, total: 13 }, counts: { all: 13, waiting: 1, hired: 1, closed: 11 } }))
+    renderRoutes(routes, { path: '/candidate/applications?page=2', auth })
+
+    expect(await screen.findByRole('link', { name: 'Hired (1)' })).toHaveAttribute('href', '/candidate/applications?status=hired')
+  })
+
+  it('offers the first page when a page has nothing on it', async () => {
+    listApplications.mockResolvedValue(page([], { meta: { current_page: 3, last_page: 2, per_page: 12, total: 14 }, counts: { all: 14, waiting: 2, hired: 1, closed: 11 } }))
+    renderRoutes(routes, { path: '/candidate/applications?page=3', auth })
+
+    expect(await screen.findByText('There are no applications on this page.')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Go to the first page' })).toHaveAttribute('href', '/candidate/applications')
+    expect(screen.queryByText("You haven't applied for any jobs yet.")).not.toBeInTheDocument()
+  })
+
+  it('moves focus to the count when a withdrawn application leaves the list', async () => {
+    listApplications
+      .mockResolvedValueOnce(page([reviewedFixture()], { counts: { all: 1, waiting: 1, hired: 0, closed: 0 } }))
+      .mockResolvedValueOnce(page([], { counts: { all: 1, waiting: 0, hired: 0, closed: 1 } }))
+    changeApplicationStatus.mockResolvedValue(reviewedFixture({ status: 'withdrawn', actions: [] }))
+    renderRoutes(routes, { path: '/candidate/applications?status=waiting', auth })
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Withdraw application for Junior Web Developer' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Withdraw application' }))
+
+    await waitFor(() => expect(screen.getByRole('heading', { level: 2, name: '0 applications' })).toHaveFocus())
+  })
+
+  it('reloads when an application changed elsewhere', async () => {
+    listApplications
+      .mockResolvedValueOnce(page([reviewedFixture()]))
+      .mockResolvedValueOnce(page([reviewedFixture({ status: 'hired', status_label: 'Hired', actions: [] })]))
+    changeApplicationStatus.mockRejectedValue({ response: { status: 409, data: { message: 'This application changed while you were looking at it. Reload to see its status.' } } })
+    renderRoutes(routes, { path: '/candidate/applications', auth })
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Withdraw application for Junior Web Developer' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Withdraw application' }))
+
+    await waitFor(() => expect(listApplications).toHaveBeenCalledTimes(2))
+    expect(await screen.findByRole('alert')).toHaveTextContent('This application changed while you were looking at it.')
+  })
+
   it('invites a job seeker without applications to find jobs', async () => {
     listApplications.mockResolvedValue(page([], { counts: { all: 0, waiting: 0, hired: 0, closed: 0 } }))
     renderRoutes(routes, { path: '/candidate/applications', auth })

@@ -73,6 +73,13 @@ export default function ApplicationPage() {
     setLoaded((previous) => ({ ...previous, application: updated }))
   }
 
+  // The application changed elsewhere (another tab, or the employer): show its status now.
+  function refresh() {
+    getApplication(id)
+      .then(changed)
+      .catch(() => {})
+  }
+
   const job = application?.job
   const title = job?.title ?? 'Application'
 
@@ -115,6 +122,7 @@ export default function ApplicationPage() {
                 <ApplicationActions
                   application={application}
                   onChanged={changed}
+                  onStale={refresh}
                   explainHire
                   focusAfter={() => headingArea.current?.querySelector('h1')?.focus()}
                 />

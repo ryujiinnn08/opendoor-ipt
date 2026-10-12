@@ -7,8 +7,9 @@ import { TEXT_LINK } from '../ui/buttonLinkStyles.js'
 /**
  * The Apply page's preview of what is shared with the employer (plan PHASE_4 §4.1), so the job
  * seeker agrees knowingly. Empty profile sections are a gentle warning, never a block (Q1).
+ * `loadState` says when the list can't yet name everything (loading, or the profile failed).
  */
-export default function WhatEmployersSee({ profile }) {
+export default function WhatEmployersSee({ profile, loadState = 'ready' }) {
   const empty = profile ? emptyProfileSections(profile) : []
   const disability = profile?.show_disability && profile.disability_type ? optionLabel(DISABILITY_TYPES, profile.disability_type) : null
 
@@ -17,6 +18,10 @@ export default function WhatEmployersSee({ profile }) {
       <h2 id="employer-sees-heading" className="text-2xl font-bold">
         What the employer will see
       </h2>
+      {loadState === 'loading' && <p className="mt-2 text-muted">Checking your profile…</p>}
+      {loadState === 'error' && (
+        <p className="mt-2">We couldn&apos;t load your profile, so this list may leave something out. Check My résumé before you send.</p>
+      )}
       <ul className="mt-3 list-disc space-y-1 pl-6">
         <li>
           <Link to="/candidate/profile/resume" className={TEXT_LINK}>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { applyForJob } from '../../api/applications.js'
 import { getProfile } from '../../api/candidate.js'
@@ -12,6 +12,7 @@ import LoadingMessage from '../../components/ui/LoadingMessage.jsx'
 import Notice from '../../components/ui/Notice.jsx'
 import PageHeader from '../../components/ui/PageHeader.jsx'
 import { TEXT_LINK } from '../../components/ui/buttonLinkStyles.js'
+import { useAnnounce } from '../../components/ui/announcerContext.js'
 import useFormErrors from '../../hooks/useFormErrors.js'
 import { interviewHint } from '../../lib/applicationText.js'
 import { summaryFrom } from '../../lib/errorSummary.js'
@@ -27,9 +28,12 @@ const ALREADY = "You've already applied for this job."
 export default function ApplyPage() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const announce = useAnnounce()
+  const refusalBox = useRef(null)
   const validId = RECORD_ID.test(id)
   const [job, setJob] = useState(null)
   const [profile, setProfile] = useState(null)
+  const [profileState, setProfileState] = useState('loading') // loading | ready | error
   const [loadError, setLoadError] = useState(validId ? null : NOT_TAKING)
   const [attempt, setAttempt] = useState(0)
   const [values, setValues] = useState({ cover_note: '', interview_request: '' })
@@ -51,12 +55,23 @@ export default function ApplyPage() {
       })
     // The preview of what's shared is a help, not a requirement: applying works without it.
     getProfile()
-      .then((loaded) => active && setProfile(loaded))
-      .catch(() => {})
+      .then((loaded) => {
+        if (!active) return
+        setProfile(loaded)
+        setProfileState('ready')
+      })
+      .catch(() => active && setProfileState('error'))
     return () => {
       active = false
     }
   }, [id, validId, attempt])
+
+  // A refusal is read out and takes focus, so nobody presses Send again without knowing why.
+  useEffect(() => {
+    if (!refusal) return
+    announce(refusal.kind === 'already' ? ALREADY : NOT_TAKING)
+    refusalBox.current?.focus()
+  }, [refusal, announce])
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -110,23 +125,22 @@ export default function ApplyPage() {
       {job && !applied && (
         <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_22rem]">
           <form onSubmit={handleSubmit} noValidate className="max-w-prose">
-            {refusal?.kind === 'already' && (
-              <Notice tone="info" className="mb-6">
-                <p>{ALREADY}</p>
-                {refusal.applicationId && (
-                  <Link to={`/candidate/applications/${refusal.applicationId}`} className={TEXT_LINK}>
-                    View your application
-                  </Link>
-                )}
-              </Notice>
-            )}
-            {refusal?.kind === 'closed' && (
-              <Notice tone="info" className="mb-6">
-                <p>{NOT_TAKING}</p>
-                <Link to="/candidate/jobs" className={TEXT_LINK}>
-                  Browse open jobs
-                </Link>
-              </Notice>
+            {refusal && (
+              <div ref={refusalBox} tabIndex={-1} className="mb-6 outline-offset-4">
+                <Notice tone="info">
+                  <p>{refusal.kind === 'already' ? ALREADY : NOT_TAKING}</p>
+                  {refusal.kind === 'already' && refusal.applicationId && (
+                    <Link to={`/candidate/applications/${refusal.applicationId}`} className={TEXT_LINK}>
+                      View your application
+                    </Link>
+                  )}
+                  {refusal.kind === 'closed' && (
+                    <Link to="/candidate/jobs" className={TEXT_LINK}>
+                      Browse open jobs
+                    </Link>
+                  )}
+                </Notice>
+              </div>
             )}
             <ErrorSummary errors={summaryFrom(errors, ['cover_note', 'interview_request'], generalError)} focusKey={focusKey} />
             <FormField
@@ -155,11 +169,14 @@ export default function ApplyPage() {
               onChange={change('interview_request')}
               error={errors.interview_request}
             />
-            <Button type="submit" loading={sending} loadingText="Sending…">
-              Send application
-            </Button>
+            {/* After a refusal, sending again can only fail the same way; the text stays to copy. */}
+            {!refusal && (
+              <Button type="submit" loading={sending} loadingText="Sending…">
+                Send application
+              </Button>
+            )}
           </form>
-          <WhatEmployersSee profile={profile} />
+          <WhatEmployersSee profile={profile} loadState={profileState} />
         </div>
       )}
     </>

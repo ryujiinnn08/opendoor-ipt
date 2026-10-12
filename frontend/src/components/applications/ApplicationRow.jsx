@@ -7,8 +7,9 @@ import ApplicationStatusBadge from './ApplicationStatusBadge.jsx'
 /**
  * One of the job seeker's applications as a ruled row (papers' ApplicationRow): the job title
  * opens the application page; the status, the applied date and the next-step sentence follow.
+ * The list decides where focus goes after a change (the row may have left the filter).
  */
-export default function ApplicationRow({ application, onChanged }) {
+export default function ApplicationRow({ application, onChanged, onStale, focusAfter }) {
   const rowId = `application-${application.id}`
   const { job } = application
 
@@ -37,7 +38,8 @@ export default function ApplicationRow({ application, onChanged }) {
       <ApplicationActions
         application={application}
         onChanged={onChanged}
-        focusAfter={() => document.querySelector(`#${rowId} h3 a`)?.focus()}
+        onStale={onStale}
+        focusAfter={focusAfter}
       />
     </li>
   )

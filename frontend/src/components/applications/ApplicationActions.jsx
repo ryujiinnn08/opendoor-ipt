@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { changeApplicationStatus } from '../../api/applications.js'
 import { generalErrorFrom } from '../../api/client.js'
 import { ASK_EMPLOYER_FIRST } from '../../lib/applicationText.js'
@@ -31,12 +31,15 @@ const ACTIONS = {
  * The job seeker's actions on one application (F6.4, F6.7): only the ones the server lists in
  * `actions`, each confirmed first. `expected_status` is the status shown, so a change made
  * meanwhile is refused and explained. After a change, `focusAfter` puts focus somewhere that
- * still exists (the button that opened the dialog is usually gone). `explainHire` adds, on a
+ * still exists (the button that opened the dialog is usually gone). `onChanged` runs once the dialog
+ * has closed (outside its focus trap; it may return a promise, e.g. a reload), then `focusAfter`. A 409 means the application changed elsewhere:
+ * `onStale` reloads it while the dialog explains. `explainHire` adds, on a
  * Pending application, why I was hired isn't offered yet (the application page; lists leave it
  * out so it doesn't repeat on every row).
  */
-export default function ApplicationActions({ application, onChanged, focusAfter, explainHire = false }) {
+export default function ApplicationActions({ application, onChanged, onStale, focusAfter, explainHire = false }) {
   const announce = useAnnounce()
+  const updatedRef = useRef(null)
   const [pending, setPending] = useState(null) // { key, open, busy, error, done }
   const keys = Object.keys(ACTIONS).filter((key) => application.actions.includes(key))
   const action = pending ? ACTIONS[pending.key] : null
@@ -46,10 +49,11 @@ export default function ApplicationActions({ application, onChanged, focusAfter,
     try {
       const updated = await changeApplicationStatus(application.id, { status: action.status, expected_status: application.status })
       announce(action.done)
+      updatedRef.current = updated
       setPending((current) => current && { ...current, open: false, busy: false, done: true })
-      onChanged(updated)
     } catch (error) {
       setPending((current) => current && { ...current, busy: false, error: generalErrorFrom(error) ?? 'Something went wrong. Please try again.' })
+      if (error?.response?.status === 409) onStale?.()
     }
   }
 
@@ -58,9 +62,13 @@ export default function ApplicationActions({ application, onChanged, focusAfter,
   }
 
   function afterClose(event) {
-    if (pending?.done && focusAfter) {
-      event.preventDefault()
-      focusAfter()
+    if (pending?.done) {
+      const updated = updatedRef.current
+      if (focusAfter) event.preventDefault()
+      Promise.resolve(onChanged(updated)).then(
+        () => focusAfter?.(updated.id),
+        () => focusAfter?.(updated.id),
+      )
     }
     setPending(null)
   }
