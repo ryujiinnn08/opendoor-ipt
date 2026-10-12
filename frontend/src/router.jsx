@@ -12,8 +12,11 @@ import EmployerVerificationPage from './portals/admin/EmployerVerificationPage.j
 import PostingApprovalsPage from './portals/admin/PostingApprovalsPage.jsx'
 import PostingReviewPage from './portals/admin/PostingReviewPage.jsx'
 import SettingsPage from './portals/admin/SettingsPage.jsx'
+import ApplicationPage from './portals/candidate/ApplicationPage.jsx'
+import ApplyPage from './portals/candidate/ApplyPage.jsx'
 import CandidateDashboard from './portals/candidate/CandidateDashboard.jsx'
 import FindJobsPage from './portals/candidate/FindJobsPage.jsx'
+import MyApplicationsPage from './portals/candidate/MyApplicationsPage.jsx'
 import NeedsPage from './portals/candidate/NeedsPage.jsx'
 import ProfilePage from './portals/candidate/ProfilePage.jsx'
 import ResumePage from './portals/candidate/ResumePage.jsx'
@@ -78,6 +81,9 @@ export const routes = [
         { path: '/candidate/jobs', element: <FindJobsPage /> },
         { path: '/candidate/jobs/:id', element: <JobPage basePath="/candidate/jobs" employerBasePath="/candidate/employers" /> },
         { path: '/candidate/employers/:id', element: <EmployerPage basePath="/candidate/jobs" /> },
+        { path: '/candidate/jobs/:id/apply', element: <ApplyPage /> },
+        { path: '/candidate/applications', element: <MyApplicationsPage /> },
+        { path: '/candidate/applications/:id', element: <ApplicationPage /> },
       ]),
       portal('employer', [
         { element: <RequireNoEmployerProfile />, children: [{ path: '/employer/setup', element: <SetupPage /> }] },

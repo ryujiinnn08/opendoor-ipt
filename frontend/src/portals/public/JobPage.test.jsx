@@ -26,6 +26,16 @@ describe('JobPage', () => {
     expect(await axe(container)).toHaveNoViolations()
   })
 
+  it('shows the Apply box to guests and job seekers', async () => {
+    getJob.mockResolvedValue(job)
+    const { unmount } = renderRoutes(routes, { path: '/jobs/2' })
+
+    expect(await screen.findByRole('link', { name: 'Log in to apply' })).toBeInTheDocument()
+    unmount()
+    renderRoutes(routes, { path: '/jobs/2', auth: { status: 'authenticated', role: 'candidate', user: { name: 'Ana', role: 'candidate' } } })
+    expect(await screen.findByRole('link', { name: 'Apply for this job' })).toHaveAttribute('href', '/candidate/jobs/2/apply')
+  })
+
   it('explains a job that is not open', async () => {
     getJob.mockRejectedValue({ response: { status: 404, data: {} } })
     renderRoutes(routes, { path: '/jobs/9' })

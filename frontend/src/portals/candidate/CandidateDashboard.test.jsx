@@ -64,4 +64,22 @@ describe('CandidateDashboard', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Try again' }))
     expect(await screen.findByRole('link', { name: 'Tell us what you need' })).toBeInTheDocument()
   })
+
+  it('counts applications, or invites the first one', async () => {
+    getDashboard.mockResolvedValue({ needs_count: 2, top_matches: [], missing_sections: [], applications: { all: 4, waiting: 2, hired: 1, closed: 1 } })
+    const { unmount } = renderPage()
+
+    const tile = (await screen.findByRole('heading', { name: 'My applications' })).closest('li')
+    expect(within(tile).getByText('2 waiting')).toBeInTheDocument()
+    expect(within(tile).getByText('1 hired')).toBeInTheDocument()
+    expect(within(tile).getByText('1 closed')).toBeInTheDocument()
+    expect(within(tile).getByRole('link', { name: 'See my applications' })).toHaveAttribute('href', '/candidate/applications')
+    expect(within(tile).queryByText('Coming in a later update')).not.toBeInTheDocument()
+    unmount()
+
+    getDashboard.mockResolvedValue({ needs_count: 2, top_matches: [], missing_sections: [], applications: { all: 0, waiting: 0, hired: 0, closed: 0 } })
+    renderPage()
+    const empty = (await screen.findByRole('heading', { name: 'My applications' })).closest('li')
+    expect(within(empty).getByText("You haven't applied for any jobs yet.")).toBeInTheDocument()
+  })
 })

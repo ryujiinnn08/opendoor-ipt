@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { generalErrorFrom } from '../../api/client.js'
 import { getJob } from '../../api/jobs.js'
+import ApplyBox from '../../components/applications/ApplyBox.jsx'
 import NeedsFit from '../../components/jobs/NeedsFit.jsx'
 import JobDetails from '../../components/postings/JobDetails.jsx'
 import Button from '../../components/ui/Button.jsx'
@@ -68,7 +69,12 @@ export default function JobPage({ basePath = '/jobs', employerBasePath = '/emplo
           <JobDetails
             posting={job}
             employerHref={`${employerBasePath}/${job.employer.id}`}
-            fit={job.match?.needs ? <NeedsFit match={job.match} /> : null}
+            fit={
+              <>
+                {job.match?.needs && <NeedsFit match={job.match} />}
+                <ApplyBox job={job} />
+              </>
+            }
           />
           <p className="mt-12">
             <Link to={basePath} className={TEXT_LINK}>

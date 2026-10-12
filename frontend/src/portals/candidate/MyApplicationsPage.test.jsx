@@ -1,0 +1,110 @@
+import { screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { axe } from 'vitest-axe'
+import { applicationFixture, reviewedFixture } from '../../test/applicationFixture.js'
+import { renderRoutes } from '../../test/renderWithProviders.jsx'
+import MyApplicationsPage from './MyApplicationsPage.jsx'
+
+vi.mock('../../api/applications.js', () => ({ listApplications: vi.fn(), changeApplicationStatus: vi.fn() }))
+const { listApplications, changeApplicationStatus } = await import('../../api/applications.js')
+
+const routes = [{ path: '/candidate/applications', element: <MyApplicationsPage /> }]
+const auth = { status: 'authenticated', role: 'candidate', user: { name: 'Ana', role: 'candidate' } }
+const counts = { all: 2, waiting: 2, hired: 0, closed: 0 }
+const page = (applications, extra = {}) => ({
+  applications,
+  meta: { current_page: 1, last_page: 1, per_page: 12, total: applications.length },
+  counts,
+  ...extra,
+})
+
+describe('MyApplicationsPage', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('lists applications with their status, next step and filters', async () => {
+    listApplications.mockResolvedValue(page([reviewedFixture(), applicationFixture({ id: 8, job: { ...applicationFixture().job, id: 3, title: 'HR Assistant', state: 'removed' } })]))
+    const { container } = renderRoutes(routes, { path: '/candidate/applications', auth })
+
+    expect(await screen.findByRole('heading', { level: 2, name: '2 applications' })).toBeInTheDocument()
+    expect(listApplications).toHaveBeenCalledWith({ status: 'all', page: 1 })
+    const rows = screen.getAllByRole('listitem').filter((item) => item.id?.startsWith('application-'))
+    expect(rows).toHaveLength(2)
+    expect(within(rows[0]).getByRole('link', { name: 'Junior Web Developer' })).toHaveAttribute('href', '/candidate/applications/7')
+    expect(within(rows[0]).getByText('Reviewed')).toBeInTheDocument()
+    expect(within(rows[0]).getByText(/Applied October 13, 2026/)).toBeInTheDocument()
+    expect(within(rows[0]).getByText(/If they want to interview you/)).toBeInTheDocument()
+    expect(within(rows[1]).getByText('This job was removed.')).toBeInTheDocument()
+    expect(screen.queryByText(/ask the employer to open/)).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Waiting (2)' })).toHaveAttribute('href', '/candidate/applications?status=waiting')
+    expect(await axe(container)).toHaveNoViolations()
+  })
+
+  it('reads the filter and page from the address', async () => {
+    listApplications.mockResolvedValue(page([], { counts: { all: 3, waiting: 0, hired: 0, closed: 3 } }))
+    renderRoutes(routes, { path: '/candidate/applications?status=closed&page=2', auth })
+
+    await waitFor(() => expect(listApplications).toHaveBeenCalledWith({ status: 'closed', page: 2 }))
+    expect(await screen.findByText('No applications here.')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Closed (3)' })).toHaveAttribute('aria-current', 'true')
+
+    listApplications.mockClear()
+    renderRoutes(routes, { path: '/candidate/applications?status=bogus&page=-4', auth })
+    await waitFor(() => expect(listApplications).toHaveBeenCalledWith({ status: 'all', page: 1 }))
+  })
+
+  it('says a job stopped taking applications only while the application waits', async () => {
+    const closedJob = { ...applicationFixture().job, state: 'not_open' }
+    listApplications.mockResolvedValue(
+      page([
+        reviewedFixture({ job: closedJob }),
+        applicationFixture({ id: 8, status: 'hired', status_label: 'Hired', hired_at: '2026-09-11', actions: [], job: closedJob }),
+      ]),
+    )
+    renderRoutes(routes, { path: '/candidate/applications', auth })
+
+    await screen.findByRole('heading', { level: 2, name: '2 applications' })
+    const rows = screen.getAllByRole('listitem').filter((item) => item.id?.startsWith('application-'))
+    expect(within(rows[0]).getByText("This job isn't taking applications right now.")).toBeInTheDocument()
+    expect(within(rows[1]).queryByText("This job isn't taking applications right now.")).not.toBeInTheDocument()
+  })
+
+  it('invites a job seeker without applications to find jobs', async () => {
+    listApplications.mockResolvedValue(page([], { counts: { all: 0, waiting: 0, hired: 0, closed: 0 } }))
+    renderRoutes(routes, { path: '/candidate/applications', auth })
+
+    expect(await screen.findByText("You haven't applied for any jobs yet.")).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Find jobs' })).toHaveAttribute('href', '/candidate/jobs')
+  })
+
+  it('shows and reads out that an application was sent', async () => {
+    const announce = vi.fn()
+    listApplications.mockResolvedValue(page([applicationFixture()]))
+    const { router, unmount } = renderRoutes(routes, { path: { pathname: '/candidate/applications', state: { sent: 'Acme Corp.' } }, auth, announce })
+
+    // The name's own full stop ends the sentence ("Acme Corp.", not "Acme Corp..").
+    expect(await screen.findByText('Your application was sent to Acme Corp.')).toBeInTheDocument()
+    expect(announce).toHaveBeenCalledWith('Your application was sent to Acme Corp.')
+    // Shown once: the message leaves the history entry, so Back or a reload won't repeat it.
+    await waitFor(() => expect(router.state.location.state).toBeNull())
+    unmount()
+
+    renderRoutes(routes, { path: { pathname: '/candidate/applications', state: { sent: 'Maria Cruz' } }, auth })
+    expect(await screen.findByText('Your application was sent to Maria Cruz.')).toBeInTheDocument()
+  })
+
+  it('reloads the list after a withdrawal', async () => {
+    listApplications
+      .mockResolvedValueOnce(page([reviewedFixture()]))
+      .mockResolvedValueOnce(page([reviewedFixture({ status: 'withdrawn', actions: [] })], { counts: { all: 1, waiting: 0, hired: 0, closed: 1 } }))
+    changeApplicationStatus.mockResolvedValue(reviewedFixture({ status: 'withdrawn', actions: [] }))
+    renderRoutes(routes, { path: '/candidate/applications', auth })
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Withdraw application for Junior Web Developer' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Withdraw application' }))
+
+    expect(await screen.findByRole('link', { name: 'Closed (1)' })).toBeInTheDocument()
+    expect(listApplications).toHaveBeenCalledTimes(2)
+    expect(screen.getByText('Withdrawn')).toBeInTheDocument()
+  })
+})

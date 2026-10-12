@@ -10,16 +10,7 @@ import LoadingMessage from '../../components/ui/LoadingMessage.jsx'
 import Notice from '../../components/ui/Notice.jsx'
 import PageHeading from '../../components/ui/PageHeading.jsx'
 import { PRIMARY_LINK, TEXT_LINK } from '../../components/ui/buttonLinkStyles.js'
-
-// The profile sections the dashboard asks for (F2.5), with where each one is filled in.
-const SECTIONS = {
-  headline: { label: 'Headline', to: '/candidate/profile#profile-basic' },
-  location: { label: 'City or municipality and province', to: '/candidate/profile#profile-basic' },
-  contact_number: { label: 'Contact number', to: '/candidate/profile#profile-basic' },
-  education: { label: 'Education', to: '/candidate/profile#profile-education' },
-  skills: { label: 'Skills', to: '/candidate/profile#profile-skills' },
-  needs: { label: 'Accommodation needs', to: '/candidate/needs' },
-}
+import { PROFILE_SECTIONS as SECTIONS } from '../../lib/profileSections.js'
 
 /**
  * The job seeker's dashboard (F8.1, F2.5). Until needs are saved, its main action is
@@ -45,6 +36,10 @@ export default function CandidateDashboard() {
       active = false
     }
   }, [attempt])
+
+  // Non-zero counts only, e.g. "2 waiting", "1 hired".
+  const counts = dashboard?.applications ?? {}
+  const applicationLines = ['waiting', 'hired', 'closed'].filter((key) => counts[key] > 0).map((key) => `${counts[key]} ${key}`)
 
   return (
     <>
@@ -120,8 +115,16 @@ export default function CandidateDashboard() {
           )}
 
           <ul className="mt-10 grid gap-4 md:grid-cols-3">
-            <DashboardTile title="My applications" comingSoon>
-              Follow the status of every job you apply for.
+            <DashboardTile title="My applications" to="/candidate/applications" linkLabel="See my applications">
+              {applicationLines.length > 0 ? (
+                <ul className="space-y-1">
+                  {applicationLines.map((line) => (
+                    <li key={line}>{line}</li>
+                  ))}
+                </ul>
+              ) : (
+                "You haven't applied for any jobs yet."
+              )}
             </DashboardTile>
           </ul>
         </>

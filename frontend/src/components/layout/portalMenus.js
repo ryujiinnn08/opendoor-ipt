@@ -26,6 +26,7 @@ const PORTALS = {
     menu: [
       { to: '/candidate/dashboard', label: 'Dashboard' },
       { to: '/candidate/jobs', label: 'Find jobs', end: false },
+      { to: '/candidate/applications', label: 'My applications', end: false },
       { to: '/candidate/needs', label: 'My needs' },
       { to: '/candidate/profile', label: 'My profile', end: false },
     ],
