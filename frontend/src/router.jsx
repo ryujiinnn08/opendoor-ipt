@@ -20,6 +20,8 @@ import MyApplicationsPage from './portals/candidate/MyApplicationsPage.jsx'
 import NeedsPage from './portals/candidate/NeedsPage.jsx'
 import ProfilePage from './portals/candidate/ProfilePage.jsx'
 import ResumePage from './portals/candidate/ResumePage.jsx'
+import ApplicantPage from './portals/employer/ApplicantPage.jsx'
+import ApplicantsPage from './portals/employer/ApplicantsPage.jsx'
 import CompanyPage from './portals/employer/CompanyPage.jsx'
 import EmployerDashboard from './portals/employer/EmployerDashboard.jsx'
 import IndividualProfilePage from './portals/employer/IndividualProfilePage.jsx'
@@ -95,6 +97,8 @@ export const routes = [
             { path: '/employer/job-postings/new', element: <JobPostingFormPage /> },
             { path: '/employer/job-postings/:id', element: <JobPostingPreviewPage /> },
             { path: '/employer/job-postings/:id/edit', element: <JobPostingFormPage /> },
+            { path: '/employer/job-postings/:id/applicants', element: <ApplicantsPage /> },
+            { path: '/employer/applications/:id', element: <ApplicantPage /> },
           ],
         },
         {

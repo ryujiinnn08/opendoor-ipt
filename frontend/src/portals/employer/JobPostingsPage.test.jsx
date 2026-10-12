@@ -190,6 +190,21 @@ describe('JobPostingsPage', () => {
     await waitFor(() => expect(field).toHaveAttribute('aria-invalid', 'true'))
     expect(field).toHaveAccessibleDescription(/Choose a later closing date\./)
   })
+
+  it('links each posting to its applicants with the counts', async () => {
+    getJobPostings.mockResolvedValue([
+      { ...fixture, id: 1, title: 'Data encoder', status: 'open', actions: [], applicants: { total: 4, new: 2 } },
+      { ...fixture, id: 2, title: 'Clerk', status: 'open', actions: [], applicants: { total: 1, new: 0 } },
+      { ...fixture, id: 3, title: 'Driver', status: 'draft', actions: [], applicants: { total: 0, new: 0 } },
+    ])
+    renderRoutes(routes, { path: '/employer/job-postings', auth: individual })
+
+    const link = await screen.findByRole('link', { name: 'Applicants for Data encoder: 4, 2 new' })
+    expect(link).toHaveAttribute('href', '/employer/job-postings/1/applicants')
+    expect(link).toHaveTextContent('4 applicants, 2 new')
+    expect(screen.getByRole('link', { name: 'Applicants for Clerk: 1' })).toHaveTextContent('1 applicant')
+    expect(screen.getByText('No applicants yet')).toBeInTheDocument()
+  })
 })
 
 function validationError(field, message) {

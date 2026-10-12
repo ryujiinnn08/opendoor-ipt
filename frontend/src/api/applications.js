@@ -28,3 +28,30 @@ export async function changeApplicationStatus(id, { status, expected_status }) {
   const { data } = await client.patch(`/api/applications/${id}/status`, { status, expected_status })
   return data.data
 }
+
+/** One posting's applicants for its employer: { applicants, meta, counts, job }. */
+export async function listApplicants(postingId, { status, page } = {}) {
+  const params = { job_posting: postingId, status: status && status !== 'all' ? status : undefined, page: page > 1 ? page : undefined }
+  const { data } = await client.get('/api/applications', {
+    params: Object.fromEntries(Object.entries(params).filter(([, value]) => value !== undefined)),
+  })
+  return { applicants: data.data, meta: data.meta, counts: data.counts, job: data.job }
+}
+
+/** An applicant's uploaded PDF as a Blob (for the job's employer), with JSON error bodies restored. */
+export async function getApplicantResume(id) {
+  try {
+    const { data } = await client.get(`/api/applications/${id}/resume`, { responseType: 'blob' })
+    return data
+  } catch (error) {
+    const body = error?.response?.data
+    if (body instanceof Blob) {
+      try {
+        error.response.data = JSON.parse(await body.text())
+      } catch {
+        error.response.data = {}
+      }
+    }
+    throw error
+  }
+}

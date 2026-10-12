@@ -51,3 +51,13 @@ const INTERVIEW_HINTS = {
 export function interviewHint(format) {
   return INTERVIEW_HINTS[format] ?? null
 }
+
+/** The Applicants page's filters; values match the API's `status`. */
+export const APPLICANT_FILTERS = [
+  { value: 'all', label: 'All' },
+  { value: 'pending', label: 'Pending' },
+  { value: 'reviewed', label: 'Reviewed' },
+  { value: 'hired', label: 'Hired' },
+  { value: 'rejected', label: 'Rejected' },
+  { value: 'withdrawn', label: 'Withdrawn' },
+]

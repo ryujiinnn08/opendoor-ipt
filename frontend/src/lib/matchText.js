@@ -16,3 +16,14 @@ export function missingText(names) {
   if (names.length <= NAMED) return `Missing: ${names.join(' and ')}`
   return `Missing: ${names.slice(0, NAMED).join(', ')} and ${names.length - NAMED} more`
 }
+
+/**
+ * The employer's view of an applicant's needs (plan PHASE_4 §7): "Your job meets 4 of their 5
+ * needs", "…all 5 of their needs", "…none of their 5 needs"; one need: "Your job meets their need".
+ */
+export function employerMatchText({ needs_total: total, needs_met: met }) {
+  if (total === 1) return met === 1 ? 'Your job meets their need' : "Your job doesn't meet their need"
+  if (met === total) return `Your job meets all ${total} of their needs`
+  if (met === 0) return `Your job meets none of their ${total} needs`
+  return `Your job meets ${met} of their ${total} needs`
+}

@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { getResumeFile } from '../../api/candidate.js'
 import { generalErrorFrom } from '../../api/client.js'
 import { formatDate } from '../../lib/format.js'
+import { openPdfInNewTab } from '../../lib/openPdf.js'
 import Button from '../ui/Button.jsx'
 import { useAnnounce } from '../ui/announcerContext.js'
 import { FieldError } from '../ui/FormField.jsx'
@@ -48,20 +49,10 @@ export default function ResumeUpload({ resume, onUpload, onRemove }) {
   }
 
   async function openResume() {
-    // Opened during the click, so pop-up blockers allow it; the file arrives a moment later.
-    const tab = window.open('', '_blank')
     setError(null)
     try {
-      const url = URL.createObjectURL(await getResumeFile())
-      if (tab) {
-        tab.opener = null
-        tab.location.href = url
-      } else {
-        window.location.assign(url)
-      }
-      setTimeout(() => URL.revokeObjectURL(url), 60_000)
+      await openPdfInNewTab(getResumeFile)
     } catch (openError) {
-      tab?.close()
       setError(generalErrorFrom(openError) ?? 'Something went wrong. Please try again.')
     }
   }

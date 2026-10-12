@@ -8,7 +8,7 @@ import DashboardTile from '../../components/ui/DashboardTile.jsx'
 import Notice from '../../components/ui/Notice.jsx'
 import PageHeader from '../../components/ui/PageHeader.jsx'
 import VerificationBadge from '../../components/ui/VerificationBadge.jsx'
-import { PRIMARY_LINK } from '../../components/ui/buttonLinkStyles.js'
+import { PRIMARY_LINK, TEXT_LINK } from '../../components/ui/buttonLinkStyles.js'
 
 // Non-zero posting counts are listed in this order.
 const COUNT_TEXT = {
@@ -31,15 +31,15 @@ function TileLoadError({ children, onRetry }) {
   )
 }
 
-/** The postings this person may see, counted by status (whole company for owners). */
-function PostingsTile({ title }) {
-  const [counts, setCounts] = useState(null)
+/** Loads the dashboard data once for the whole page (posting counts and waiting applicants). */
+function useEmployerDashboard() {
+  const [data, setData] = useState(null)
   const [failed, setFailed] = useState(false)
 
   const load = useCallback(() => {
     getEmployerDashboard()
-      .then((data) => {
-        setCounts(data.postings)
+      .then((loaded) => {
+        setData(loaded)
         setFailed(false)
       })
       .catch(() => setFailed(true))
@@ -49,12 +49,18 @@ function PostingsTile({ title }) {
     load()
   }, [load])
 
+  return { data, failed, retry: load }
+}
+
+/** The postings this person may see, counted by status (whole company for owners). */
+function PostingsTile({ title, dashboard }) {
+  const counts = dashboard.data?.postings ?? null
   const lines = counts ? Object.keys(COUNT_TEXT).filter((status) => counts[status] > 0) : []
 
   return (
     <DashboardTile title={title} to="/employer/job-postings" linkLabel="Manage job postings">
-      {failed && <TileLoadError onRetry={load}>We couldn't load your posting counts.</TileLoadError>}
-      {!counts && !failed && 'Post jobs and list the accommodations you provide.'}
+      {dashboard.failed && <TileLoadError onRetry={dashboard.retry}>We couldn't load your posting counts.</TileLoadError>}
+      {!counts && !dashboard.failed && 'Post jobs and list the accommodations you provide.'}
       {counts && lines.length === 0 && 'No job postings yet.'}
       {lines.length > 0 && (
         <ul className="space-y-1">
@@ -64,6 +70,35 @@ function PostingsTile({ title }) {
         </ul>
       )}
     </DashboardTile>
+  )
+}
+
+/**
+ * Postings with applicants nobody has opened yet (F8.2), most first, each linking to its
+ * applicants. HR officers see their own department's.
+ */
+function WaitingApplicants({ dashboard }) {
+  const waiting = dashboard.data?.waiting_applicants
+
+  return (
+    <section aria-labelledby="waiting-heading" className="mt-8">
+      <h2 id="waiting-heading" className="text-2xl font-bold">
+        Applicants waiting for review
+      </h2>
+      {!waiting && !dashboard.failed && <p className="mt-2 text-muted">Loading…</p>}
+      {waiting && waiting.postings.length === 0 && <p className="mt-2">No applicants are waiting for review.</p>}
+      {waiting && waiting.postings.length > 0 && (
+        <ul className="mt-3">
+          {waiting.postings.map((posting) => (
+            <li key={posting.id} className="border-b border-border py-2 first:border-t">
+              <Link to={`/employer/job-postings/${posting.id}/applicants`} className={`${TEXT_LINK} min-h-11`}>
+                {`${posting.title}: ${posting.new} new`}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   )
 }
 
@@ -78,6 +113,7 @@ export default function EmployerDashboard() {
   const { user } = useAuth()
   const kind = employerKind(user)
   const { employer, department } = user.membership
+  const dashboard = useEmployerDashboard()
 
   return (
     <>
@@ -90,7 +126,8 @@ export default function EmployerDashboard() {
           </Link>
         }
       />
-      {kind === 'owner' && <OwnerDashboard employer={employer} />}
+      <WaitingApplicants dashboard={dashboard} />
+      {kind === 'owner' && <OwnerDashboard employer={employer} dashboard={dashboard} />}
       {kind === 'hr' && (
         <>
           <p className="mt-4 max-w-prose">
@@ -103,7 +140,7 @@ export default function EmployerDashboard() {
                 <VerificationBadge status={employer.verification_status} />
               </span>
             </DashboardTile>
-            <PostingsTile title={`${department.name} job postings`} />
+            <PostingsTile title={`${department.name} job postings`} dashboard={dashboard} />
           </ul>
         </>
       )}
@@ -114,7 +151,7 @@ export default function EmployerDashboard() {
             <DashboardTile title="My profile" to="/employer/profile" linkLabel="Edit my profile">
               What job seekers see about you on your postings.
             </DashboardTile>
-            <PostingsTile title="Job postings" />
+            <PostingsTile title="Job postings" dashboard={dashboard} />
           </ul>
         </>
       )}
@@ -122,7 +159,7 @@ export default function EmployerDashboard() {
   )
 }
 
-function OwnerDashboard({ employer }) {
+function OwnerDashboard({ employer, dashboard }) {
   const [team, setTeam] = useState(null)
   const [teamFailed, setTeamFailed] = useState(false)
 
@@ -172,7 +209,7 @@ function OwnerDashboard({ employer }) {
             !teamFailed && 'Departments and HR officers.'
           )}
         </DashboardTile>
-        <PostingsTile title="Job postings" />
+        <PostingsTile title="Job postings" dashboard={dashboard} />
       </ul>
     </>
   )

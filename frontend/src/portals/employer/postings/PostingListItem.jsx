@@ -11,6 +11,23 @@ const BUTTONS = [
   { action: 'delete', label: 'Delete' },
 ]
 
+/** "4 applicants, 2 new" linking to the posting's applicants, or plain "No applicants yet". */
+function applicantsLink(posting) {
+  const { total, new: fresh } = posting.applicants
+  if (total === 0) return 'No applicants yet'
+  const text = `${total === 1 ? '1 applicant' : `${total} applicants`}${fresh > 0 ? `, ${fresh} new` : ''}`
+
+  return (
+    <Link
+      to={`/employer/job-postings/${posting.id}/applicants`}
+      aria-label={`Applicants for ${posting.title}: ${total}${fresh > 0 ? `, ${fresh} new` : ''}`}
+      className="inline-flex min-h-11 items-center font-bold text-primary underline underline-offset-4 hover:no-underline"
+    >
+      {text}
+    </Link>
+  )
+}
+
 /**
  * One posting in the Job postings list, as a ruled row (plan PHASE_2 §4.10). The buttons are
  * the posting's `actions`, which the server decides (decision 34). The title opens the preview.
@@ -34,6 +51,7 @@ export default function PostingListItem({ posting, showDepartment, showCreator, 
         <li>{posting.closes_on ? `Closing date: ${formatDay(posting.closes_on)}` : 'No closing date yet'}</li>
         <li>{count === 1 ? '1 accommodation' : `${count} accommodations`}</li>
         {showCreator && posting.created_by && <li>Created by {posting.created_by.name}</li>}
+        {posting.applicants && <li>{applicantsLink(posting)}</li>}
       </ul>
 
       {posting.status === 'rejected' && posting.rejection_reason && (

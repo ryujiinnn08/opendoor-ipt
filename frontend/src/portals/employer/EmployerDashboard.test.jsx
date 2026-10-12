@@ -73,4 +73,32 @@ describe('EmployerDashboard', () => {
 
     expect(await within(tile).findByText('IT: 1 of 2 places used')).toBeInTheDocument()
   })
+
+  it('lists the postings with applicants waiting for review, loading the dashboard once', async () => {
+    getEmployerDashboard.mockResolvedValue({
+      postings: { draft: 0, pending: 0, open: 2, rejected: 0, closed: 0 },
+      waiting_applicants: {
+        total: 3,
+        postings: [
+          { id: 2, title: 'HR Assistant', new: 2 },
+          { id: 1, title: 'Junior Web Developer', new: 1 },
+        ],
+      },
+    })
+    renderRoutes([{ path: '/', element: <EmployerDashboard /> }], { auth: auth({ role: 'hr', employer: company, department: { id: 5, name: 'HR' } }) })
+
+    const section = (await screen.findByRole('heading', { level: 2, name: 'Applicants waiting for review' })).closest('section')
+    expect(await within(section).findByRole('link', { name: 'HR Assistant: 2 new' })).toHaveAttribute('href', '/employer/job-postings/2/applicants')
+    expect(within(section).getByRole('link', { name: 'Junior Web Developer: 1 new' })).toBeInTheDocument()
+    expect(await screen.findByText('2 open')).toBeInTheDocument()
+    expect(getEmployerDashboard).toHaveBeenCalledTimes(1)
+  })
+
+  it('says when nobody is waiting for review', async () => {
+    getEmployerDashboard.mockResolvedValue({ postings: { draft: 0, pending: 0, open: 1, rejected: 0, closed: 0 }, waiting_applicants: { total: 0, postings: [] } })
+    renderRoutes([{ path: '/', element: <EmployerDashboard /> }], { auth: auth({ role: 'owner', employer: { id: 2, type: 'individual', name: 'Maria' }, department: null }) })
+
+    expect(await screen.findByText('No applicants are waiting for review.')).toBeInTheDocument()
+  })
 })
+
