@@ -14,7 +14,7 @@ class Feedback extends Model
 {
     protected $table = 'feedback';
 
-    /** The application and is_hidden are set by FeedbackService and admins, never from input. */
+    /** The application and hiding are set by FeedbackService and admins, never from input. */
     protected $fillable = ['comment'];
 
     protected $attributes = [
@@ -36,5 +36,13 @@ class Feedback extends Model
     public function items(): HasMany
     {
         return $this->hasMany(FeedbackItem::class);
+    }
+
+    /**
+     * Moderation history, newest first (Phase 6B); read only by administrators.
+     */
+    public function events(): HasMany
+    {
+        return $this->hasMany(FeedbackEvent::class)->latest('id');
     }
 }

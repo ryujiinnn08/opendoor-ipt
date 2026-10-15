@@ -6,9 +6,11 @@ import PortalLayout from './components/layout/PortalLayout.jsx'
 import PublicLayout from './components/layout/PublicLayout.jsx'
 import RootLayout from './components/layout/RootLayout.jsx'
 import ChangePasswordPage from './portals/account/ChangePasswordPage.jsx'
+import NotificationsPage from './portals/account/NotificationsPage.jsx'
 import AccommodationsPage from './portals/admin/AccommodationsPage.jsx'
 import AddAdminPage from './portals/admin/AddAdminPage.jsx'
 import AdminDashboard from './portals/admin/AdminDashboard.jsx'
+import FeedbackModerationPage from './portals/admin/FeedbackModerationPage.jsx'
 import CategoriesPage from './portals/admin/CategoriesPage.jsx'
 import EmployerVerificationPage from './portals/admin/EmployerVerificationPage.jsx'
 import PostingApprovalsPage from './portals/admin/PostingApprovalsPage.jsx'
@@ -129,6 +131,7 @@ export const routes = [
         { path: '/admin/job-postings', element: <PostingApprovalsPage /> },
         { path: '/admin/job-postings/:id', element: <PostingReviewPage /> },
         { path: '/admin/settings', element: <SettingsPage /> },
+        { path: '/admin/feedback', element: <FeedbackModerationPage /> },
         { path: '/admin/users', element: <UsersPage /> },
         { path: '/admin/users/new', element: <AddAdminPage /> },
         { path: '/admin/users/:id', element: <UserPage /> },
@@ -137,6 +140,11 @@ export const routes = [
       {
         element: <ProtectedRoute roles={['candidate', 'employer', 'admin']} />,
         children: [{ element: <PortalLayout />, children: [{ path: '/account/password', element: <ChangePasswordPage /> }] }],
+      },
+      // Job seekers and employers (Phase 6B); admins have their queues.
+      {
+        element: <ProtectedRoute roles={['candidate', 'employer']} />,
+        children: [{ element: <PortalLayout />, children: [{ path: '/notifications', element: <NotificationsPage /> }] }],
       },
     ],
   },

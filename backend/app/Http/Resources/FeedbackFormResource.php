@@ -42,6 +42,8 @@ class FeedbackFormResource extends JsonResource
             'accommodations' => $accommodations->all(),
             'sent' => $feedback ? [
                 'sent_at' => $feedback->created_at->toIso8601String(),
+                // Hidden by OpenDoor's administrators: left out of the trust score (Phase 6B).
+                'hidden' => $feedback->is_hidden,
                 'comment' => $feedback->comment,
                 'ratings' => $accommodations->map(function (array $item) use ($feedback) {
                     /** @var FeedbackItem|null $rated */

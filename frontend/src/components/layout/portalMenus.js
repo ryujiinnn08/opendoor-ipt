@@ -43,6 +43,7 @@ const PORTALS = {
       { to: '/admin/accommodations', label: 'Accommodation types' },
       { to: '/admin/employers', label: 'Employer verification' },
       { to: '/admin/job-postings', label: 'Posting approvals', end: false },
+      { to: '/admin/feedback', label: 'Feedback' },
       { to: '/admin/settings', label: 'Settings' },
     ],
   },

@@ -36,5 +36,6 @@ describe('portalFor', () => {
     expect(labels({ role: 'admin' })).toContain('Settings')
     expect(labels({ role: 'admin' })).toContain('Posting approvals')
     expect(labels({ role: 'admin' })).toContain('Users')
+    expect(labels({ role: 'admin' })).toContain('Feedback')
   })
 })

@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\DecisionRequest;
 use App\Http\Resources\AdminCompanyResource;
 use App\Models\Employer;
+use App\Notifications\VerificationDecided;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Validation\Rule;
@@ -51,6 +52,12 @@ class EmployerVerificationController extends Controller
             'verified_at' => $approve ? now() : null,
             'verification_rejection_reason' => $approve ? null : $request->validated('reason'),
         ])->save();
+
+        // The owner hears the result (M9, Phase 6B).
+        $owner = $employer->owner?->user;
+        if ($owner?->is_active) {
+            $owner->notify(new VerificationDecided($employer));
+        }
 
         return new AdminCompanyResource($employer->load('owner.user'));
     }

@@ -6,8 +6,10 @@ use App\Enums\PostingStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\RemovePostingRequest;
 use App\Models\JobPosting;
+use App\Notifications\PostingRemoved;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 /**
  * Remove a posting with a reason the employer sees (plan PHASE_6 §4.2, F10.2).
@@ -32,6 +34,9 @@ class JobPostingRemovalController extends Controller
                 'removal_reason' => $request->validated('reason'),
             ])->save();
             $posting->delete();
+
+            // Its managers hear about it; the reason is on their Removed list (Phase 6B).
+            DB::afterCommit(fn () => Notification::send($posting->managers(), new PostingRemoved($posting)));
         });
 
         return response()->noContent();

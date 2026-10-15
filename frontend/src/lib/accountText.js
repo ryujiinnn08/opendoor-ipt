@@ -54,3 +54,20 @@ export function historySentence(event) {
       return `Changed on ${when}${by}.`
   }
 }
+
+/** One line of a feedback's moderation history (plan PHASE_6 §4.5). */
+export function feedbackHistorySentence(event) {
+  const when = formatDate(event.at)
+  const by = event.by ? ` by ${event.by}` : ''
+
+  switch (event.type) {
+    case 'hidden':
+      return `Hidden from the trust score on ${when}${by}${event.reason ? ':' : '.'}`
+    case 'shown':
+      return `Counted in the trust score again on ${when}${by}.`
+    case 'author_viewed':
+      return `${event.by ?? 'An administrator'} looked at who wrote it on ${when}.`
+    default:
+      return `Changed on ${when}${by}.`
+  }
+}

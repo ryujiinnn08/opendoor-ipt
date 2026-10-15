@@ -22,4 +22,10 @@ describe('FeedbackSummary', () => {
 
     expect(screen.getByText("You didn't add a comment.")).toBeInTheDocument()
   })
+
+  it('says when OpenDoor removed the ratings from the trust score', () => {
+    render(<FeedbackSummary sent={{ ...sentFeedbackFixture().sent, hidden: true }} />)
+
+    expect(screen.getByText("OpenDoor's administrators removed these ratings from the trust score.")).toBeInTheDocument()
+  })
 })

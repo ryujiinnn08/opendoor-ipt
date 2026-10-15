@@ -5,7 +5,10 @@ namespace App\Services;
 use App\Enums\PostingStatus;
 use App\Models\JobPosting;
 use App\Models\User;
+use App\Notifications\PostingDecided;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
 use LogicException;
 
@@ -153,6 +156,9 @@ class JobPostingWorkflow
                 $posting->forceFill(['rejection_reason' => $reason])->save();
             }
 
+            // Its creator and the department's managers hear the result (M9, Phase 6B).
+            DB::afterCommit(fn () => Notification::send($this->peopleFor($posting), new PostingDecided($posting)));
+
             return $posting;
         });
     }
@@ -175,6 +181,23 @@ class JobPostingWorkflow
             PostingStatus::Closed => ['edit', 'reopen', 'delete'],
             default => ['edit', 'delete'],
         };
+    }
+
+    /**
+     * The posting's managers and, if still active and not already one of them, its creator.
+     *
+     * @return EloquentCollection<int, User>
+     */
+    private function peopleFor(JobPosting $posting): EloquentCollection
+    {
+        $people = $posting->managers();
+        $creator = $posting->creator;
+
+        if ($creator?->is_active && ! $people->contains($creator)) {
+            $people->push($creator);
+        }
+
+        return $people;
     }
 
     /**

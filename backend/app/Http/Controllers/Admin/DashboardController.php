@@ -12,6 +12,7 @@ use App\Models\Accommodation;
 use App\Models\Application;
 use App\Models\Category;
 use App\Models\Employer;
+use App\Models\Feedback;
 use App\Models\JobPosting;
 use App\Models\User;
 use App\Services\TeamCapacity;
@@ -37,6 +38,10 @@ class DashboardController extends Controller
                 ->where('verification_status', VerificationStatus::Pending)
                 ->count(),
             'postings_waiting_for_approval' => JobPosting::where('status', PostingStatus::Pending)->count(),
+            // Moderation has no "checked" state, so the queue is the past week's comments (Phase 6B).
+            'feedback_comments_last_7_days' => Feedback::whereNotNull('comment')->where('comment', '!=', '')
+                ->where('created_at', '>=', now()->subDays(7))
+                ->count(),
 
             // OpenDoor in numbers.
             'job_seekers' => $countRole(Role::Candidate),

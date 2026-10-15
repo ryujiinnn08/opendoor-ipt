@@ -73,3 +73,21 @@ export async function setSuspended(id, suspended, reason) {
 export async function removePosting(id, reason) {
   await client.delete(`/api/admin/job-postings/${id}`, { data: { reason } })
 }
+
+/** Phase 6B. filter: 'comments' (default) | 'all' | 'hidden'. Returns { data, meta }. */
+export async function getFeedbackForModeration(filter, page) {
+  const { data } = await client.get('/api/admin/feedback', { params: { filter, page } })
+  return data
+}
+
+/** "Show who wrote this": { name, email }; each look is recorded in the feedback's history. */
+export async function revealFeedbackAuthor(id) {
+  const { data } = await client.post(`/api/admin/feedback/${id}/author`)
+  return data.data
+}
+
+/** Hide with a reason (leaves the trust score), or show again (no reason). */
+export async function setFeedbackHidden(id, hidden, reason) {
+  const { data } = await client.patch(`/api/admin/feedback/${id}/hide`, hidden ? { hidden, reason } : { hidden })
+  return data.data
+}

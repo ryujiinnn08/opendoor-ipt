@@ -2,7 +2,7 @@
 
 The REST API behind the OpenDoor web app (Laravel 12, `backend/`). Every endpoint the React app (`frontend/src/api/*.js`) uses is listed here, with who may call it, what to send and what comes back. The examples are real responses captured from the demo data (long lists are shortened with `…`).
 
-Phases covered: 1–5 (accounts, employers and teams, job postings, the job board and matching, profiles, applications, feedback and the trust score) and Phase 6A's server (user management, suspension, change password, posting removal).
+Phases covered: 1–5 (accounts, employers and teams, job postings, the job board and matching, profiles, applications, feedback and the trust score) and Phase 6 (user management, suspension, change password, posting removal, notifications, feedback moderation).
 
 **Where the contract lives in the code:** each request's rules are a Form Request in `backend/app/Http/Requests/`, each response shape is an API Resource in `backend/app/Http/Resources/`, and the server tests in `backend/tests/Feature/` check the shapes and the permissions. If this page and the code ever disagree, the code and its tests win; please update this page.
 
@@ -348,7 +348,7 @@ The job's employer only, and not after Withdrawn. Sent with `Content-Security-Po
   "sent": null }
 ```
 
-`accommodations` are the ones copied at the hire, whatever the posting says now. Once sent, `sent` is `{ "sent_at", "comment", "ratings": [{ "accommodation_id", "name", "group_name", "note", "rating", "rating_label" }] }`. Only the application's own job seeker, only Hired; anyone else 403.
+`accommodations` are the ones copied at the hire, whatever the posting says now. Once sent, `sent` is `{ "sent_at", "hidden", "comment", "ratings": [{ "accommodation_id", "name", "group_name", "note", "rating", "rating_label" }] }`; `hidden` (6B) is `true` when OpenDoor's administrators removed the ratings from the trust score. Only the application's own job seeker, only Hired; anyone else 403.
 
 #### `POST /applications/{id}/feedback` — rate the accommodations (the hired job seeker) · 5A
 
@@ -364,9 +364,27 @@ The job's employer only, and not after Withdrawn. Sent with `Content-Security-Po
 - 422 on `ratings.{id}`: `"Choose an answer for Flexible hours."`; on `ratings`: `"You can only rate the accommodations listed when you were hired."`, `"Rate at least one accommodation you used."`
 - 429 after 10 a minute
 
-#### Notifications (recorded, not yet shown) · 4B
+#### Notifications · 4B / 6B
 
-Each change is stored with Laravel's database notifications (table `notifications`) for the other party: `new_applicant` to the posting's owner and the HR officers of its department; `status_changed` (`status`, `actor`) to the job seeker when the employer acts, and to the managers when the job seeker withdraws or confirms a hire. Phase 5 adds `feedback_open` (application id, job title, employer name) for the job seeker, once per hire, the first time the dashboard or My applications is opened after the form opens. They hold ids, the job title and names only, never needs, messages or ratings. The endpoints to read them (`GET /notifications`, mark as read) come in Phase 6.
+Each change is stored with Laravel's database notifications (table `notifications`). They hold ids, job titles and names only, never needs, messages, ratings or reasons.
+
+| `type` | To | `details` |
+|---|---|---|
+| `new_applicant` | The posting's owner and the HR officers of its department | `application_id`, `job_posting_id`, `job_title`, `applicant_name` |
+| `status_changed` | The job seeker when the employer acts; the managers when the job seeker withdraws or confirms a hire | `application_id`, `job_posting_id`, `job_title`, `employer_name`, `applicant_name`, `status`, `actor` |
+| `feedback_open` (5A) | The hired job seeker, once, the first time the dashboard or My applications opens after the form opens | `application_id`, `job_title`, `employer_name` |
+| `verification_decided` (6B) | The company's owner | `employer_id`, `employer_name`, `verified` |
+| `posting_decided` (6B) | Its creator and the department's managers | `job_posting_id`, `job_title`, `approved` |
+| `posting_removed` (6B) | The posting's managers (the reason is on their Removed list) | `job_posting_id`, `job_title` |
+
+`candidate` and `employer` only, each their own (another person's id answers 404). Kept 90 days: older ones are hidden and `php artisan notifications:prune` (scheduled daily) deletes them.
+
+| Method | Address | Send | Returns |
+|---|---|---|---|
+| GET | `/notifications` | `page` | 20 a page, newest first: `{ "id", "type", "details", "read_at", "created_at" }` with `links` and `meta` |
+| GET | `/notifications/unread-count` | — | `{ "count": 3 }` (the header asks on every page change) |
+| PATCH | `/notifications/{id}/read` | — | The notification, now read |
+| PATCH | `/notifications/read-all` | — | 204 |
 
 ### 4.6 Employer: profile, verification, team
 
@@ -426,7 +444,7 @@ Limits: `title`, `location` ≤150; `description` ≤5000; `closes_on` from tomo
 
 | Method | Address | Send | Returns |
 |---|---|---|---|
-| GET | `/admin/dashboard` | — | Waiting: `companies_waiting_for_verification`, `postings_waiting_for_approval`. Numbers (6A): `job_seekers`, `employer_accounts`, `companies`, `individual_employers`, `administrators`, `suspended_accounts`, `open_jobs`, `applications`, `hires`, `employers_with_trust_score`. Tiles: `categories`, `active_accommodations`, `hr_per_department_cap` |
+| GET | `/admin/dashboard` | — | Waiting: `companies_waiting_for_verification`, `postings_waiting_for_approval`, `feedback_comments_last_7_days` (6B). Numbers (6A): `job_seekers`, `employer_accounts`, `companies`, `individual_employers`, `administrators`, `suspended_accounts`, `open_jobs`, `applications`, `hires`, `employers_with_trust_score`. Tiles: `categories`, `active_accommodations`, `hr_per_department_cap` |
 | POST | `/admin/categories` | `name` (≤100, unique) | 201, `{ "id", "name" }` |
 | PUT | `/admin/categories/{id}` | `name` | The category |
 | DELETE | `/admin/categories/{id}` | — | 204; 422 on `category` if any posting (even a deleted one) uses it: "… Rename it instead." |
@@ -459,6 +477,16 @@ Limits: `title`, `location` ≤150; `description` ≤5000; `closes_on` from tomo
   "history": [ { "id": 7, "type": "suspended", "reason": "Posted fake jobs, reported by 3 job seekers.", "by": "OpenDoor Admin", "at": "2026-10-16T10:20:00+08:00" } ] }
 ```
 
+#### Feedback moderation (Phase 6B)
+
+| Method | Address | Send | Returns |
+|---|---|---|---|
+| GET | `/admin/feedback` | `filter`: `comments` (default) \| `all` \| `hidden`; `page` | 20 a page, newest first: `{ "id", "sent_at", "employer": { "id", "name" }, "job": { "id", "title" }, "ratings": [ { "name", "rating", "rating_label" } ], "comment", "is_hidden", "hidden_reason", "history" }`. **Never the author** |
+| POST | `/admin/feedback/{id}/author` | — | `{ "name", "email" }` of the job seeker who wrote it; each call adds an `author_viewed` line to its `history` |
+| PATCH | `/admin/feedback/{id}/hide` | `{ "hidden": true, "reason" }` (5–500) or `{ "hidden": false }` | The feedback. The employer's trust score is recalculated at once; the job seeker's sent ratings say `hidden: true` (never the reason). 409 when it's already in that state |
+
+`history` lines are `{ "id", "type", "reason", "by", "at" }` with `type` from `hidden`, `shown`, `author_viewed`.
+
 Admins see no applications (`/applications` answers 403).
 
 ---
@@ -476,7 +504,8 @@ The server checks every rule (Laravel policies and resources); hiding something 
 | "Meets 4 of 5 of your needs" | — | ✓ | — | As "Your job meets 4 of their 5 needs" on applicants | — | — |
 | An application, its cover note and interview request | — | ✓ | — | ✓ (not after Withdrawn) | — | — |
 | Whom else someone applied to | — | ✓ | — | — | — | — |
-| Their accommodation ratings and comment | — | ✓ | — | — (never, only totals from 3+ responses) | — | ✓ (Phase 6) |
+| Their accommodation ratings and comment | — | ✓ | — | — (never, only totals from 3+ responses) | — | ✓ (6B), the author only on request, recorded |
+| Notifications | — | Their own | — | Their own | — | — |
 | An employer's trust score, count and breakdown (3+ responses; rows rated by 3+) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Registration number, team, emails | — | — | — | Their own company | — | ✓ |
 | Account status, history and suspension reasons (6A) | — | Status only (the login message) | — | — | — | ✓ |

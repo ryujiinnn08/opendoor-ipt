@@ -14,6 +14,7 @@ export default function FeedbackSummary({ sent, headingLevel = 2, title = 'Your 
         {title}
       </Heading>
       <p className="mt-1 text-muted">You sent these on {formatDate(sent.sent_at)}. Only you and OpenDoor's administrators see them.</p>
+      {sent.hidden && <p className="mt-2 max-w-prose font-bold">OpenDoor's administrators removed these ratings from the trust score.</p>}
       <dl className="mt-3">
         {sent.ratings.map((item) => (
           <div key={item.accommodation_id} className="border-b border-border py-3 first:border-t">

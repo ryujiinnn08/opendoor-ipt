@@ -1,9 +1,11 @@
-import { useState } from 'react'
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { useCallback, useEffect, useState } from 'react'
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { getUnreadCount } from '../../api/notifications.js'
 import { useAuth } from '../../auth/authContext.js'
 import { employerSummary } from '../../auth/employerAccess.js'
 import { CHANGE_PASSWORD_PATH, dashboardFor } from '../../auth/redirects.js'
 import { useAnnounce } from '../ui/announcerContext.js'
+import NotificationsLink from '../notifications/NotificationsLink.jsx'
 import Button from '../ui/Button.jsx'
 import { portalFor } from './portalMenus.js'
 import BrandLink from './BrandLink.jsx'
@@ -18,8 +20,24 @@ export default function PortalLayout() {
   const navigate = useNavigate()
   const announce = useAnnounce()
   const [loggingOut, setLoggingOut] = useState(false)
+  const location = useLocation()
   const portal = portalFor(user)
   const summary = employerSummary(user)
+  // Job seekers and employers get notifications; admins have their queues (plan PHASE_6 §4.4).
+  const notified = role === 'candidate' || role === 'employer'
+  const [unread, setUnread] = useState(0)
+
+  const refreshNotifications = useCallback(() => {
+    if (!notified) return
+    getUnreadCount()
+      .then(setUnread)
+      .catch(() => {})
+  }, [notified])
+
+  // Counted when a page loads (Q8): no live updates.
+  useEffect(() => {
+    refreshNotifications()
+  }, [refreshNotifications, location.pathname])
 
   async function handleLogout() {
     setLoggingOut(true)
@@ -39,7 +57,8 @@ export default function PortalLayout() {
             <BrandLink to={dashboardFor(role)} />
             <span className="font-bold text-muted">{portal.name}</span>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+            {notified && <NotificationsLink count={unread} />}
             <div>
               <p>
                 <span className="sr-only">Logged in as</span> <span className="font-bold">{user.name}</span>
@@ -77,7 +96,7 @@ export default function PortalLayout() {
       </header>
 
       <main id="main" tabIndex={-1} className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 outline-none">
-        <Outlet />
+        <Outlet context={{ refreshNotifications }} />
       </main>
 
       <div className="print:hidden">

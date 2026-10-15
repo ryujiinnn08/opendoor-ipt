@@ -27,6 +27,13 @@ const QUEUES = [
     to: '/admin/job-postings',
     link: 'Review postings',
   },
+  {
+    key: 'feedback_comments_last_7_days',
+    text: (count) => `${plural(count, 'feedback comment', 'feedback comments')} this week`,
+    none: 'No feedback comments this week',
+    to: '/admin/feedback',
+    link: 'Read feedback',
+  },
 ]
 
 /**

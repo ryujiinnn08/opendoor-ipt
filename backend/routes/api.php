@@ -9,6 +9,7 @@ use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Candidate;
 use App\Http\Controllers\Employer;
 use App\Http\Controllers\FeedbackController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Public;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -59,6 +60,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
         // Change password (F1.6, Phase 6A): every portal.
         Route::put('/me/password', [PasswordController::class, 'update'])->middleware('throttle:10,1,password');
+
+        // Notifications (M9, Phase 6B): job seekers and employers, their own only.
+        Route::middleware('role:candidate,employer')->prefix('notifications')->group(function () {
+            Route::get('/', [NotificationController::class, 'index']);
+            Route::get('unread-count', [NotificationController::class, 'unreadCount']);
+            Route::patch('read-all', [NotificationController::class, 'readAll']);
+            Route::patch('{id}/read', [NotificationController::class, 'read'])->whereUuid('id');
+        });
 
         // Candidate portal (M2, Phase 3B): only the logged-in job seeker's own data.
         Route::middleware('role:candidate')->prefix('candidate')->group(function () {
@@ -138,6 +147,12 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('job-postings/{posting}', [Admin\JobPostingApprovalController::class, 'show'])->withTrashed();
             Route::patch('job-postings/{posting}/approve', [Admin\JobPostingApprovalController::class, 'update']);
             Route::delete('job-postings/{posting}', [Admin\JobPostingRemovalController::class, 'destroy']);
+
+            // Feedback moderation (F10.5, Phase 6B).
+            Route::get('feedback', [Admin\FeedbackModerationController::class, 'index']);
+            // A POST: each look is recorded in the feedback's history (Q9).
+            Route::post('feedback/{feedback}/author', [Admin\FeedbackModerationController::class, 'author']);
+            Route::patch('feedback/{feedback}/hide', [Admin\FeedbackModerationController::class, 'hide']);
 
             // Users (F10.1, Phase 6A).
             Route::get('users', [Admin\UserController::class, 'index']);
