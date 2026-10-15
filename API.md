@@ -2,7 +2,7 @@
 
 The REST API behind the OpenDoor web app (Laravel 12, `backend/`). Every endpoint the React app (`frontend/src/api/*.js`) uses is listed here, with who may call it, what to send and what comes back. The examples are real responses captured from the demo data (long lists are shortened with `…`).
 
-Phases covered: 1–4 (accounts, employers and teams, job postings, the job board and matching, profiles, applications). Feedback and the trust score (Phase 5) will be added when they're built.
+Phases covered: 1–5 (accounts, employers and teams, job postings, the job board and matching, profiles, applications, feedback and the trust score) and Phase 6A's server (user management, suspension, change password, posting removal).
 
 **Where the contract lives in the code:** each request's rules are a Form Request in `backend/app/Http/Requests/`, each response shape is an API Resource in `backend/app/Http/Resources/`, and the server tests in `backend/tests/Feature/` check the shapes and the permissions. If this page and the code ever disagree, the code and its tests win; please update this page.
 
@@ -97,13 +97,13 @@ The same objects appear in several endpoints. Field lists are complete; examples
 ### User (`UserResource`)
 
 ```json
-{ "id": 4, "name": "Demo Employer", "email": "employer@opendoor.test", "role": "employer",
+{ "id": 4, "name": "Demo Employer", "email": "employer@opendoor.test", "role": "employer", "must_change_password": false,
   "membership": { "role": "owner", "department": null,
     "employer": { "id": 1, "type": "company", "name": "OpenDoor Demo Corp.", "logo_url": null,
                   "is_verified": true, "verification_status": "verified" } } }
 ```
 
-`membership` appears for employers only (`null` before setup); HR officers have `"role": "hr"` and their `department` (`{ "id", "name" }`).
+`membership` appears for employers only (`null` before setup); HR officers have `"role": "hr"` and their `department` (`{ "id", "name" }`). `must_change_password` is `true` for a new administrator until they replace the temporary password (Phase 6A); until then every address except `GET /me`, `PUT /me/password` and `POST /logout` answers **403** `"Change your temporary password before you continue."`
 
 ### Accommodation
 
@@ -138,6 +138,7 @@ The public fields plus: `status` (the status people see: `draft|pending|open|rej
 
 - `actions`: what this person may do now, from `edit`, `close`, `reopen`, `change_closing_date`, `delete`.
 - `applicants` (on the list): `{ "total": 4, "new": 2 }` (`new` = not opened yet).
+- `removal` (Phase 6A): `null`, or for a posting OpenDoor removed `{ "removed_at", "reason", "removed_by" }`; `removed_by` (the administrator's name) is sent to admins only. A removed posting has no `actions`.
 
 ### Application, the job seeker's view (`CandidateApplicationResource`)
 
@@ -227,6 +228,9 @@ Never the job seeker's shape. In a list:
 | POST | `/login` | Anyone | `email`, `password` | 200, User. Wrong details: 422 on `email` ("These details do not match our records. Check your email and password.") |
 | POST | `/logout` | Logged in | — | 204 |
 | GET | `/me` | Logged in | — | User (the app calls it on load to restore the session) |
+| PUT | `/me/password` | Logged in · 6A | `current_password`, `password` + `password_confirmation` (the registration rules; different from the current one) | User. Ends the person's other sessions; this one continues. 422 `"That isn't your current password."`. 10 a minute |
+
+A suspended account (`is_active = false`) gets **403** `"This account has been suspended. Contact the OpenDoor administrators for help."` at login and on its next request; suspending also deletes its stored sessions (Phase 6A).
 
 ### 4.3 Job board (public)
 
@@ -392,7 +396,7 @@ Each change is stored with Laravel's database notifications (table `notification
 
 | Method | Address | Send | Returns |
 |---|---|---|---|
-| GET | `/employer/job-postings` | `status` (`all`\|`draft`\|`pending`\|`open`\|`rejected`\|`closed`), `department` (owners) | Employer job postings with `applicants` and `actions`, newest change first (≤200) |
+| GET | `/employer/job-postings` | `status` (`all`\|`draft`\|`pending`\|`open`\|`rejected`\|`closed`\|`removed`), `department` (owners). `removed` lists only postings OpenDoor removed, with `removal`; `all` leaves them out | Employer job postings with `applicants` and `actions`, newest change first (≤200) |
 | POST | `/employer/job-postings` | See below | 201, the posting (Draft, or Waiting for approval with `submit: true`) |
 | GET | `/employer/job-postings/{id}` | — | The posting |
 | PUT | `/employer/job-postings/{id}` | See below | The posting. Saving an open or closed posting sends it back for approval |
@@ -422,7 +426,7 @@ Limits: `title`, `location` ≤150; `description` ≤5000; `closes_on` from tomo
 
 | Method | Address | Send | Returns |
 |---|---|---|---|
-| GET | `/admin/dashboard` | — | `{ "categories", "active_accommodations", "companies_waiting_for_verification", "postings_waiting_for_approval", "hr_per_department_cap" }` |
+| GET | `/admin/dashboard` | — | Waiting: `companies_waiting_for_verification`, `postings_waiting_for_approval`. Numbers (6A): `job_seekers`, `employer_accounts`, `companies`, `individual_employers`, `administrators`, `suspended_accounts`, `open_jobs`, `applications`, `hires`, `employers_with_trust_score`. Tiles: `categories`, `active_accommodations`, `hr_per_department_cap` |
 | POST | `/admin/categories` | `name` (≤100, unique) | 201, `{ "id", "name" }` |
 | PUT | `/admin/categories/{id}` | `name` | The category |
 | DELETE | `/admin/categories/{id}` | — | 204; 422 on `category` if any posting (even a deleted one) uses it: "… Rename it instead." |
@@ -433,12 +437,29 @@ Limits: `title`, `location` ≤150; `description` ≤5000; `closes_on` from tomo
 | GET | `/admin/employers` | `verification`: `pending` (default, oldest first) \| `verified` \| `rejected` | Companies with `verification`, `owner` (`name`, `email`), `departments_count`, `hr_officers_count` |
 | PATCH | `/admin/employers/{id}/verify` | `decision`: `approve` \| `reject`, `reason` (required to reject, ≤500) | The company. Only a company waiting for verification |
 | GET | `/admin/job-postings` | `status`: `pending` (default, oldest first) \| `open` \| `rejected` | Postings |
-| GET | `/admin/job-postings/{id}` | — | One posting (drafts: 404) |
+| GET | `/admin/job-postings/{id}` | — | One posting, including one OpenDoor removed (with `removal`). Drafts and postings the employer deleted: 404 |
+| DELETE | `/admin/job-postings/{id}` · 6A | `reason` (5–500; the employer sees it) | 204. Hidden everywhere and kept: applications keep their status (job seekers see `job.state: "removed"`), the employer sees it under `status=removed` and can't edit, reopen or delete it. Allowed with applicants waiting. Drafts: 404 |
 | PATCH | `/admin/job-postings/{id}/approve` | `decision`, `reason` (to reject), and `updated_at` of the version reviewed | The posting. 409 `"This posting changed while you were reviewing it. Reload the page to see the latest version."`; 422 `"Reload the page and review the posting again."` without `updated_at` |
 | GET | `/admin/settings` | — | `{ "hr_per_department_cap": 10 }` |
 | PUT | `/admin/settings` | `hr_per_department_cap` (1–100) | The settings |
 
-Admins see no applications (`/applications` answers 403); user management comes in Phase 6.
+#### Users (Phase 6A)
+
+| Method | Address | Send | Returns |
+|---|---|---|---|
+| GET | `/admin/users` | `q` (name or email, ≤100), `role` (`candidate`\|`employer`\|`admin`), `status` (`active`\|`suspended`), `page` | 20 a page, newest first, with `links` and `meta`: `{ "id", "name", "email", "role", "is_active", "joined_at", "employer" }`; `employer` (employers only, `null` before setup) is `{ "id", "name", "type", "verification_status", "member_role", "department" }` |
+| GET | `/admin/users/{id}` | — | The list fields plus `last_login_at`, `must_change_password`, `is_you`, `history` (newest first: `{ "id", "type", "reason", "by", "at" }`, `type` from `suspended`, `reactivated`, `admin_created`, `password_changed`; `by` is the administrator, `null` when the person acted), for job seekers `applications` (`{ "total", "hires" }`) and for employers `postings` (the ones they manage, not drafts, ≤50: `{ "id", "title", "status" }`). **Never** a job seeker's profile, needs, disability type or résumé |
+| POST | `/admin/users` | `name` (≤255), `email` (lowercase, unique) | 201, the new administrator's page plus `"temporary_password"` (16 characters), **shown only in this response**; they must change it after logging in |
+| PATCH | `/admin/users/{id}/suspend` | `{ "suspended": true, "reason" }` (5–500, administrators only see it) or `{ "suspended": false }` | The account's page. Suspending ends every session of that person. 422 `"You can't suspend your own account."` / `"OpenDoor needs at least one active administrator."`; 409 when it's already in that state |
+
+```json
+{ "id": 3, "name": "Demo Candidate Two", "email": "candidate2@opendoor.test", "role": "candidate", "is_active": false,
+  "joined_at": "2026-10-03T10:00:00+08:00", "last_login_at": "2026-10-15T09:12:00+08:00", "must_change_password": false, "is_you": false,
+  "applications": { "total": 2, "hires": 0 },
+  "history": [ { "id": 7, "type": "suspended", "reason": "Posted fake jobs, reported by 3 job seekers.", "by": "OpenDoor Admin", "at": "2026-10-16T10:20:00+08:00" } ] }
+```
+
+Admins see no applications (`/applications` answers 403).
 
 ---
 
@@ -458,3 +479,5 @@ The server checks every rule (Laravel policies and resources); hiding something 
 | Their accommodation ratings and comment | — | ✓ | — | — (never, only totals from 3+ responses) | — | ✓ (Phase 6) |
 | An employer's trust score, count and breakdown (3+ responses; rows rated by 3+) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Registration number, team, emails | — | — | — | Their own company | — | ✓ |
+| Account status, history and suspension reasons (6A) | — | Status only (the login message) | — | — | — | ✓ |
+| Why OpenDoor removed a posting (6A) | — | — | — | ✓ | — | ✓ (and who removed it) |

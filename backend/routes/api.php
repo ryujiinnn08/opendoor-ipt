@@ -55,7 +55,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    Route::middleware('active')->group(function () {
+    Route::middleware(['active', 'password.changed'])->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
         // Change password (F1.6, Phase 6A): every portal.
         Route::put('/me/password', [PasswordController::class, 'update'])->middleware('throttle:10,1,password');
@@ -134,7 +134,8 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::patch('employers/{employer}/verify', [Admin\EmployerVerificationController::class, 'update']);
 
             Route::get('job-postings', [Admin\JobPostingApprovalController::class, 'index']);
-            Route::get('job-postings/{posting}', [Admin\JobPostingApprovalController::class, 'show']);
+            // Removed postings stay readable here, with the reason (Phase 6A).
+            Route::get('job-postings/{posting}', [Admin\JobPostingApprovalController::class, 'show'])->withTrashed();
             Route::patch('job-postings/{posting}/approve', [Admin\JobPostingApprovalController::class, 'update']);
             Route::delete('job-postings/{posting}', [Admin\JobPostingRemovalController::class, 'destroy']);
 

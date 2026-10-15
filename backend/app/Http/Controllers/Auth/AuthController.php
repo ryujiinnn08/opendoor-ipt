@@ -46,6 +46,7 @@ class AuthController extends Controller
         }
 
         $request->session()->regenerate();
+        $user->forceFill(['last_login_at' => now()])->save();
 
         return new UserResource($user);
     }

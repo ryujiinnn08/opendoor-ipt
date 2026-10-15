@@ -20,12 +20,13 @@ class JobPostingController extends Controller
 {
     /**
      * The postings this person may see, newest change first. `status` filters by the status
-     * people see; company owners can also filter by `department`.
+     * people see, or `removed` for postings OpenDoor removed; company owners can also filter by
+     * `department`.
      */
     public function index(Request $request): AnonymousResourceCollection
     {
         $filters = $request->validate([
-            'status' => ['nullable', Rule::in(['all', ...array_column(PostingStatus::cases(), 'value')])],
+            'status' => ['nullable', Rule::in(['all', 'removed', ...array_column(PostingStatus::cases(), 'value')])],
             'department' => ['nullable', 'integer'],
         ]);
         $status = $filters['status'] ?? 'all';
@@ -35,7 +36,9 @@ class JobPostingController extends Controller
         $postings = JobPosting::visibleTo($request->user())
             ->with(JobPostingResource::RELATIONS)
             ->withCount(['applications', 'applications as new_applications_count' => fn ($query) => $query->where('status', ApplicationStatus::Pending)])
-            ->when($status !== 'all', fn ($query) => $query->inDisplayStatus(PostingStatus::from($status)))
+            // Removed by OpenDoor (Phase 6A): its own filter, with the reason.
+            ->when($status === 'removed', fn ($query) => $query->onlyTrashed()->whereNotNull('removed_at'))
+            ->when(! in_array($status, ['all', 'removed'], true), fn ($query) => $query->inDisplayStatus(PostingStatus::from($status)))
             ->when($ownsCompany && isset($filters['department']), fn ($query) => $query->where('department_id', $filters['department']))
             ->latest('updated_at')
             ->latest('id')

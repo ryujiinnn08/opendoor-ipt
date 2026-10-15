@@ -2,39 +2,75 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\Role;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\AddAdminRequest;
+use App\Http\Resources\AdminUserDetailResource;
+use App\Http\Resources\AdminUserResource;
 use App\Models\User;
+use App\Services\AccountService;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Validation\Rule;
 
 /**
  * Every account, one account's page, and adding an administrator (plan PHASE_6 §4.1, F10.1).
- * Scaffold: answers 501 until 6A step 1 builds it.
  */
 class UserController extends Controller
 {
+    public const PER_PAGE = 20;
+
     /**
      * Newest first, 20 a page; `q` matches name or email; filters `role` and `status`.
      */
-    public function index(Request $request)
+    public function index(Request $request): AnonymousResourceCollection
     {
-        abort(501, 'Not built yet.');
+        $filters = $request->validate([
+            'q' => ['nullable', 'string', 'max:100'],
+            'role' => ['nullable', Rule::enum(Role::class)],
+            'status' => ['nullable', Rule::in(['active', 'suspended'])],
+            'page' => ['nullable', 'integer', 'min:1'],
+        ]);
+        $search = trim($filters['q'] ?? '');
+
+        $users = User::with(AdminUserResource::RELATIONS)
+            ->when($search !== '', function (Builder $query) use ($search) {
+                // %, _ and ! are plain characters (escaped with ! so SQLite and MariaDB agree).
+                $pattern = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $search).'%';
+                $query->where(fn (Builder $query) => $query
+                    ->whereRaw("name LIKE ? ESCAPE '!'", [$pattern])
+                    ->orWhereRaw("email LIKE ? ESCAPE '!'", [$pattern]));
+            })
+            ->when(isset($filters['role']), fn (Builder $query) => $query->where('role', $filters['role']))
+            ->when(isset($filters['status']), fn (Builder $query) => $query->where('is_active', $filters['status'] === 'active'))
+            ->latest('id')
+            ->paginate(self::PER_PAGE)
+            ->withQueryString();
+
+        return AdminUserResource::collection($users);
+    }
+
+    public function show(User $user): AdminUserDetailResource
+    {
+        return new AdminUserDetailResource($user->load(AdminUserResource::RELATIONS));
     }
 
     /**
-     * The account, what it's connected to (company and role, or application and hire counts) and
-     * its history. Never a job seeker's profile, needs, disability type or résumé (Q3).
+     * Add an administrator. The temporary password is in this response only (Q4).
      */
-    public function show(User $user)
+    public function store(AddAdminRequest $request, AccountService $accounts): JsonResponse
     {
-        abort(501, 'Not built yet.');
-    }
+        [$user, $password] = $accounts->createAdmin(
+            $request->validated('name'),
+            $request->validated('email'),
+            $request->user(),
+        );
 
-    /**
-     * Add an administrator: name and email; returns a 16-character temporary password once and
-     * sets `must_change_password` (Q4).
-     */
-    public function store(Request $request)
-    {
-        abort(501, 'Not built yet.');
+        return (new AdminUserDetailResource($user->load(AdminUserResource::RELATIONS)))
+            ->additional(['temporary_password' => $password])
+            ->response()
+            ->setStatusCode(201);
     }
 }

@@ -165,6 +165,11 @@ class JobPostingWorkflow
      */
     public function actionsFor(JobPosting $posting): array
     {
+        // Removed by OpenDoor or deleted: no edit, reopen or delete (Phase 6A, Q7).
+        if ($posting->trashed()) {
+            return [];
+        }
+
         return match ($posting->displayStatus()) {
             PostingStatus::Open => ['edit', 'close', 'change_closing_date', 'delete'],
             PostingStatus::Closed => ['edit', 'reopen', 'delete'],

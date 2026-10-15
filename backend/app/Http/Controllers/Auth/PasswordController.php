@@ -3,20 +3,26 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\Auth\ChangePasswordRequest;
+use App\Http\Resources\UserResource;
+use App\Services\AccountService;
 
 /**
  * Change password, for every portal (plan PHASE_6 §4.1, F1.6, Q5).
- * Scaffold: answers 501 until 6A step 1 builds it.
  */
 class PasswordController extends Controller
 {
     /**
-     * Current password, new password (the registration rules) and confirmation; clears
-     * `must_change_password`, ends the user's other sessions and records it in the history.
+     * Ends the user's other sessions; this one continues with a new id.
      */
-    public function update(Request $request)
+    public function update(ChangePasswordRequest $request, AccountService $accounts): UserResource
     {
-        abort(501, 'Not built yet.');
+        $user = $request->user();
+        $session = $request->hasSession() ? $request->session() : null;
+
+        $session?->migrate(true);
+        $accounts->changePassword($user, $request->validated('password'), $session?->getId());
+
+        return new UserResource($user);
     }
 }

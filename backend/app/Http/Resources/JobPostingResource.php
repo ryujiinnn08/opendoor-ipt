@@ -42,6 +42,16 @@ class JobPostingResource extends JsonResource
             'status' => $status->value,
             'closed_automatically' => $this->isExpired(),
             'rejection_reason' => $status === PostingStatus::Rejected ? $this->rejection_reason : null,
+            // Removed by OpenDoor (Phase 6A): the employer and admins see the reason; which
+            // administrator removed it is for admins only.
+            'removal' => $this->removed_at === null ? null : [
+                'removed_at' => $this->removed_at->toIso8601String(),
+                'reason' => $this->removal_reason,
+                'removed_by' => $this->when(
+                    $request->user()?->role === Role::Admin,
+                    fn () => $this->remover?->name,
+                ),
+            ],
             'changed_after_approval' => $this->status === PostingStatus::Pending && $this->approved_at !== null,
             'submitted_at' => $this->submitted_at?->toIso8601String(),
             'approved_at' => $this->approved_at?->toIso8601String(),

@@ -53,7 +53,7 @@ class UserSeeder extends Seeder
         $this->createAccount($adminEmail, 'OpenDoor Admin', Role::Admin, $adminPassword);
 
         // Demo accounts are a backup for demonstrations; in production they are opt-in.
-        $demoPassword = config('opendoor.seed.demo_password') ?: ($production ? null : self::LOCAL_DEMO_PASSWORD);
+        $demoPassword = self::demoPassword();
 
         if (! $demoPassword) {
             $this->command?->warn('Demo accounts skipped: SEED_DEMO_PASSWORD is not set.');
@@ -68,6 +68,15 @@ class UserSeeder extends Seeder
         $this->createAccount(self::DEMO_INDIVIDUAL_EMAIL, 'Demo Individual', Role::Employer, $demoPassword);
         $this->createAccount(self::DEMO_EMPLOYER2_EMAIL, 'Demo Contact Center Owner', Role::Employer, $demoPassword);
         $this->createAccount(self::DEMO_EMPLOYER3_EMAIL, 'Demo Clinic Owner', Role::Employer, $demoPassword);
+    }
+
+    /**
+     * The demo accounts' password: SEED_DEMO_PASSWORD, or the local one outside production.
+     * Null means demo accounts are skipped.
+     */
+    public static function demoPassword(): ?string
+    {
+        return config('opendoor.seed.demo_password') ?: (app()->isProduction() ? null : self::LOCAL_DEMO_PASSWORD);
     }
 
     private function createAccount(string $email, string $name, Role $role, string $password): void

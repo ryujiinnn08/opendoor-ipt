@@ -39,10 +39,13 @@ class JobPostingApprovalController extends Controller
 
     /**
      * Drafts belong to the employer until they are submitted, so admins can't open them.
+     * A posting OpenDoor removed opens with the removal (Phase 6A).
      */
     public function show(JobPosting $posting): JobPostingResource
     {
         abort_if($posting->status === PostingStatus::Draft, 404);
+        // An employer's own delete stays hidden; only postings OpenDoor removed are shown.
+        abort_if($posting->trashed() && $posting->removed_at === null, 404);
 
         return new JobPostingResource($posting->load(JobPostingResource::RELATIONS));
     }

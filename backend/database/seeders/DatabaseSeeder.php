@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
             AccommodationSeeder::class,
             UserSeeder::class,
+            DemoAccountSeeder::class,
             DemoEmployerSeeder::class,
             DemoJobPostingSeeder::class,
             DemoCandidateSeeder::class,

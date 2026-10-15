@@ -34,8 +34,9 @@ class SeederTest extends TestCase
 
         $this->assertSame(10, Category::count());
         $this->assertSame(18, Accommodation::count());
-        // 8 accounts and 6 sample hires (Phase 5); 6 demo and 6 sample applications.
-        $this->assertSame(14, User::count());
+        // 8 accounts, 6 sample hires (Phase 5) and 2 for user management (Phase 6); 6 demo and
+        // 6 sample applications.
+        $this->assertSame(16, User::count());
         $this->assertSame(12, Application::count());
 
         $this->assertSame(17, JobPosting::count());
