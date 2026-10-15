@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Services\FeedbackService;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
@@ -34,39 +35,43 @@ class DemoFeedbackSeeder extends Seeder
             return;
         }
 
-        // Sample number, employer, job, days since the hire, and the answers that aren't Delivered.
+        // Sample number, employer, job, days past the feedback delay since the hire (so the form is
+        // open whatever FEEDBACK_DELAY_DAYS says), and the answers that aren't Delivered.
         $hires = [
-            [1, $demoCorp, 'Office Clerk', 60, []],
-            [2, $demoCorp, 'Office Clerk', 50, ['Accessible restroom' => FeedbackRating::Partial]],
-            [3, $contactCenter, 'Customer Support Associate', 90, ['Adjustable workstation' => FeedbackRating::Partial]],
-            [4, $contactCenter, 'Customer Support Associate', 75, [
+            [1, $demoCorp, 'Office Clerk', 30, []],
+            [2, $demoCorp, 'Office Clerk', 20, ['Accessible restroom' => FeedbackRating::Partial]],
+            [3, $contactCenter, 'Customer Support Associate', 60, ['Adjustable workstation' => FeedbackRating::Partial]],
+            [4, $contactCenter, 'Customer Support Associate', 45, [
                 'Adjustable workstation' => FeedbackRating::NotDelivered,
                 'Job coach or onboarding buddy' => FeedbackRating::NotUsed,
             ]],
-            [5, $contactCenter, 'Customer Support Associate', 60, [
+            [5, $contactCenter, 'Customer Support Associate', 30, [
                 'Accessible restroom' => FeedbackRating::NotUsed,
                 'Adjustable workstation' => FeedbackRating::Partial,
             ]],
-            [6, $contactCenter, 'Chat Support Specialist', 40, [
+            [6, $contactCenter, 'Chat Support Specialist', 10, [
                 'Sign language interpreter' => FeedbackRating::Partial,
                 'Screen-reader-compatible work tools' => FeedbackRating::NotUsed,
             ]],
         ];
 
-        foreach ($hires as [$number, $employer, $title, $daysAgo, $answers]) {
-            $job = JobPosting::withTrashed()->where('employer_id', $employer->id)->firstWhere('title', $title);
-            if (! $job) {
-                $this->command?->warn("  Demo job \"{$title}\" not found; its sample feedback was skipped.");
+        // All or nothing: a half-seeded run would be skipped for good by the guard above.
+        DB::transaction(function () use ($hires, $feedback) {
+            foreach ($hires as [$number, $employer, $title, $daysPastDelay, $answers]) {
+                $job = JobPosting::withTrashed()->with('accommodations')->where('employer_id', $employer->id)->firstWhere('title', $title);
+                if (! $job || $job->accommodations->isEmpty()) {
+                    $this->command?->warn("  Demo job \"{$title}\" not found or lists no accommodations; its sample feedback was skipped.");
 
-                continue;
+                    continue;
+                }
+
+                $application = $this->hire($this->sampleSeeker($number), $job, config('opendoor.feedback.delay_days') + $daysPastDelay);
+                $ratings = $application->hiredAccommodations
+                    ->mapWithKeys(fn (Accommodation $item) => [$item->id => $answers[$item->name] ?? FeedbackRating::Delivered])
+                    ->all();
+                $feedback->submit($application, $ratings, null);
             }
-
-            $application = $this->hire($this->sampleSeeker($number), $job, $daysAgo);
-            $ratings = $application->hiredAccommodations
-                ->mapWithKeys(fn (Accommodation $item) => [$item->id => $answers[$item->name] ?? FeedbackRating::Delivered])
-                ->all();
-            $feedback->submit($application, $ratings, null);
-        }
+        });
 
         $this->command?->line('  Sample feedback created for '.DemoEmployerSeeder::CONTACT_CENTER_NAME.' and '.DemoEmployerSeeder::COMPANY_NAME);
     }

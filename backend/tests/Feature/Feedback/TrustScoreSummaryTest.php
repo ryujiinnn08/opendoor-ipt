@@ -81,6 +81,28 @@ class TrustScoreSummaryTest extends TestCase
         $this->assertSame([['id' => $interpreter->id, 'name' => 'Sign language interpreter', 'group_name' => $interpreter->group_name]], $data['not_enough']);
     }
 
+    public function test_not_enough_never_shows_who_rated_a_rare_accommodation(): void
+    {
+        $team = $this->hiringCompany();
+        $ramp = Accommodation::factory()->create(['name' => 'Wheelchair-accessible entrance']);
+        $interpreter = Accommodation::factory()->create(['name' => 'Sign language interpreter']);
+        $team['itJob']->accommodations()->attach([$ramp->id, $interpreter->id]);
+        $job = $team['itJob']->fresh();
+        foreach ([1, 2, 3] as $_) {
+            $this->feedbackOn($this->hireFor($job), [$ramp->id => 'delivered', $interpreter->id => 'not_used']);
+        }
+        $fourth = $this->hireFor($job);
+        app(TrustScore::class)->recalculate($team['company']);
+        $before = $this->publicSummary($team['company'])->json('data.not_enough');
+
+        // The 4th hire rates the interpreter: the list mustn't change because of it.
+        $this->feedbackOn($fourth, [$ramp->id => 'delivered', $interpreter->id => 'partial']);
+        app(TrustScore::class)->recalculate($team['company']);
+
+        $this->assertSame(['Sign language interpreter'], array_column($before, 'name'));
+        $this->assertSame($before, $this->publicSummary($team['company'])->json('data.not_enough'));
+    }
+
     public function test_not_used_is_not_a_rating(): void
     {
         $team = $this->hiringCompany();

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { NOT_ENOUGH_RATINGS, NOT_ENOUGH_RESPONSES, TRUST_EXPLAINED, TRUST_HEADING, basedOnText, rowText } from '../../lib/trustScoreText.js'
+import LoadingMessage from '../ui/LoadingMessage.jsx'
 import { TEXT_LINK } from '../ui/buttonLinkStyles.js'
 
 /**
@@ -8,7 +9,7 @@ import { TEXT_LINK } from '../ui/buttonLinkStyles.js'
  * amber of the employer's promises. Below 3 responses only "Not enough responses yet", with no
  * count. `short` (job pages) leaves out the breakdown and links to `employerHref` for it.
  */
-export default function TrustScoreCard({ summary, short = false, employerHref, headingLevel = 2, headingId = 'trust-score-heading' }) {
+export default function TrustScoreCard({ summary, short = false, loadingBreakdown = false, employerHref, headingLevel = 2, headingId = 'trust-score-heading' }) {
   const Heading = `h${headingLevel}`
   const scored = summary?.score != null
   const rows = [
@@ -28,6 +29,7 @@ export default function TrustScoreCard({ summary, short = false, employerHref, h
             {basedOnText(summary.responses)}
           </p>
           <p className="mt-1 max-w-prose text-muted">{TRUST_EXPLAINED}</p>
+          {!short && loadingBreakdown && <LoadingMessage>Loading the ratings for each accommodation…</LoadingMessage>}
           {!short && rows.length > 0 && (
             <dl className="mt-4">
               {rows.map((row) => (

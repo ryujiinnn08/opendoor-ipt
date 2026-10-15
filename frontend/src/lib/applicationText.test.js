@@ -33,7 +33,7 @@ describe('nextStepText', () => {
   it('follows where a hire’s feedback stands', () => {
     expect(nextStepText(hired(null))).toMatch(/About 30 days after your hire date/)
     expect(nextStepText(hired('not_yet'))).toMatch(/About 30 days after your hire date/)
-    expect(nextStepText(hired('open'))).toBe('Congratulations. You can now rate whether each accommodation was provided.')
+    expect(nextStepText(hired('open'))).toBe('Congratulations. You can now rate whether each accommodation was delivered.')
     expect(nextStepText(hired('sent'))).toBe('Congratulations. Thank you for rating the accommodations.')
     expect(nextStepText(hired('nothing_to_rate'))).toBe('Congratulations on your new job.')
     expect(nextStepText({ status: 'pending', feedback: null })).toBe("Sent. The employer hasn't opened it yet.")

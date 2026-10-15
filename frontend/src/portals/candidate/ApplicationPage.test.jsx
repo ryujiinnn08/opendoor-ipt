@@ -89,6 +89,20 @@ describe('ApplicationPage', () => {
     expect(await axe(container)).toHaveNoViolations()
   })
 
+  it("says when the job seeker's own ratings couldn't load, with Try again", async () => {
+    const user = userEvent.setup()
+    getApplication.mockResolvedValue({
+      ...detailed(reviewedFixture({ status: 'hired', status_label: 'Hired', hired_at: '2026-09-14', actions: [], feedback: { state: 'sent', opens_on: '2026-10-14', sent_at: '2026-10-15T03:00:00+00:00' } })),
+      hired_accommodations: [accommodations[0]],
+    })
+    getFeedbackForm.mockRejectedValueOnce({ response: { status: 500, data: {} } }).mockResolvedValueOnce(sentFeedbackFixture())
+    open()
+
+    expect(await screen.findByText("We couldn't load your ratings.")).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Try again' }))
+    expect(await screen.findByRole('region', { name: 'Your ratings' })).toBeInTheDocument()
+  })
+
   it('explains a removed job instead of linking to it', async () => {
     getApplication.mockResolvedValue(detailed(applicationFixture({ job: { ...applicationFixture().job, state: 'removed' } })))
     open()

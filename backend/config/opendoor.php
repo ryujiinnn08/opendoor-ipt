@@ -61,7 +61,8 @@ return [
     */
 
     'feedback' => [
-        'delay_days' => (int) env('FEEDBACK_DELAY_DAYS', 30),
+        // Never negative; 0 opens the form on the hire day (for a demo only).
+        'delay_days' => max(0, (int) env('FEEDBACK_DELAY_DAYS', 30)),
         'min_responses' => 3,
     ],
 

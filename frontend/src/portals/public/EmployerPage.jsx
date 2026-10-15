@@ -39,7 +39,7 @@ export default function EmployerPage({ basePath = '/jobs' }) {
   const [loadedResults, setResults] = useState(null) // { employerId, page, jobs, meta }
   const results = loadedResults?.employerId === employer?.id ? loadedResults : null
   const [jobsError, setJobsError] = useState(null)
-  const [trust, setTrust] = useState(null) // { employerId, summary }
+  const [trust, setTrust] = useState(null) // { employerId, summary, failed }
   const jobsHeading = useRef(null)
   const loadedPage = useRef(null)
   const focusJobsOnLoad = useRef(false)
@@ -62,7 +62,8 @@ export default function EmployerPage({ basePath = '/jobs' }) {
     let active = true
     getTrustScore(employer.id)
       .then((summary) => active && setTrust({ employerId: employer.id, summary }))
-      .catch(() => {})
+      // Without the breakdown the card still shows the score from the employer.
+      .catch(() => active && setTrust({ employerId: employer.id, summary: null }))
     return () => {
       active = false
     }
@@ -152,7 +153,8 @@ export default function EmployerPage({ basePath = '/jobs' }) {
 
           <div className="mt-10 max-w-3xl">
             <TrustScoreCard
-              summary={trust?.employerId === employer.id ? trust.summary : { score: employer.trust_score, responses: employer.trust_count }}
+              summary={(trust?.employerId === employer.id && trust.summary) || { score: employer.trust_score, responses: employer.trust_count }}
+              loadingBreakdown={employer.trust_score != null && trust?.employerId !== employer.id}
             />
           </div>
 

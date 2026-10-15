@@ -57,19 +57,22 @@ export default function ApplicationPage() {
   const loadError = validId ? (current?.error ?? null) : NOT_FOUND
   const headingArea = useRef(null)
   const sentFeedback = application?.feedback?.state === 'sent'
-  const [ratings, setRatings] = useState(null) // { id, sent } once sent feedback is loaded
+  const [ratingsAttempt, setRatingsAttempt] = useState(0)
+  const [ratings, setRatings] = useState(null) // { key, sent, failed } once sent feedback is loaded
+  const ratingsKey = `${id}#${ratingsAttempt}`
+  const ownRatings = ratings?.key === ratingsKey ? ratings : null
 
-  // The job seeker's own ratings, once sent; a failure just leaves them out (the date still shows).
+  // The job seeker's own ratings, once sent; a failure says so with Try again (the date still shows).
   useEffect(() => {
     if (!sentFeedback) return
     let active = true
     getFeedbackForm(id)
-      .then((form) => active && setRatings({ id, sent: form.sent }))
-      .catch(() => {})
+      .then((form) => active && setRatings({ key: ratingsKey, sent: form.sent, failed: false }))
+      .catch(() => active && setRatings({ key: ratingsKey, sent: null, failed: true }))
     return () => {
       active = false
     }
-  }, [id, sentFeedback])
+  }, [id, sentFeedback, ratingsKey])
 
   useEffect(() => {
     if (!validId) return
@@ -146,10 +149,18 @@ export default function ApplicationPage() {
                 <FeedbackStatus application={application} className="mt-4 max-w-prose" />
               </section>
 
-              {sentFeedback && ratings?.id === id && ratings.sent && (
+              {sentFeedback && ownRatings?.sent && (
                 <div className="mt-10">
-                  <FeedbackSummary sent={ratings.sent} />
+                  <FeedbackSummary sent={ownRatings.sent} />
                 </div>
+              )}
+              {sentFeedback && ownRatings?.failed && (
+                <Notice tone="error" className="mt-10">
+                  <p>We couldn't load your ratings.</p>
+                  <Button variant="secondary" className="mt-3" onClick={() => setRatingsAttempt((count) => count + 1)}>
+                    Try again
+                  </Button>
+                </Notice>
               )}
 
               <section aria-labelledby="sent-heading" className="mt-10">

@@ -50,8 +50,8 @@ describe('FeedbackPage', () => {
     getFeedbackForm.mockResolvedValue(sentFeedbackFixture())
     open()
 
-    expect(await screen.findByRole('heading', { level: 1, name: 'Rate the accommodations' })).toBeInTheDocument()
-    expect(screen.getByRole('region', { name: 'Your ratings' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Your ratings for OpenDoor Demo Corp.' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'What you sent' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Send your ratings' })).not.toBeInTheDocument()
   })
 
@@ -71,7 +71,24 @@ describe('FeedbackPage', () => {
     expect(await screen.findByText(thanks)).toBeInTheDocument()
     await waitFor(() => expect(announce).toHaveBeenCalledWith(thanks))
     await waitFor(() => expect(screen.getByText(thanks).closest('[tabindex="-1"]')).toHaveFocus())
-    expect(screen.getByRole('region', { name: 'Your ratings' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'Your ratings for OpenDoor Demo Corp.' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'What you sent' })).toBeInTheDocument()
+  })
+
+  it('reloads and says so when the ratings were already sent from another tab', async () => {
+    const user = userEvent.setup()
+    getFeedbackForm.mockResolvedValueOnce(feedbackFormFixture()).mockResolvedValueOnce(sentFeedbackFixture())
+    sendFeedback.mockRejectedValue({ response: { status: 409, data: { message: "You've already sent your ratings." } } })
+    open()
+
+    await user.click(within(await screen.findByRole('group', { name: 'Wheelchair-accessible entrance' })).getByLabelText('Delivered'))
+    await user.click(within(screen.getByRole('group', { name: 'Flexible hours' })).getByLabelText('Delivered'))
+    await user.click(screen.getByRole('button', { name: 'Send your ratings' }))
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Send your ratings' }))
+
+    const notice = await screen.findByText("You've already sent your ratings.")
+    await waitFor(() => expect(notice.closest('[tabindex="-1"]')).toHaveFocus())
+    expect(screen.getByRole('region', { name: 'What you sent' })).toBeInTheDocument()
   })
 
   it('refuses someone else’s or a not-hired application without a retry', async () => {

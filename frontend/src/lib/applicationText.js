@@ -27,7 +27,7 @@ export const APPLICATION_STATUSES = {
 
 // A hire's sentence once feedback has opened, been sent, or has nothing to rate (Phase 5).
 const HIRED_FEEDBACK_NEXT = {
-  open: 'Congratulations. You can now rate whether each accommodation was provided.',
+  open: 'Congratulations. You can now rate whether each accommodation was delivered.',
   sent: 'Congratulations. Thank you for rating the accommodations.',
   nothing_to_rate: 'Congratulations on your new job.',
 }

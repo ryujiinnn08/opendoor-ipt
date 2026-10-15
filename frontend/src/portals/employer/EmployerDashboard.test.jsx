@@ -53,7 +53,7 @@ describe('EmployerDashboard', () => {
     renderRoutes([{ path: '/', element: <EmployerDashboard /> }], { auth: auth({ role: 'owner', employer: company, department: null }) })
 
     const tile = (await screen.findByRole('heading', { name: 'Trust score' })).closest('li')
-    expect(await within(tile).findByText('Not enough responses yet.')).toBeInTheDocument()
+    expect(await within(tile).findByText('Not enough responses yet. The score appears once 3 hired employees have rated this employer.')).toBeInTheDocument()
   })
 
   it("names the HR officer's department", async () => {

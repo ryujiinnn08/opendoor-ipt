@@ -32,6 +32,14 @@ class DemoFeedbackSeederTest extends TestCase
         $this->assertSame('open', $clerk->feedbackState());
     }
 
+    public function test_a_longer_feedback_delay_still_seeds_open_feedback(): void
+    {
+        config(['opendoor.feedback.delay_days' => 60]);
+        $this->seed(DatabaseSeeder::class);
+
+        $this->assertSame(4, Employer::firstWhere('name', DemoEmployerSeeder::CONTACT_CENTER_NAME)->feedback_count);
+    }
+
     public function test_seeding_again_changes_nothing(): void
     {
         $this->seed(DatabaseSeeder::class);

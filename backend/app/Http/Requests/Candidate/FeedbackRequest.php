@@ -5,6 +5,7 @@ namespace App\Http\Requests\Candidate;
 use App\Enums\FeedbackRating;
 use App\Models\Accommodation;
 use App\Models\Application;
+use App\Services\FeedbackService;
 use Closure;
 use Illuminate\Auth\Access\Response;
 use Illuminate\Foundation\Http\FormRequest;
@@ -53,7 +54,7 @@ class FeedbackRequest extends FormRequest
             $ratings = (array) $this->input('ratings', []);
             $copy = Accommodation::inDisplayOrder($application->hiredAccommodations);
             if (array_diff(array_map('strval', array_keys($ratings)), $copy->pluck('id')->map(fn ($id) => (string) $id)->all()) !== []) {
-                $validator->errors()->add('ratings', 'You can only rate the accommodations listed when you were hired.');
+                $validator->errors()->add('ratings', FeedbackService::ONLY_THE_HIRE_COPY);
 
                 return;
             }
@@ -66,7 +67,7 @@ class FeedbackRequest extends FormRequest
                 }
             }
             if (! $missing && ! $validator->errors()->any() && collect($ratings)->every(fn ($rating) => $rating === FeedbackRating::NotUsed->value)) {
-                $validator->errors()->add('ratings', 'Rate at least one accommodation you used.');
+                $validator->errors()->add('ratings', FeedbackService::AT_LEAST_ONE);
             }
         }];
     }
@@ -76,7 +77,12 @@ class FeedbackRequest extends FormRequest
      */
     public function ratings(): array
     {
-        return collect($this->validated('ratings'))->map(fn (string $rating) => FeedbackRating::from($rating))->all();
+        // Unanswered rows (null) are only allowed through when the form isn't open, where
+        // FeedbackService refuses with the reason; leaving them out avoids a 500 first.
+        return collect($this->validated('ratings'))
+            ->filter(fn ($rating) => $rating !== null)
+            ->map(fn (string $rating) => FeedbackRating::from($rating))
+            ->all();
     }
 
     /**

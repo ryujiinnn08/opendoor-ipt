@@ -27,6 +27,7 @@ export default function FeedbackPage() {
   const validId = RECORD_ID.test(id)
   const announce = useAnnounce()
   const thanksBox = useRef(null)
+  const alreadyBox = useRef(null)
   const [attempt, setAttempt] = useState(0)
   const requestKey = `${id}#${attempt}`
   const [loaded, setLoaded] = useState(null) // { key, form, error }
@@ -58,6 +59,12 @@ export default function FeedbackPage() {
     thanksBox.current?.focus()
   }, [justSent, form, announce])
 
+  // Sent meanwhile from another tab: once reloaded, focus says so instead of falling to the page.
+  const showsAlready = alreadySent && !justSent && form?.state === 'sent'
+  useEffect(() => {
+    if (showsAlready) alreadyBox.current?.focus()
+  }, [showsAlready])
+
   function sent(updated) {
     setLoaded((previous) => ({ ...previous, form: updated }))
     setJustSent(true)
@@ -71,9 +78,10 @@ export default function FeedbackPage() {
   }
 
   const error = loadError === NOT_FOUND ? { message: NOT_FOUND, retry: false } : loadError
-  const title = form && form.state !== 'sent' ? `How did ${form.employer.name} do?` : RATE_ACTION
+  // Once sent, the heading names what's on the page, not an action that's no longer possible.
+  const title = !form ? RATE_ACTION : form.state === 'sent' ? `Your ratings for ${form.employer.name}` : `How did ${form.employer.name} do?`
   const backLink = (
-    <Link to={`/candidate/applications/${id}`} className={TEXT_LINK}>
+    <Link to={`/candidate/applications/${id}`} className={`mt-2 ${TEXT_LINK}`}>
       Back to your application
     </Link>
   )
@@ -90,7 +98,7 @@ export default function FeedbackPage() {
               Try again
             </Button>
           )}
-          <Link to="/candidate/applications" className={TEXT_LINK}>
+          <Link to="/candidate/applications" className={`mt-2 ${TEXT_LINK}`}>
             My applications
           </Link>
         </Notice>
@@ -125,19 +133,21 @@ export default function FeedbackPage() {
 
       {form?.state === 'sent' && (
         <div className="mt-6 space-y-8">
-          {alreadySent && !justSent && (
-            <Notice>
-              <p>{ALREADY_SENT}</p>
-            </Notice>
+          {showsAlready && (
+            <div ref={alreadyBox} tabIndex={-1} className="focus:outline-3 focus:outline-offset-4 focus:outline-(--od-focus)">
+              <Notice>
+                <p>{ALREADY_SENT}</p>
+              </Notice>
+            </div>
           )}
           {justSent && (
-            <div ref={thanksBox} tabIndex={-1} className="outline-offset-4">
+            <div ref={thanksBox} tabIndex={-1} className="focus:outline-3 focus:outline-offset-4 focus:outline-(--od-focus)">
               <Notice tone="success">
                 <p>{thankYouText(form.employer.name)}</p>
               </Notice>
             </div>
           )}
-          <FeedbackSummary sent={form.sent} />
+          <FeedbackSummary sent={form.sent} title="What you sent" />
           <p>{backLink}</p>
         </div>
       )}

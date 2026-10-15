@@ -1,6 +1,6 @@
 # Phase 5 Plan: Accommodation Feedback and the Trust Score
 
-> Status: **Phase 5 built (2026-10-15)**: 5A demo steps F1–F5 and 5B demo steps T1–T7 verified in the browser (build notes at the end); 323 server and 381 page tests pass. Still to do from §9 step 5: the GSD reviews (code review, UI review, security audit) and a screen reader pass. APPROVED 2026-10-15 with every recommendation in §3 (Q1–Q10); built from the [5A](superpowers/plans/2026-10-15-phase-5a-give-feedback.md) and [5B](superpowers/plans/2026-10-15-phase-5b-show-the-score.md) implementation plans. Checked against the proposal papers ([Revised Proposal](papers/REVISED_PROPOSAL.md) §VII-G and §VII-H, [Modules and Features](papers/MODULES_AND_FEATURES.md) M7, M8, §3.1–3.3).
+> Status: **Phase 5 finished (2026-10-15)**: 5A demo steps F1–F5 and 5B demo steps T1–T7 verified in the browser; GSD code review, UI review (19/24 before fixes) and security audit run and their findings fixed (review notes at the end); 327 server and 384 page tests pass. Still open: a screen reader pass (a groupmate with NVDA). APPROVED 2026-10-15 with every recommendation in §3 (Q1–Q10); built from the [5A](superpowers/plans/2026-10-15-phase-5a-give-feedback.md) and [5B](superpowers/plans/2026-10-15-phase-5b-show-the-score.md) implementation plans. Checked against the proposal papers ([Revised Proposal](papers/REVISED_PROPOSAL.md) §VII-G and §VII-H, [Modules and Features](papers/MODULES_AND_FEATURES.md) M7, M8, §3.1–3.3).
 > Part of: [CONCEPT_PLAN.md](CONCEPT_PLAN.md), build phase 5 of 7
 > Builds on: [PHASE_4_PLAN.md](PHASE_4_PLAN.md) (applications; a hire already copies the job's accommodations for this phase)
 > Method: this spec and the 5A and 5B implementation plans were written with Superpowers; from 2026-10-15 on, OpenDoor uses only GSD and Frontend Design (§7). GSD code review, UI review and security audit before finishing.
@@ -298,4 +298,29 @@ Decided (say if you'd like them changed):
 - The employer dashboard tile shows the score for owners, HR officers and individual employers alike (the score belongs to the whole company).
 
 Known limit, for the defense Q&A: when an employer's score first appears, it is built from exactly 3 people the employer hired. With all 3 rating an accommodation the same way (e.g. "3 of 3 delivered"), the employer learns how each of them answered for it. This is the papers' threshold (§VII-G); raising it (say, to 5) would make it safer but would delay every score.
+
+## Phase 5 review notes (2026-10-15)
+
+GSD's code review (standard depth, 45 source files: 2 critical, 4 warnings, 4 info), UI review (**19/24**: copywriting 3, visuals 3, colour 4, typography 3, spacing 3, experience 3) and security audit (**open threats: 1** before fixes; 12 of 15 threats closed, 2 of them as accepted risks) were run over `84da53b..HEAD`. The reports stayed outside the repository, as in earlier phases. The security auditor's one blocking threat and two of its others were the same issues as the code review's.
+
+Found and fixed:
+- **The "Not enough ratings yet" list named who had rated** (critical; security T-5-03, blocking). It listed only accommodations rated by 1 or 2 people, so when a rare one appeared (on the demo, "Sign language interpreter", promised only to Sample Hire 6) the employer learned that this one person had answered, and from the score's change how. It now lists every accommodation the employer's hires were promised that fewer than 3 people rated, **including ones nobody rated**, so it changes with hires, not with answers. Pinned by `test_not_enough_never_shows_who_rated_a_rare_accommodation`.
+- **Two hires rating the same employer at once could store a wrong score** (critical; MySQL/MariaDB only, SQLite can't show it). The recalculation read a snapshot taken before the employer lock. It now runs after the feedback is committed, in its own transaction that locks the employer first.
+- **Ratings could be saved for accommodations never promised** (security T-5-09): a request sent just before midnight in Manila on day 29 passed the request's checks (form not open yet) and reached the save after midnight. The save itself now refuses anything that isn't exactly the hire copy with one answer used.
+- **An unanswered row sent before the form opens, or after sending, gave a 500** instead of the reason (403/409).
+- **The demo seeder** failed with `FEEDBACK_DELAY_DAYS` over 40 or a job without accommodations, leaving half-made sample users that blocked it for good. Hire dates now follow the setting, a job without accommodations is skipped, and it runs all or nothing. `FEEDBACK_DELAY_DAYS` can no longer be negative.
+- **The reminder could be lost** if recording its notification failed; claiming it and recording it are now one transaction.
+- **After sending, the page heading still said "Rate the accommodations"**; it now says "Your ratings for OpenDoor Demo Corp." and the summary is titled "What you sent". The thank-you and the "already sent" message now show a focus ring when focus moves to them, and after an "already sent" reload focus lands on that message instead of the page.
+- **The employer dashboard tile** was blank while loading and said only "Not enough responses yet."; it now says "Loading…" and the full sentence. The employer page shows "Loading the ratings for each accommodation…" in the card until the breakdown arrives, and keeps the score if it fails.
+- **The application page said nothing when the job seeker's own ratings failed to load**; it now says so with **Try again**.
+- Smaller: an unanswered row's error is now read from each answer, not only the group; "Your comment" follows the summary's heading level; links in notices have space above them; "provided" became "delivered" in the hire sentence.
+
+Decided (say if you'd like them changed):
+- **The answers stay as boxed choices**, as on Register and Set up your profile (`RadioCardGroup`), rather than ruled rows. The UI review flagged them as new to Phase 5; they're the app's existing large-target radio style.
+- **Rounding** (code review IN-01): the score is stored to 2 decimals and shown as a whole percent, so an average of exactly 87.495–87.499% shows as 88 instead of 87. Left as it is.
+
+Accepted risks (for the defense Q&A):
+- **Any change in the score or count can point to the latest respondent** (security T-5-04, broader than the 5B "known limit"). The score is recalculated on every save, as the papers ask (M7), so an employer who watches it can tell when someone answered and roughly how. Publishing the score only after several new responses, or monthly, would close it but goes against the papers.
+- **Self-confirmed hires count like others** (Q10, T-5-13); admins hiding feedback comes in Phase 6 if time allows.
+- **The score's first appearance** comes from exactly 3 known hires (T-5-14; see the 5B notes).
 

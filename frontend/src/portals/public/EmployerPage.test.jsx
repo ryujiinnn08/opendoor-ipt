@@ -46,6 +46,16 @@ describe('EmployerPage', () => {
     expect(await axe(container)).toHaveNoViolations()
   })
 
+  it('keeps the score when the breakdown fails to load', async () => {
+    getEmployer.mockResolvedValue({ ...company, trust_score: 88, trust_count: 4 })
+    getTrustScore.mockRejectedValue({ response: { status: 500, data: {} } })
+    renderRoutes(routes, { path: '/employers/1' })
+
+    const card = await screen.findByRole('region', { name: 'Accommodation trust score' })
+    await waitFor(() => expect(within(card).queryByText(/Loading the ratings/)).not.toBeInTheDocument())
+    expect(card).toHaveTextContent('88%, based on 4 hires')
+  })
+
   it('says not enough responses yet, without asking for a breakdown', async () => {
     getEmployer.mockResolvedValue({ ...company, trust_score: null, trust_count: null })
     renderRoutes(routes, { path: '/employers/1' })

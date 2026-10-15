@@ -2,11 +2,14 @@
 
 namespace Tests\Feature\Feedback;
 
+use App\Enums\FeedbackRating;
 use App\Models\Accommodation;
 use App\Models\Application;
 use App\Models\User;
+use App\Services\FeedbackService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Validation\ValidationException;
 use Tests\Concerns\BuildsFeedback;
 use Tests\TestCase;
 
@@ -194,6 +197,34 @@ class GiveFeedbackTest extends TestCase
             $this->actingAs($stranger, 'web');
             $this->getJson("/api/applications/{$application->id}/feedback-form")->assertForbidden();
             $this->send($application, $ratings)->assertForbidden();
+        }
+        $this->assertNull($application->fresh()->feedback);
+    }
+
+    public function test_unanswered_rows_get_the_reason_not_an_error_when_the_form_is_closed(): void
+    {
+        [, $application, $ramp, $hours] = $this->hiredWithTwoAccommodations(3);
+
+        $this->actingAs($application->candidate, 'web');
+        $this->send($application, [$ramp->id => null])->assertForbidden();
+
+        $application->forceFill(['hired_at' => now()->subDays(40)->toDateString()])->save();
+        $this->send($application, [$ramp->id => 'delivered', $hours->id => 'delivered'])->assertCreated();
+        $this->send($application, [$ramp->id => null])->assertConflict();
+    }
+
+    public function test_the_service_itself_only_accepts_the_hire_copy(): void
+    {
+        [, $application, $ramp] = $this->hiredWithTwoAccommodations();
+        $service = app(FeedbackService::class);
+
+        foreach ([[$ramp->id => FeedbackRating::Delivered], [$ramp->id => FeedbackRating::NotUsed, 999 => FeedbackRating::Delivered]] as $ratings) {
+            try {
+                $service->submit($application, $ratings, null);
+                $this->fail('Ratings that are not exactly the hire copy were saved.');
+            } catch (ValidationException $exception) {
+                $this->assertSame(['ratings'], array_keys($exception->errors()));
+            }
         }
         $this->assertNull($application->fresh()->feedback);
     }

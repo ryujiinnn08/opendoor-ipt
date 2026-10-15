@@ -45,6 +45,7 @@ function RatingRow({ item, value, onChange, error }) {
                   checked={value === choice.value}
                   onChange={() => onChange(item.id, choice.value)}
                   aria-invalid={error ? true : undefined}
+                  aria-describedby={errorId ?? undefined}
                   className="size-6 shrink-0 accent-primary"
                 />
                 <span>{choice.label}</span>

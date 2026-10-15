@@ -9,7 +9,7 @@ import Notice from '../../components/ui/Notice.jsx'
 import PageHeader from '../../components/ui/PageHeader.jsx'
 import VerificationBadge from '../../components/ui/VerificationBadge.jsx'
 import { PRIMARY_LINK, TEXT_LINK } from '../../components/ui/buttonLinkStyles.js'
-import { basedOnText } from '../../lib/trustScoreText.js'
+import { NOT_ENOUGH_RESPONSES, basedOnText } from '../../lib/trustScoreText.js'
 
 // Non-zero posting counts are listed in this order.
 const COUNT_TEXT = {
@@ -45,7 +45,8 @@ function TrustTile({ dashboard }) {
           {basedOnText(trust.responses)}
         </>
       )}
-      {trust && trust.score == null && 'Not enough responses yet.'}
+      {trust && trust.score == null && NOT_ENOUGH_RESPONSES}
+      {!dashboard.data && !dashboard.failed && 'Loading…'}
     </DashboardTile>
   )
 }
