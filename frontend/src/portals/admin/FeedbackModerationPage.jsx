@@ -44,15 +44,23 @@ export default function FeedbackModerationPage() {
   const [message, setMessage] = useState(null)
   const [authors, setAuthors] = useState({}) // feedback id => { name, email } | { error }
   const [acting, setActing] = useState(null) // { feedback, hide, open, busy, error, done }
+  const [revealing, setRevealing] = useState(null) // feedback id being looked up
   const messageRef = useRef(null)
+  const latest = useRef(0)
+  const lookingUp = useRef(false)
 
+  // Only the latest filter's answer is shown (review WR-08).
   const load = useCallback(() => {
+    const request = ++latest.current
     getFeedbackForModeration(filter, page)
       .then((data) => {
+        if (request !== latest.current) return
         setResult(data)
         setLoadError(null)
       })
-      .catch((error) => setLoadError(generalErrorFrom(error)))
+      .catch((error) => {
+        if (request === latest.current) setLoadError(generalErrorFrom(error))
+      })
   }, [filter, page])
 
   useEffect(() => {
@@ -63,18 +71,28 @@ export default function FeedbackModerationPage() {
     setResult((current) => ({ ...current, data: current.data.map((item) => (item.id === updated.id ? updated : item)) }))
   }
 
+  // One look at a time, so a double click records one look, not two (review WR-04).
   async function revealAuthor(feedback) {
+    // A ref, not state: two clicks before a re-render must not both pass.
+    if (lookingUp.current) return
+    lookingUp.current = true
+    setRevealing(feedback.id)
     try {
       const author = await revealFeedbackAuthor(feedback.id)
       setAuthors((current) => ({ ...current, [feedback.id]: author }))
       announce(`Written by ${author.name}.`)
-      // The look is now in the history.
-      getFeedbackForModeration(filter, page).then((data) => {
-        const fresh = data.data.find((item) => item.id === feedback.id)
-        if (fresh) replace(fresh)
-      })
+      // The look is now in the history; if reloading it fails, the page keeps what it shows.
+      getFeedbackForModeration(filter, page)
+        .then((data) => {
+          const fresh = data.data.find((item) => item.id === feedback.id)
+          if (fresh) replace(fresh)
+        })
+        .catch(() => {})
     } catch (error) {
       setAuthors((current) => ({ ...current, [feedback.id]: { error: generalErrorFrom(error) } }))
+    } finally {
+      lookingUp.current = false
+      setRevealing(null)
     }
   }
 
@@ -149,6 +167,7 @@ export default function FeedbackModerationPage() {
               key={feedback.id}
               feedback={feedback}
               author={authors[feedback.id]}
+              revealing={revealing === feedback.id}
               onReveal={() => revealAuthor(feedback)}
               onHide={() => setActing({ feedback, hide: true, open: true })}
               onShow={() => setActing({ feedback, hide: false, open: true })}
@@ -197,7 +216,7 @@ export default function FeedbackModerationPage() {
   )
 }
 
-function FeedbackRow({ feedback, author, onReveal, onHide, onShow }) {
+function FeedbackRow({ feedback, author, revealing, onReveal, onHide, onShow }) {
   const headingId = `feedback-${feedback.id}`
 
   return (
@@ -243,10 +262,14 @@ function FeedbackRow({ feedback, author, onReveal, onHide, onShow }) {
             </p>
           ) : (
             <>
-              <Button variant="link" onClick={onReveal}>
+              <Button variant="link" onClick={onReveal} loading={revealing} loadingText="Looking up…">
                 Show who wrote this
               </Button>
-              {author?.error && <p className="font-bold text-danger">{author.error}</p>}
+              {author?.error && (
+                <p role="alert" className="font-bold text-danger">
+                  {author.error}
+                </p>
+              )}
             </>
           )}
         </div>

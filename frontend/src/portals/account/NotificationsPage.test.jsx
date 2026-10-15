@@ -78,7 +78,7 @@ describe('NotificationsPage', () => {
   })
 
   it('marks all as read', async () => {
-    getUnreadCount.mockResolvedValue(1)
+    getUnreadCount.mockResolvedValueOnce(1).mockResolvedValue(0)
     getNotifications.mockResolvedValue(page([unread]))
     markAllRead.mockResolvedValue()
     const announce = vi.fn()
@@ -111,5 +111,23 @@ describe('NotificationsPage', () => {
     await screen.findByText('Admin home')
     expect(screen.queryByRole('link', { name: /Notifications/ })).not.toBeInTheDocument()
     expect(getUnreadCount).not.toHaveBeenCalled()
+  })
+
+  it('offers Mark all as read when the unread ones are on another page', async () => {
+    getUnreadCount.mockResolvedValue(2)
+    getNotifications.mockResolvedValue({ data: [read], meta: { current_page: 2, last_page: 2, total: 21 } })
+    renderRoutes(routes, { path: '/notifications?page=2', auth: employer })
+
+    expect(await screen.findByRole('button', { name: 'Mark all as read' })).toBeInTheDocument()
+  })
+
+  it('says when a page is past the end instead of "no notifications yet"', async () => {
+    getUnreadCount.mockResolvedValue(0)
+    getNotifications.mockResolvedValue({ data: [], meta: { current_page: 9, last_page: 2, total: 21 } })
+    renderRoutes(routes, { path: '/notifications?page=9', auth: employer })
+
+    expect(await screen.findByText(/This page is past the end of your notifications/)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Go to the newest' })).toHaveAttribute('href', '/notifications')
+    expect(screen.queryByText(/No notifications yet/)).not.toBeInTheDocument()
   })
 })

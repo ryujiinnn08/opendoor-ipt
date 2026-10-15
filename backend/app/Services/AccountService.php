@@ -5,8 +5,10 @@ namespace App\Services;
 use App\Enums\AccountEventType;
 use App\Enums\Role;
 use App\Models\User;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Suspending, reactivating, adding administrators and changing passwords (plan PHASE_6 §4.1).
@@ -81,7 +83,12 @@ class AccountService
         $password = $this->temporaryPassword();
 
         $user = DB::transaction(function () use ($name, $email, $password, $admin) {
-            $user = User::create(['name' => $name, 'email' => $email, 'password' => $password, 'role' => Role::Admin]);
+            try {
+                $user = User::create(['name' => $name, 'email' => $email, 'password' => $password, 'role' => Role::Admin]);
+            } catch (UniqueConstraintViolationException) {
+                // Another request took the email between validation and saving.
+                throw ValidationException::withMessages(['email' => 'An account with this email already exists.']);
+            }
             $user->forceFill(['must_change_password' => true])->save();
             $user->accountEvents()->create(['type' => AccountEventType::AdminCreated, 'actor_id' => $admin->id]);
 
@@ -89,6 +96,27 @@ class AccountService
         });
 
         return [$user, $password];
+    }
+
+    /**
+     * A lost temporary password (Phase 6 review WR-05): only for an administrator still on theirs,
+     * never one's own. The old one stops working and any session it opened ends.
+     */
+    public function replaceTemporaryPassword(User $user, User $admin): string
+    {
+        if ($user->is($admin) || $user->role !== Role::Admin || ! $user->must_change_password) {
+            abort(422, 'Only an administrator who hasn\'t changed their temporary password can get a new one.');
+        }
+
+        $password = $this->temporaryPassword();
+
+        DB::transaction(function () use ($user, $admin, $password) {
+            $user->forceFill(['password' => $password, 'remember_token' => Str::random(60)])->save();
+            $this->endSessions($user);
+            $user->accountEvents()->create(['type' => AccountEventType::TemporaryPasswordReplaced, 'actor_id' => $admin->id]);
+        });
+
+        return $password;
     }
 
     /**

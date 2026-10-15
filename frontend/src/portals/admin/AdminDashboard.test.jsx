@@ -39,7 +39,7 @@ describe('AdminDashboard', () => {
 
     const waiting = (await screen.findByRole('heading', { name: 'Waiting for you' })).closest('section')
     expect(within(waiting).getByText('2 companies to verify')).toBeInTheDocument()
-    expect(within(waiting).getByText('No postings waiting for approval')).toBeInTheDocument()
+    expect(within(waiting).getByText('Nothing waiting for approval')).toBeInTheDocument()
     expect(within(waiting).getByRole('link', { name: 'Review companies' })).toHaveAttribute('href', '/admin/employers')
     expect(within(waiting).getByRole('link', { name: 'Review postings' })).toHaveAttribute('href', '/admin/job-postings')
   })

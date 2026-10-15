@@ -11,6 +11,7 @@ use App\Models\Employer;
 use App\Notifications\VerificationDecided;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -39,25 +40,36 @@ class EmployerVerificationController extends Controller
         return AdminCompanyResource::collection($companies);
     }
 
+    /**
+     * The company row is locked, so two administrators deciding at once can't both succeed
+     * (Phase 6 review WR-02). The owner hears the result once it's committed (M9, Phase 6B).
+     */
     public function update(DecisionRequest $request, Employer $employer): AdminCompanyResource
     {
-        if (! $employer->isCompany() || $employer->verification_status !== VerificationStatus::Pending) {
-            throw ValidationException::withMessages(['decision' => 'This company is not waiting for review.']);
-        }
-
         $approve = $request->validated('decision') === 'approve';
 
-        $employer->forceFill([
-            'verification_status' => $approve ? VerificationStatus::Verified : VerificationStatus::Rejected,
-            'verified_at' => $approve ? now() : null,
-            'verification_rejection_reason' => $approve ? null : $request->validated('reason'),
-        ])->save();
+        $employer = DB::transaction(function () use ($request, $employer, $approve) {
+            $locked = Employer::whereKey($employer->id)->lockForUpdate()->firstOrFail();
 
-        // The owner hears the result (M9, Phase 6B).
-        $owner = $employer->owner?->user;
-        if ($owner?->is_active) {
-            $owner->notify(new VerificationDecided($employer));
-        }
+            if (! $locked->isCompany() || $locked->verification_status !== VerificationStatus::Pending) {
+                throw ValidationException::withMessages(['decision' => 'This company is not waiting for review.']);
+            }
+
+            $locked->forceFill([
+                'verification_status' => $approve ? VerificationStatus::Verified : VerificationStatus::Rejected,
+                'verified_at' => $approve ? now() : null,
+                'verification_rejection_reason' => $approve ? null : $request->validated('reason'),
+            ])->save();
+
+            DB::afterCommit(function () use ($locked) {
+                $owner = $locked->owner?->user;
+                if ($owner?->is_active) {
+                    $owner->notify(new VerificationDecided($locked));
+                }
+            });
+
+            return $locked;
+        });
 
         return new AdminCompanyResource($employer->load('owner.user'));
     }

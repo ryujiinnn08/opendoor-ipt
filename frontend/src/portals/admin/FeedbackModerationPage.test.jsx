@@ -83,4 +83,17 @@ describe('FeedbackModerationPage', () => {
     expect(getFeedbackForModeration).toHaveBeenCalledWith('hidden', 1)
     expect(screen.getByRole('link', { name: 'Hidden' })).toHaveAttribute('aria-current', 'true')
   })
+
+  it('asks once even when "Show who wrote this" is double-clicked', async () => {
+    getFeedbackForModeration.mockResolvedValue(page([feedback]))
+    let finish
+    revealFeedbackAuthor.mockReturnValue(new Promise((resolve) => (finish = resolve)))
+    renderRoutes(routes, { path: '/admin/feedback', auth: admin })
+
+    await userEvent.dblClick(await screen.findByRole('button', { name: 'Show who wrote this' }))
+    finish({ name: 'Sample Hire 4', email: 'sample4@opendoor.test' })
+
+    expect(await screen.findByText('Sample Hire 4')).toBeInTheDocument()
+    expect(revealFeedbackAuthor).toHaveBeenCalledTimes(1)
+  })
 })

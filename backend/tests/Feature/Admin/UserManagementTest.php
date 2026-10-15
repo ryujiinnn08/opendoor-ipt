@@ -240,6 +240,36 @@ class UserManagementTest extends TestCase
         );
     }
 
+    public function test_a_lost_temporary_password_can_be_replaced_once_more(): void
+    {
+        $first = $this->actingAs($this->admin, 'web')
+            ->postJson('/api/admin/users', ['name' => 'Rosa Lim', 'email' => 'rosa@opendoor.test'])
+            ->json('temporary_password');
+        $rosa = User::firstWhere('email', 'rosa@opendoor.test');
+
+        $second = $this->postJson("/api/admin/users/{$rosa->id}/temporary-password")
+            ->assertOk()
+            ->assertJsonPath('data.history.0.type', 'temporary_password_replaced')
+            ->assertJsonPath('data.history.0.by', 'Ana Cruz')
+            ->json('temporary_password');
+
+        $this->assertSame(AccountService::TEMPORARY_PASSWORD_LENGTH, strlen($second));
+        $this->assertFalse(Hash::check($first, $rosa->fresh()->password));
+        $this->assertTrue(Hash::check($second, $rosa->fresh()->password));
+    }
+
+    public function test_only_an_administrator_still_on_a_temporary_password_gets_a_new_one(): void
+    {
+        $settled = User::factory()->admin()->create();
+        $seeker = User::factory()->create();
+        $this->actingAs($this->admin, 'web');
+
+        $this->postJson("/api/admin/users/{$settled->id}/temporary-password")->assertUnprocessable();
+        $this->postJson("/api/admin/users/{$seeker->id}/temporary-password")->assertUnprocessable();
+        $this->admin->forceFill(['must_change_password' => true])->save();
+        $this->postJson("/api/admin/users/{$this->admin->id}/temporary-password")->assertForbidden();
+    }
+
     public function test_registration_still_refuses_the_admin_role(): void
     {
         $this->postJson('/api/register', [

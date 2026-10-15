@@ -162,12 +162,27 @@ describe('PostingApprovalsPage', () => {
     const dialog = screen.getByRole('dialog', { name: 'Remove Junior Web Developer?' })
     expect(within(dialog).getByText(/You can't undo this/)).toBeInTheDocument()
     await userEvent.type(within(dialog).getByLabelText('Reason (the employer sees this)'), reason)
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Remove posting' }))
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Remove Junior Web Developer' }))
 
     expect(removePosting).toHaveBeenCalledWith(2, reason)
     expect(await screen.findByText('"Junior Web Developer" was removed. The employer can see your reason.')).toBeInTheDocument()
     expect(announce).toHaveBeenCalledWith('"Junior Web Developer" was removed. The employer can see your reason.')
     expect(screen.getByText(`Removed by OpenDoor on October 16, 2026 (Admin): ${reason}`)).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Remove Junior Web Developer' })).not.toBeInTheDocument()
+  })
+
+  it('shows the posting removed even if reloading it fails, instead of an error to retry', async () => {
+    getPostingForReview.mockResolvedValueOnce({ ...fixture, status: 'open' }).mockRejectedValueOnce(new Error('Network Error'))
+    removePosting.mockResolvedValue()
+    renderRoutes(routes, { path: '/admin/job-postings/2', auth: admin })
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Remove Junior Web Developer' }))
+    const dialog = screen.getByRole('dialog')
+    await userEvent.type(within(dialog).getByLabelText('Reason (the employer sees this)'), 'Fake accommodations.')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Remove Junior Web Developer' }))
+
+    expect(await screen.findByText('"Junior Web Developer" was removed. The employer can see your reason.')).toBeInTheDocument()
+    expect(screen.getByText(/Removed by OpenDoor on .*: Fake accommodations\./)).toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 })

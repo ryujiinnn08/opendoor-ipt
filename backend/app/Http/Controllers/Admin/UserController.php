@@ -58,6 +58,17 @@ class UserController extends Controller
     }
 
     /**
+     * A new temporary password for an administrator who lost theirs (review WR-05), shown once.
+     */
+    public function temporaryPassword(Request $request, User $user, AccountService $accounts): AdminUserDetailResource
+    {
+        $password = $accounts->replaceTemporaryPassword($user, $request->user());
+
+        return (new AdminUserDetailResource($user->refresh()->load(AdminUserResource::RELATIONS)))
+            ->additional(['temporary_password' => $password]);
+    }
+
+    /**
      * Add an administrator. The temporary password is in this response only (Q4).
      */
     public function store(AddAdminRequest $request, AccountService $accounts): JsonResponse

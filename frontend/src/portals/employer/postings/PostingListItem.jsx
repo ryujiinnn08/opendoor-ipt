@@ -62,7 +62,7 @@ export default function PostingListItem({ posting, showDepartment, showCreator, 
       </ul>
 
       {removal && (
-        <p className="mt-3 max-w-prose">
+        <p className="mt-3 max-w-prose border-l-4 border-text pl-4">
           Removed by OpenDoor on {formatDate(removal.removed_at)}: {removal.reason}
         </p>
       )}

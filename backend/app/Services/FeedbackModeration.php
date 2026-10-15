@@ -37,11 +37,11 @@ class FeedbackModeration
 
     private function setHidden(Feedback $feedback, User $admin, bool $hidden, ?string $reason): Feedback
     {
-        DB::transaction(function () use ($feedback, $admin, $hidden, $reason) {
+        $changed = DB::transaction(function () use ($feedback, $admin, $hidden, $reason) {
             $locked = Feedback::whereKey($feedback->id)->lockForUpdate()->firstOrFail();
 
             if ($locked->is_hidden === $hidden) {
-                abort(409, $hidden ? 'This feedback is already hidden.' : 'This feedback is already shown.');
+                return false;
             }
 
             $locked->forceFill([
@@ -54,11 +54,18 @@ class FeedbackModeration
                 'reason' => $reason,
                 'actor_id' => $admin->id,
             ]);
+
+            return true;
         });
 
         // After the commit, as FeedbackService does: the recalculation locks the employer first.
+        // It runs on a repeat too, so retrying after a failed recalculation repairs the score.
         $feedback->refresh();
         $this->trustScore->recalculate($feedback->application->jobPosting->employer);
+
+        if (! $changed) {
+            abort(409, $hidden ? 'This feedback is already hidden.' : 'This feedback is already shown.');
+        }
 
         return $feedback;
     }

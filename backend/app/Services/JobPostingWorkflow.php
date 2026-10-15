@@ -6,7 +6,6 @@ use App\Enums\PostingStatus;
 use App\Models\JobPosting;
 use App\Models\User;
 use App\Notifications\PostingDecided;
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
@@ -83,14 +82,14 @@ class JobPostingWorkflow
 
     public function close(JobPosting $posting): JobPosting
     {
-        if ($posting->displayStatus() !== PostingStatus::Open) {
-            throw ValidationException::withMessages(['action' => 'Only open postings can be closed.']);
-        }
+        return $this->changeLocked($posting, function (JobPosting $posting) {
+            if ($posting->displayStatus() !== PostingStatus::Open) {
+                throw ValidationException::withMessages(['action' => 'Only open postings can be closed.']);
+            }
 
-        $this->moveTo($posting, PostingStatus::Closed);
-        $posting->save();
-
-        return $posting;
+            $this->moveTo($posting, PostingStatus::Closed);
+            $posting->save();
+        });
     }
 
     /**
@@ -99,18 +98,18 @@ class JobPostingWorkflow
      */
     public function reopen(JobPosting $posting, string $closesOn): JobPosting
     {
-        if ($posting->displayStatus() !== PostingStatus::Closed) {
-            throw ValidationException::withMessages(['action' => 'Only closed postings can be reopened.']);
-        }
+        return $this->changeLocked($posting, function (JobPosting $posting) use ($closesOn) {
+            if ($posting->displayStatus() !== PostingStatus::Closed) {
+                throw ValidationException::withMessages(['action' => 'Only closed postings can be reopened.']);
+            }
 
-        if ($posting->status !== PostingStatus::Open) {
-            $this->moveTo($posting, PostingStatus::Open);
-        }
+            if ($posting->status !== PostingStatus::Open) {
+                $this->moveTo($posting, PostingStatus::Open);
+            }
 
-        $posting->closes_on = $closesOn;
-        $posting->save();
-
-        return $posting;
+            $posting->closes_on = $closesOn;
+            $posting->save();
+        });
     }
 
     /**
@@ -118,16 +117,32 @@ class JobPostingWorkflow
      */
     public function changeClosingDate(JobPosting $posting, string $closesOn): JobPosting
     {
-        if ($posting->displayStatus() !== PostingStatus::Open) {
-            throw ValidationException::withMessages([
-                'action' => 'Only open postings can have their closing date changed. Reopen a closed posting instead.',
-            ]);
-        }
+        return $this->changeLocked($posting, function (JobPosting $posting) use ($closesOn) {
+            if ($posting->displayStatus() !== PostingStatus::Open) {
+                throw ValidationException::withMessages([
+                    'action' => 'Only open postings can have their closing date changed. Reopen a closed posting instead.',
+                ]);
+            }
 
-        $posting->closes_on = $closesOn;
-        $posting->save();
+            $posting->closes_on = $closesOn;
+            $posting->save();
+        });
+    }
 
-        return $posting;
+    /**
+     * Runs an employer's change on the locked row, so a posting OpenDoor removed meanwhile (or
+     * another change) is seen first (Phase 6 review): a removed posting answers 404.
+     *
+     * @param  callable(JobPosting): void  $change
+     */
+    private function changeLocked(JobPosting $posting, callable $change): JobPosting
+    {
+        return DB::transaction(function () use ($posting, $change) {
+            $locked = JobPosting::whereKey($posting->id)->lockForUpdate()->first() ?? abort(404);
+            $change($locked);
+
+            return $locked;
+        });
     }
 
     /**
@@ -156,8 +171,9 @@ class JobPostingWorkflow
                 $posting->forceFill(['rejection_reason' => $reason])->save();
             }
 
-            // Its creator and the department's managers hear the result (M9, Phase 6B).
-            DB::afterCommit(fn () => Notification::send($this->peopleFor($posting), new PostingDecided($posting)));
+            // The department's managers hear the result (M9, Phase 6B). Its creator is one of them
+            // while they still manage it; someone who left or moved hears nothing (review CR-01).
+            DB::afterCommit(fn () => Notification::send($posting->managers(), new PostingDecided($posting)));
 
             return $posting;
         });
@@ -181,23 +197,6 @@ class JobPostingWorkflow
             PostingStatus::Closed => ['edit', 'reopen', 'delete'],
             default => ['edit', 'delete'],
         };
-    }
-
-    /**
-     * The posting's managers and, if still active and not already one of them, its creator.
-     *
-     * @return EloquentCollection<int, User>
-     */
-    private function peopleFor(JobPosting $posting): EloquentCollection
-    {
-        $people = $posting->managers();
-        $creator = $posting->creator;
-
-        if ($creator?->is_active && ! $people->contains($creator)) {
-            $people->push($creator);
-        }
-
-        return $people;
     }
 
     /**

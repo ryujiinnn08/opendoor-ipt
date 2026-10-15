@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { getUnreadCount } from '../../api/notifications.js'
 import { useAuth } from '../../auth/authContext.js'
@@ -26,11 +26,16 @@ export default function PortalLayout() {
   // Job seekers and employers get notifications; admins have their queues (plan PHASE_6 §4.4).
   const notified = role === 'candidate' || role === 'employer'
   const [unread, setUnread] = useState(0)
+  const countRequest = useRef(0)
 
+  // Only the latest answer counts, so an older one can't overwrite a newer count (review WR-08).
   const refreshNotifications = useCallback(() => {
     if (!notified) return
+    const request = ++countRequest.current
     getUnreadCount()
-      .then(setUnread)
+      .then((count) => {
+        if (request === countRequest.current) setUnread(count)
+      })
       .catch(() => {})
   }, [notified])
 
@@ -96,7 +101,7 @@ export default function PortalLayout() {
       </header>
 
       <main id="main" tabIndex={-1} className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 outline-none">
-        <Outlet context={{ refreshNotifications }} />
+        <Outlet context={{ refreshNotifications, unreadNotifications: unread }} />
       </main>
 
       <div className="print:hidden">

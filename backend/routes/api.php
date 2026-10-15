@@ -62,7 +62,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/me/password', [PasswordController::class, 'update'])->middleware('throttle:10,1,password');
 
         // Notifications (M9, Phase 6B): job seekers and employers, their own only.
-        Route::middleware('role:candidate,employer')->prefix('notifications')->group(function () {
+        Route::middleware(['role:candidate,employer', 'no.store'])->prefix('notifications')->group(function () {
             Route::get('/', [NotificationController::class, 'index']);
             Route::get('unread-count', [NotificationController::class, 'unreadCount']);
             Route::patch('read-all', [NotificationController::class, 'readAll']);
@@ -131,7 +131,8 @@ Route::middleware('auth:sanctum')->group(function () {
             });
         });
 
-        Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
+        // Accounts, feedback and temporary passwords: never kept by the browser (review WR-06).
+        Route::middleware(['role:admin', 'no.store'])->prefix('admin')->name('admin.')->group(function () {
             Route::get('dashboard', [Admin\DashboardController::class, 'show']);
 
             Route::apiResource('categories', Admin\CategoryController::class)->only(['store', 'update', 'destroy']);
@@ -159,6 +160,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('users', [Admin\UserController::class, 'store']);
             Route::get('users/{user}', [Admin\UserController::class, 'show']);
             Route::patch('users/{user}/suspend', [Admin\UserStatusController::class, 'update']);
+            Route::post('users/{user}/temporary-password', [Admin\UserController::class, 'temporaryPassword']);
 
             Route::get('settings', [Admin\SettingsController::class, 'show']);
             Route::put('settings', [Admin\SettingsController::class, 'update']);

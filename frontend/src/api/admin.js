@@ -91,3 +91,9 @@ export async function setFeedbackHidden(id, hidden, reason) {
   const { data } = await client.patch(`/api/admin/feedback/${id}/hide`, hidden ? { hidden, reason } : { hidden })
   return data.data
 }
+
+/** A new temporary password for an administrator who lost theirs: { user, temporaryPassword }. */
+export async function replaceTemporaryPassword(id) {
+  const { data } = await client.post(`/api/admin/users/${id}/temporary-password`)
+  return { user: data.data, temporaryPassword: data.temporary_password }
+}

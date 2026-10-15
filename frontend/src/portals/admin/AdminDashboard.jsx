@@ -16,23 +16,23 @@ const QUEUES = [
   {
     key: 'companies_waiting_for_verification',
     text: (count) => `${plural(count, 'company', 'companies')} to verify`,
-    none: 'No companies waiting for verification',
+    none: 'Nothing waiting for verification',
     to: '/admin/employers',
     link: 'Review companies',
   },
   {
     key: 'postings_waiting_for_approval',
     text: (count) => `${plural(count, 'posting', 'postings')} to approve`,
-    none: 'No postings waiting for approval',
+    none: 'Nothing waiting for approval',
     to: '/admin/job-postings',
     link: 'Review postings',
   },
   {
     key: 'feedback_comments_last_7_days',
     text: (count) => `${plural(count, 'feedback comment', 'feedback comments')} this week`,
-    none: 'No feedback comments this week',
+    none: 'Nothing waiting in feedback',
     to: '/admin/feedback',
-    link: 'Read feedback',
+    link: 'Open feedback',
   },
 ]
 
@@ -105,11 +105,13 @@ export default function AdminDashboard() {
             </h2>
             <dl className="mt-3">
               <NumberRow label="Job seekers" value={counts.job_seekers} />
+              {/* Employers are companies and individuals; their accounts include HR officers (review WR-09). */}
               <NumberRow
                 label="Employers"
-                value={counts.employer_accounts}
+                value={counts.companies + counts.individual_employers}
                 detail={`${plural(counts.companies, 'company', 'companies')}, ${plural(counts.individual_employers, 'individual', 'individuals')}`}
               />
+              <NumberRow label="Employer accounts" value={counts.employer_accounts} detail="owners and HR officers" />
               <NumberRow label="Administrators" value={counts.administrators} />
               <NumberRow
                 label="Suspended accounts"

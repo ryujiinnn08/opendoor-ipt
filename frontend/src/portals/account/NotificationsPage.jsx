@@ -27,14 +27,20 @@ export default function NotificationsPage() {
   const [loadError, setLoadError] = useState(null)
   const [marking, setMarking] = useState(false)
   const listHeading = useRef(null)
+  const latest = useRef(0)
 
+  // Only the latest page's answer is shown (review WR-08).
   const load = useCallback(() => {
+    const request = ++latest.current
     getNotifications(page)
       .then((data) => {
+        if (request !== latest.current) return
         setResult(data)
         setLoadError(null)
       })
-      .catch((error) => setLoadError(generalErrorFrom(error)))
+      .catch((error) => {
+        if (request === latest.current) setLoadError(generalErrorFrom(error))
+      })
   }, [page])
 
   useEffect(() => {
@@ -66,7 +72,8 @@ export default function NotificationsPage() {
       .catch(() => {})
   }
 
-  const unread = result?.data.some((item) => !item.read_at)
+  // Unread ones may be on another page: the header's count says so (review).
+  const unread = result?.data.some((item) => !item.read_at) || outlet?.unreadNotifications > 0
 
   return (
     <div className="max-w-3xl">
@@ -95,7 +102,15 @@ export default function NotificationsPage() {
         </Notice>
       )}
       {!result && !loadError && <LoadingMessage>Loading notifications…</LoadingMessage>}
-      {result?.data.length === 0 && <p className="mt-8 max-w-prose">{EMPTY_NOTIFICATIONS[role]}</p>}
+      {result?.data.length === 0 && result.meta.total === 0 && <p className="mt-8 max-w-prose">{EMPTY_NOTIFICATIONS[role]}</p>}
+      {result?.data.length === 0 && result.meta.total > 0 && (
+        <p className="mt-8">
+          This page is past the end of your notifications.{' '}
+          <Link to="/notifications" className="font-bold text-primary underline underline-offset-4 hover:no-underline">
+            Go to the newest
+          </Link>
+        </p>
+      )}
 
       {result?.data.length > 0 && (
         <ul className="mt-8">
@@ -105,7 +120,7 @@ export default function NotificationsPage() {
             return (
               <li key={item.id} className="border-b border-border py-4 first:border-t">
                 <p className={isNew ? 'font-bold' : ''}>
-                  {isNew && <span className="mr-2 rounded-full bg-primary-soft px-2 py-0.5 text-sm text-primary">New</span>}
+                  {isNew && <span className="mr-2 rounded-full bg-neutral-soft px-2 py-0.5 text-sm text-text">New</span>}
                   <Link
                     to={to}
                     onClick={() => open(item)}

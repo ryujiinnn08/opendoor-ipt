@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react'
+import { act, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { axe } from 'vitest-axe'
@@ -8,9 +8,10 @@ import UserPage from './UserPage.jsx'
 vi.mock('../../api/admin.js', () => ({
   getUser: vi.fn(),
   setSuspended: vi.fn(),
+  replaceTemporaryPassword: vi.fn(),
 }))
 
-const { getUser, setSuspended } = await import('../../api/admin.js')
+const { getUser, setSuspended, replaceTemporaryPassword } = await import('../../api/admin.js')
 
 const routes = [{ path: '/admin/users/:id', element: <UserPage /> }]
 const admin = { status: 'authenticated', role: 'admin', user: { name: 'Ana Cruz', role: 'admin' } }
@@ -123,5 +124,36 @@ describe('UserPage', () => {
 
     expect(await screen.findByText('Owner of Acme Corp.')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Junior Web Developer' })).toHaveAttribute('href', '/admin/job-postings/7')
+  })
+
+  it('makes a new temporary password for an administrator who lost theirs', async () => {
+    const rosa = { ...maria, name: 'Rosa Lim', role: 'admin', applications: undefined, must_change_password: true }
+    getUser.mockResolvedValue(rosa)
+    replaceTemporaryPassword.mockResolvedValue({ user: rosa, temporaryPassword: 'Kq7!mPz2Rt9@wXy4' })
+    renderRoutes(routes, { path: '/admin/users/3', auth: admin })
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Make a new temporary password' }))
+    const dialog = screen.getByRole('dialog', { name: 'Make a new temporary password for Rosa Lim?' })
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Make a new password' }))
+
+    expect(replaceTemporaryPassword).toHaveBeenCalledWith(3)
+    expect(await screen.findByLabelText('Temporary password')).toHaveValue('Kq7!mPz2Rt9@wXy4')
+    expect(screen.queryByRole('button', { name: 'Make a new temporary password' })).not.toBeInTheDocument()
+  })
+
+  it('starts fresh when the address moves to another account', async () => {
+    getUser.mockImplementation(async (id) => (id === '3' ? maria : { ...maria, id: 4, name: 'Jose Reyes' }))
+    setSuspended.mockResolvedValue({ ...maria, is_active: false })
+    const { router } = renderRoutes(routes, { path: '/admin/users/3', auth: admin })
+    await screen.findByRole('heading', { level: 1, name: 'Maria Santos' })
+
+    await act(() => router.navigate('/admin/users/4'))
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Suspend Jose Reyes' }))
+    const dialog = screen.getByRole('dialog', { name: 'Suspend Jose Reyes?' })
+    await userEvent.type(within(dialog).getByLabelText('Why (only administrators see this)'), 'Posted fake jobs.')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Suspend Jose Reyes' }))
+
+    expect(setSuspended).toHaveBeenCalledWith(4, true, 'Posted fake jobs.')
   })
 })

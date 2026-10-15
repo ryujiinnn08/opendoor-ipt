@@ -49,11 +49,12 @@ class FeedbackModerationTest extends TestCase
     public function test_only_administrators_moderate(): void
     {
         $id = $this->feedback[3]->id;
-        $employer = User::factory()->employer()->create();
 
-        $this->actingAs($employer, 'web')->getJson('/api/admin/feedback')->assertForbidden();
-        $this->postJson("/api/admin/feedback/{$id}/author")->assertForbidden();
-        $this->patchJson("/api/admin/feedback/{$id}/hide", ['hidden' => true, 'reason' => 'Abusive words.'])->assertForbidden();
+        foreach ([User::factory()->employer()->create(), $this->feedback[3]->application->candidate] as $user) {
+            $this->actingAs($user, 'web')->getJson('/api/admin/feedback')->assertForbidden();
+            $this->postJson("/api/admin/feedback/{$id}/author")->assertForbidden();
+            $this->patchJson("/api/admin/feedback/{$id}/hide", ['hidden' => true, 'reason' => 'Abusive words.'])->assertForbidden();
+        }
     }
 
     public function test_the_list_shows_comments_first_and_never_the_author(): void
@@ -122,6 +123,19 @@ class FeedbackModerationTest extends TestCase
         $this->patchJson("/api/admin/feedback/{$id}/hide", ['hidden' => false])->assertConflict();
 
         $this->assertEqualsWithDelta(75.0, (float) $this->job->employer->fresh()->trust_score, 0.01);
+    }
+
+    public function test_a_retry_repairs_a_score_left_stale_by_a_failed_recalculation(): void
+    {
+        // The hide committed, but the recalculation after it failed: the score still counts it.
+        $this->feedback[3]->forceFill(['is_hidden' => true, 'hidden_reason' => 'Abusive words.'])->save();
+        $this->assertEqualsWithDelta(75.0, (float) $this->job->employer->fresh()->trust_score, 0.01);
+
+        $this->actingAs($this->admin, 'web')
+            ->patchJson("/api/admin/feedback/{$this->feedback[3]->id}/hide", ['hidden' => true, 'reason' => 'Abusive words.'])
+            ->assertConflict();
+
+        $this->assertEqualsWithDelta(100.0, (float) $this->job->employer->fresh()->trust_score, 0.01);
     }
 
     public function test_hiding_below_the_minimum_takes_the_score_away(): void

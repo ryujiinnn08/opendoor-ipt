@@ -1,6 +1,6 @@
 # Phase 6 Plan: Admin Tools and Notifications
 
-> Status: **APPROVED 2026-10-15** with every recommendation in §3 (Q1–Q10). **6A built** (§9 steps 1–2): server and pages, demo steps A1–A7 checked in the browser at desktop and 360 px; A8's keyboard and screen reader pass is still open. **6B notifications and feedback moderation built** (§9 step 3), demo steps B1–B3 checked in the browser; report a posting and analytics are left for Friday if time allows (Q1). Checked against the proposal papers ([Modules and Features](papers/MODULES_AND_FEATURES.md) §3.4, M1, M4, M7, M8, M9, M10).
+> Status: **APPROVED 2026-10-15** with every recommendation in §3 (Q1–Q10). **6A built** (§9 steps 1–2): server and pages, demo steps A1–A7 checked in the browser at desktop and 360 px; A8's keyboard and screen reader pass is still open. **6B notifications and feedback moderation built** (§9 step 3), demo steps B1–B3 checked in the browser; **report a posting and admin analytics are cut** (Q1, decided 2026-10-15; after the defense). §9 step 4 done: GSD code review, UI review (19/24 before fixes) and security audit run and their findings fixed (review notes at the end). 394 server and 426 page tests pass. Still open: A8's keyboard and screen reader pass. Checked against the proposal papers ([Modules and Features](papers/MODULES_AND_FEATURES.md) §3.4, M1, M4, M7, M8, M9, M10).
 > Part of: [CONCEPT_PLAN.md](CONCEPT_PLAN.md), build phase 6 of 7
 > Builds on: [PHASE_5_PLAN.md](PHASE_5_PLAN.md) (feedback and the trust score; `feedback.is_hidden` and the recalculation already exist) and [PHASE_4_PLAN.md](PHASE_4_PLAN.md) (notifications are already recorded)
 > Method: GSD and Frontend Design only (§7). After approval, an implementation plan per part; GSD code review, UI review and security audit before finishing.
@@ -306,5 +306,28 @@ Suspended accounts  1
 | Email notifications, forgot password (Could-have) | After the defense |
 | Account deletion request (F1.8, Could-have) | After the defense |
 | Saved jobs (M12), display settings (M13 settings page, Could-have) | After the defense |
-| Report a posting, admin analytics | Only if Q1 allows; otherwise after the defense |
+| Report a posting, admin analytics (F10.3, F10.4, F8.4) | Cut on 2026-10-15 (Q1); after the defense. The panel's "view analytics" is answered by the dashboard's OpenDoor in numbers |
 | Going live, accessibility audit, usability tests | Phase 7 (Oct 17–20) |
+
+---
+
+## Phase 6 review notes (2026-10-15)
+
+GSD's code review (standard depth, 74 source files: 1 critical, 9 warnings, 8 info), UI review (**19/24**: copywriting 3, visuals 3, colour 3, typography 3, spacing 4, experience 3; code-only) and security audit (**SECURED, 11/11** threats from §8 closed at ASVS level 1, with 5 non-blocking notes) were run over `065465b..HEAD`. As in earlier phases the reports stayed outside the repository. GSD's own phase folders don't exist in this project, so its reviewer agents were run directly on the changed-file list.
+
+Found and fixed:
+- **Notifications outlived access** (critical, CR-01). An HR officer removed from a company, or moved to another department, could still read the applicant names and decisions of postings they no longer manage, and a posting's creator who had left still heard about its approval. Leaving a company now deletes its posting notifications for that person, moving deletes the old department's, and approval results go only to the posting's current managers.
+- **A lost temporary password locked an account for good** (WR-05). Another administrator can now make a new temporary password for an administrator who hasn't changed theirs (never their own); the old one stops working, its sessions end, and it's recorded in the history.
+- **Private responses could be kept by the browser** (WR-06): notifications and every `/admin/*` response (temporary passwords, accounts, feedback, authors) now send `Cache-Control: private, no-store`.
+- **A retry after a failed trust score recalculation answered 409 and left the score wrong** (WR-01); the recalculation now runs on a repeat too, so retrying repairs it.
+- **Two admins deciding a company's verification at once could both succeed** (WR-02); the company row is locked and the owner hears the result after the commit. The employer's close, reopen and change-closing-date now also re-read the posting under a lock, so one removed meanwhile answers 404 (security note).
+- **Pages:** a failed reload after removing a posting showed an error whose retry answered 404 (WR-03); "Show who wrote this" could record two looks on a double click and didn't announce its error (WR-04); the user and posting pages kept the previous record when only the address's id changed, so Suspend could act on the wrong account (WR-07); an older answer could overwrite the unread count or a newer search (WR-08); the dashboard's Employers number counted HR officers' accounts while its detail counted companies (WR-09; now Employers and Employer accounts are separate rows); Mark all as read is offered when the unread ones are on another page; a page past the end no longer says "No notifications yet"; a failed reload of the user no longer logs them out; two adds with the same email answer 422, not 500.
+- **UI review:** the account history now sits beside the facts and the action on wide screens; a decorative bell is drawn before "Notifications" in the Icons8 line style; empty queues say "Nothing waiting…" and the feedback row's link is "Open feedback"; the remove confirm names the posting ("Remove Junior Web Developer"); the employer's removed-posting reason has the same ink rule as the admin's; "New" uses the neutral tint, not the action colour; the suspend dialog's wording for employers matches what the page offers.
+- **Tests and docs:** moderation is now refused to job seekers as well as employers in the tests; API.md gained the new endpoint, the password rate limit, the count's real shape, the roles table's second way to create admins, and the scheduler note.
+
+Accepted, not changed:
+- The prune of 90-day-old notifications needs `php artisan schedule:run` every minute in deployment (Phase 7); until then old ones are only hidden.
+- Ending sessions on suspension relies on `SESSION_DRIVER=database` (production uses it); with another driver the `active` middleware still logs the person out on their next request.
+- A notification about a posting that was later removed links to a page that says it can't be found.
+- The Change password success message stays until the page is left; the shared-list tiles stay on the dashboard (§4.3 kept them); the Search button's alignment uses a fixed offset at large widths.
+

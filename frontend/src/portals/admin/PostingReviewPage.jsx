@@ -18,9 +18,14 @@ import { manilaToday } from '../../lib/postingOptions.js'
 /**
  * One posting for the admin to approve or reject (plan PHASE_2 decision 33), or remove with a
  * reason the employer sees (plan PHASE_6 §4.2). Drafts can't be opened here; the API answers 404.
+ * Keyed by the id, so going Back or Forward to another posting starts fresh (review WR-07).
  */
 export default function PostingReviewPage() {
   const { id } = useParams()
+  return <PostingReview key={id} id={id} />
+}
+
+function PostingReview({ id }) {
   const navigate = useNavigate()
   const announce = useAnnounce()
   const [posting, setPosting] = useState(null)
@@ -43,7 +48,10 @@ export default function PostingReviewPage() {
     setDeciding((current) => ({ ...current, busy: true, error: null }))
     try {
       await removePosting(posting.id, reason)
-      setPosting(await getPostingForReview(posting.id))
+      // It's removed even if reloading it fails: show it removed rather than an error to retry,
+      // which would answer 404 (review WR-03).
+      const reloaded = await getPostingForReview(posting.id).catch(() => null)
+      setPosting(reloaded ?? { ...posting, removal: { removed_at: new Date().toISOString(), reason } })
       const text = `"${posting.title}" was removed. The employer can see your reason.`
       setRemovedMessage(text)
       announce(text)
@@ -207,7 +215,7 @@ export default function PostingReviewPage() {
         description="Job seekers won't see it again, and the employer can't edit or reopen it. You can't undo this."
         label="Reason (the employer sees this)"
         hint="Say what was wrong, e.g., Accommodations listed aren't available at this site."
-        confirmLabel="Remove posting"
+        confirmLabel={`Remove ${posting.title}`}
         minLength={5}
         onConfirm={remove}
         busy={deciding?.busy}

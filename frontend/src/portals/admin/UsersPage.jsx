@@ -34,18 +34,24 @@ export default function UsersPage() {
   const [loadError, setLoadError] = useState(null)
   const resultsHeading = useRef(null)
   const searched = useRef(false)
+  const latest = useRef(0)
 
+  // Only the latest search's answer is shown (review WR-08); focus moves only after a search.
   const load = useCallback(() => {
+    const request = ++latest.current
     getUsers({ q: q || undefined, role: role || undefined, status: status || undefined, page })
       .then((data) => {
+        if (request !== latest.current) return
         setResult(data)
         setLoadError(null)
-        if (searched.current) {
-          searched.current = false
-          resultsHeading.current?.focus()
-        }
+        if (searched.current) resultsHeading.current?.focus()
+        searched.current = false
       })
-      .catch((error) => setLoadError(generalErrorFrom(error)))
+      .catch((error) => {
+        if (request !== latest.current) return
+        setLoadError(generalErrorFrom(error))
+        searched.current = false
+      })
   }, [q, role, status, page])
 
   useEffect(() => {

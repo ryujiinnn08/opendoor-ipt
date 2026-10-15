@@ -12,12 +12,16 @@ export default function AuthProvider({ children }) {
     setStatus(nextUser ? 'authenticated' : 'guest')
   }, [])
 
-  /** Reloads the user, e.g., after an employer sets up or renames their company. */
+  /**
+   * Reloads the user, e.g., after an employer sets up or renames their company. A failed reload
+   * keeps the user: an ended session (401) is already handled by the unauthorized handler, and a
+   * network error shouldn't log anyone out (Phase 6 review).
+   */
   const refresh = useCallback(async () => {
     try {
       applyUser(await authApi.fetchCurrentUser())
     } catch {
-      applyUser(null)
+      // Keep the current user.
     }
   }, [applyUser])
 

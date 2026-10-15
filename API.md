@@ -56,7 +56,7 @@ A suspended account is logged out on its next request (403). An expired CSRF tok
 |---|---|---|
 | `candidate` | A job seeker | Registers on their own |
 | `employer` | A company owner, an HR officer or an individual employer | Registers on their own, then sets up a profile; HR officers join through an invite. Most employer endpoints need that profile first (otherwise 403 with `"code": "employer_profile_required"`) |
-| `admin` | An OpenDoor administrator | Created by the seeder; never through registration |
+| `admin` | An OpenDoor administrator | Created by the seeder or by another administrator (`POST /admin/users`, 6A); never through registration |
 
 "Owner" below means the owner of a company or an individual employer; "HR" is an HR officer, who sees only their own department.
 
@@ -85,8 +85,9 @@ Every error is JSON with at least a `message` written for people (the app shows 
 | Job board (`/job-postings`, `/employers/{id}`) | 120 a minute per IP address, counted separately |
 | Apply | 10 a minute per account |
 | Open an invite / accept it | 30 / 10 a minute per IP address |
+| Change password (6A) | 10 a minute per account |
 
-**Caching:** responses with private details (applications, applicants, résumés) send `Cache-Control: private, no-store`, so a browser never keeps them on disk.
+**Caching:** responses with private details (applications, applicants, résumés, notifications and every `/admin/*` response, including temporary passwords) send `Cache-Control: private, no-store`, so a browser never keeps them on disk.
 
 ---
 
@@ -374,15 +375,15 @@ Each change is stored with Laravel's database notifications (table `notification
 | `status_changed` | The job seeker when the employer acts; the managers when the job seeker withdraws or confirms a hire | `application_id`, `job_posting_id`, `job_title`, `employer_name`, `applicant_name`, `status`, `actor` |
 | `feedback_open` (5A) | The hired job seeker, once, the first time the dashboard or My applications opens after the form opens | `application_id`, `job_title`, `employer_name` |
 | `verification_decided` (6B) | The company's owner | `employer_id`, `employer_name`, `verified` |
-| `posting_decided` (6B) | Its creator and the department's managers | `job_posting_id`, `job_title`, `approved` |
+| `posting_decided` (6B) | The department's managers (its creator among them while they still manage it) | `job_posting_id`, `job_title`, `approved` |
 | `posting_removed` (6B) | The posting's managers (the reason is on their Removed list) | `job_posting_id`, `job_title` |
 
-`candidate` and `employer` only, each their own (another person's id answers 404). Kept 90 days: older ones are hidden and `php artisan notifications:prune` (scheduled daily) deletes them.
+`candidate` and `employer` only, each their own (another person's id answers 404). Someone who leaves a company loses its posting notifications, and an HR officer moved to another department loses the old department's. Kept 90 days: older ones are hidden and `php artisan notifications:prune` deletes them; it's scheduled daily, which needs `php artisan schedule:run` every minute (a cron job or the host's scheduler) in deployment.
 
 | Method | Address | Send | Returns |
 |---|---|---|---|
 | GET | `/notifications` | `page` | 20 a page, newest first: `{ "id", "type", "details", "read_at", "created_at" }` with `links` and `meta` |
-| GET | `/notifications/unread-count` | — | `{ "count": 3 }` (the header asks on every page change) |
+| GET | `/notifications/unread-count` | — | `{ "data": { "count": 3 } }` (the header asks on every page change) |
 | PATCH | `/notifications/{id}/read` | — | The notification, now read |
 | PATCH | `/notifications/read-all` | — | 204 |
 
@@ -466,8 +467,9 @@ Limits: `title`, `location` ≤150; `description` ≤5000; `closes_on` from tomo
 | Method | Address | Send | Returns |
 |---|---|---|---|
 | GET | `/admin/users` | `q` (name or email, ≤100), `role` (`candidate`\|`employer`\|`admin`), `status` (`active`\|`suspended`), `page` | 20 a page, newest first, with `links` and `meta`: `{ "id", "name", "email", "role", "is_active", "joined_at", "employer" }`; `employer` (employers only, `null` before setup) is `{ "id", "name", "type", "verification_status", "member_role", "department" }` |
-| GET | `/admin/users/{id}` | — | The list fields plus `last_login_at`, `must_change_password`, `is_you`, `history` (newest first: `{ "id", "type", "reason", "by", "at" }`, `type` from `suspended`, `reactivated`, `admin_created`, `password_changed`; `by` is the administrator, `null` when the person acted), for job seekers `applications` (`{ "total", "hires" }`) and for employers `postings` (the ones they manage, not drafts, ≤50: `{ "id", "title", "status" }`). **Never** a job seeker's profile, needs, disability type or résumé |
+| GET | `/admin/users/{id}` | — | The list fields plus `last_login_at`, `must_change_password`, `is_you`, `history` (newest first: `{ "id", "type", "reason", "by", "at" }`, `type` from `suspended`, `reactivated`, `admin_created`, `temporary_password_replaced`, `password_changed`; `by` is the administrator, `null` when the person acted), for job seekers `applications` (`{ "total", "hires" }`) and for employers `postings` (the ones they manage, not drafts, ≤50: `{ "id", "title", "status" }`). **Never** a job seeker's profile, needs, disability type or résumé |
 | POST | `/admin/users` | `name` (≤255), `email` (lowercase, unique) | 201, the new administrator's page plus `"temporary_password"` (16 characters), **shown only in this response**; they must change it after logging in |
+| POST | `/admin/users/{id}/temporary-password` | — | For an administrator who hasn't changed their temporary password (not yourself): their page plus a new `"temporary_password"`, shown only in this response. The old one stops working and its sessions end; recorded as `temporary_password_replaced`. Anyone else: 422 |
 | PATCH | `/admin/users/{id}/suspend` | `{ "suspended": true, "reason" }` (5–500, administrators only see it) or `{ "suspended": false }` | The account's page. Suspending ends every session of that person. 422 `"You can't suspend your own account."` / `"OpenDoor needs at least one active administrator."`; 409 when it's already in that state |
 
 ```json
