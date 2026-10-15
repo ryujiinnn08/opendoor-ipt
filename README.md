@@ -10,8 +10,11 @@ See [.planning/CONCEPT_PLAN.md](.planning/CONCEPT_PLAN.md) for the concept, arch
 OpenDoor/
 ├── backend/    Laravel 12 REST API (Sanctum SPA cookie auth, MySQL/MariaDB)
 ├── frontend/   React 19 + Vite SPA (React Router, Axios, Tailwind CSS), deployed to Cloudflare Workers
-└── .planning/  Planning documents: concept, phase plans, implementation plans (also GSD's planning folder)
+├── .planning/  Planning documents: concept, phase plans, implementation plans (also GSD's planning folder)
+└── API.md      API reference: every endpoint, who may call it, requests, responses and errors
 ```
+
+The API is documented in [API.md](API.md).
 
 ## Requirements
 
