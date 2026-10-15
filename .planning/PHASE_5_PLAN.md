@@ -1,6 +1,6 @@
 # Phase 5 Plan: Accommodation Feedback and the Trust Score
 
-> Status: **DRAFT, waiting for your answers** (2026-10-15). The questions are in §3, each with a recommendation; "the other recommendations are OK" is enough. Checked against the proposal papers ([Revised Proposal](papers/REVISED_PROPOSAL.md) §VII-G and §VII-H, [Modules and Features](papers/MODULES_AND_FEATURES.md) M7, M8, §3.1–3.3).
+> Status: **APPROVED 2026-10-15** with every recommendation in §3 (Q1–Q10). 5A is built from the [5A implementation plan](superpowers/plans/2026-10-15-phase-5a-give-feedback.md). Checked against the proposal papers ([Revised Proposal](papers/REVISED_PROPOSAL.md) §VII-G and §VII-H, [Modules and Features](papers/MODULES_AND_FEATURES.md) M7, M8, §3.1–3.3).
 > Part of: [CONCEPT_PLAN.md](CONCEPT_PLAN.md), build phase 5 of 7
 > Builds on: [PHASE_4_PLAN.md](PHASE_4_PLAN.md) (applications; a hire already copies the job's accommodations for this phase)
 > Method: Superpowers brainstorming (this spec), then Superpowers writing-plans for 5A and 5B; Frontend Design (§7); GSD code review, UI review and security audit before finishing.
