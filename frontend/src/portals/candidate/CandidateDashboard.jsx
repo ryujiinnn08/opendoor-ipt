@@ -10,10 +10,11 @@ import LoadingMessage from '../../components/ui/LoadingMessage.jsx'
 import Notice from '../../components/ui/Notice.jsx'
 import PageHeading from '../../components/ui/PageHeading.jsx'
 import { PRIMARY_LINK, TEXT_LINK } from '../../components/ui/buttonLinkStyles.js'
+import { RATE_ACTION } from '../../lib/feedbackText.js'
 import { PROFILE_SECTIONS as SECTIONS } from '../../lib/profileSections.js'
 
 /**
- * The job seeker's dashboard (F8.1, F2.5). Until needs are saved, its main action is
+ * The job seeker's dashboard (F8.1, F2.5). Feedback due comes first (F7.6). Until needs are saved, its main action is
  * Tell us what you need; then it shows the three best matches. Below, the profile sections
  * still missing. Every state keeps the same heading.
  */
@@ -57,6 +58,30 @@ export default function CandidateDashboard() {
 
       {dashboard && (
         <>
+          {dashboard.feedback_due?.length > 0 && (
+            <section aria-labelledby="feedback-due-heading" className="mt-8">
+              <h2 id="feedback-due-heading" className="text-2xl font-bold">
+                Feedback due
+              </h2>
+              <ul className="mt-4">
+                {dashboard.feedback_due.map((item) => (
+                  <li key={item.application_id} className="border-b border-border py-4 first:border-t">
+                    <p className="max-w-prose">
+                      Rate how {item.employer_name} delivered the accommodations for {item.job_title}.
+                    </p>
+                    <Link
+                      to={`/candidate/applications/${item.application_id}/feedback`}
+                      aria-label={`${RATE_ACTION} for ${item.job_title}`}
+                      className={`mt-3 ${PRIMARY_LINK}`}
+                    >
+                      {RATE_ACTION}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
           {dashboard.needs_count === 0 ? (
             <section aria-labelledby="start-heading" className="mt-8 max-w-prose">
               <h2 id="start-heading" className="text-2xl font-bold">

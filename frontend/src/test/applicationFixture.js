@@ -15,6 +15,7 @@ export function applicationFixture(overrides = {}) {
     cover_note: 'I have three years of bookkeeping.\nI would love to learn.',
     interview_request: 'Online interview with captions, please.',
     actions: ['withdraw'],
+    feedback: null,
     job: {
       id: 2,
       title: 'Junior Web Developer',

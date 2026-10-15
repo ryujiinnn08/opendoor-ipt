@@ -13,6 +13,7 @@ import PostingApprovalsPage from './portals/admin/PostingApprovalsPage.jsx'
 import PostingReviewPage from './portals/admin/PostingReviewPage.jsx'
 import SettingsPage from './portals/admin/SettingsPage.jsx'
 import ApplicationPage from './portals/candidate/ApplicationPage.jsx'
+import FeedbackPage from './portals/candidate/FeedbackPage.jsx'
 import ApplyPage from './portals/candidate/ApplyPage.jsx'
 import CandidateDashboard from './portals/candidate/CandidateDashboard.jsx'
 import FindJobsPage from './portals/candidate/FindJobsPage.jsx'
@@ -86,6 +87,7 @@ export const routes = [
         { path: '/candidate/jobs/:id/apply', element: <ApplyPage /> },
         { path: '/candidate/applications', element: <MyApplicationsPage /> },
         { path: '/candidate/applications/:id', element: <ApplicationPage /> },
+        { path: '/candidate/applications/:id/feedback', element: <FeedbackPage /> },
       ]),
       portal('employer', [
         { element: <RequireNoEmployerProfile />, children: [{ path: '/employer/setup', element: <SetupPage /> }] },

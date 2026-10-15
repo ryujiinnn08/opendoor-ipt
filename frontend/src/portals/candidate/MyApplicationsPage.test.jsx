@@ -40,6 +40,22 @@ describe('MyApplicationsPage', () => {
     expect(await axe(container)).toHaveNoViolations()
   })
 
+  it('says where each hire’s feedback stands', async () => {
+    const hired = (id, title, feedback) =>
+      reviewedFixture({ id, status: 'hired', status_label: 'Hired', hired_at: '2026-09-14', actions: [], feedback, job: { ...applicationFixture().job, id, title } })
+    listApplications.mockResolvedValue(page([
+      hired(7, 'Office Clerk', { state: 'open', opens_on: '2026-10-14', sent_at: null }),
+      hired(8, 'Graphic Designer', { state: 'not_yet', opens_on: '2026-11-12', sent_at: null }),
+    ]))
+    renderRoutes(routes, { path: '/candidate/applications', auth })
+
+    expect(await screen.findByRole('link', { name: 'Rate the accommodations for Office Clerk' })).toHaveAttribute('href', '/candidate/applications/7/feedback')
+    const rows = screen.getAllByRole('listitem').filter((item) => item.id?.startsWith('application-'))
+    expect(within(rows[0]).queryByText(/About 30 days after your hire date/)).not.toBeInTheDocument()
+    expect(within(rows[1]).getByText(/About 30 days after your hire date/)).toBeInTheDocument()
+    expect(within(rows[1]).getByText("You can rate your employer's accommodations from November 12, 2026.")).toBeInTheDocument()
+  })
+
   it('reads the filter and page from the address', async () => {
     listApplications.mockResolvedValue(page([], { counts: { all: 3, waiting: 0, hired: 0, closed: 3 } }))
     renderRoutes(routes, { path: '/candidate/applications?status=closed&page=2', auth })

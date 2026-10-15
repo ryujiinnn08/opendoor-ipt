@@ -25,6 +25,21 @@ export const APPLICATION_STATUSES = {
   withdrawn: { label: 'Withdrawn', tone: 'neutral', icon: 'minus', next: 'You withdrew this application.' },
 }
 
+// A hire's sentence once feedback has opened, been sent, or has nothing to rate (Phase 5).
+const HIRED_FEEDBACK_NEXT = {
+  open: 'Congratulations. You can now rate whether each accommodation was provided.',
+  sent: 'Congratulations. Thank you for rating the accommodations.',
+  nothing_to_rate: 'Congratulations on your new job.',
+}
+
+/** The next-step sentence for an application; a hire's follows where its feedback stands. */
+export function nextStepText(application) {
+  if (application.status === 'hired' && HIRED_FEEDBACK_NEXT[application.feedback?.state]) {
+    return HIRED_FEEDBACK_NEXT[application.feedback.state]
+  }
+  return APPLICATION_STATUSES[application.status]?.next
+}
+
 /** My applications' filters; values match the API's `status`. */
 export const APPLICATION_FILTERS = [
   { value: 'all', label: 'All' },

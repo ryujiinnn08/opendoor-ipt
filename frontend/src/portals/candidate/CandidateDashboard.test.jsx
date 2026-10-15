@@ -37,6 +37,31 @@ describe('CandidateDashboard', () => {
     expect(await axe(container)).toHaveNoViolations()
   })
 
+  it('puts feedback due first, with a link to rate', async () => {
+    getDashboard.mockResolvedValue({
+      needs_count: 2,
+      top_matches: [matched(2, 'Data Encoder')],
+      missing_sections: [],
+      feedback_due: [{ application_id: 7, job_title: 'Office Clerk', employer_name: 'OpenDoor Demo Corp.' }],
+    })
+    const { container } = renderPage()
+
+    const due = await screen.findByRole('region', { name: 'Feedback due' })
+    expect(within(due).getByText('Rate how OpenDoor Demo Corp. delivered the accommodations for Office Clerk.')).toBeInTheDocument()
+    expect(within(due).getByRole('link', { name: 'Rate the accommodations for Office Clerk' })).toHaveAttribute('href', '/candidate/applications/7/feedback')
+    const headings = screen.getAllByRole('heading', { level: 2 }).map((heading) => heading.textContent)
+    expect(headings.indexOf('Feedback due')).toBeLessThan(headings.indexOf('Your top matches'))
+    expect(await axe(container)).toHaveNoViolations()
+  })
+
+  it('has no feedback section when nothing is due', async () => {
+    getDashboard.mockResolvedValue({ needs_count: 2, top_matches: [], missing_sections: [], feedback_due: [] })
+    renderPage()
+
+    await screen.findByRole('region', { name: 'Your top matches' })
+    expect(screen.queryByRole('region', { name: 'Feedback due' })).not.toBeInTheDocument()
+  })
+
   it('shows the top matches to a job seeker with needs', async () => {
     getDashboard.mockResolvedValue({ needs_count: 2, top_matches: [matched(2, 'Data Encoder'), matched(3, 'Clerk')], missing_sections: [] })
     renderPage()

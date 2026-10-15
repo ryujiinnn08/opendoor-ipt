@@ -3,11 +3,14 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { axe } from 'vitest-axe'
 import { applicationFixture, reviewedFixture } from '../../test/applicationFixture.js'
+import { sentFeedbackFixture } from '../../test/feedbackFixture.js'
 import { renderRoutes } from '../../test/renderWithProviders.jsx'
 import ApplicationPage from './ApplicationPage.jsx'
 
 vi.mock('../../api/applications.js', () => ({ getApplication: vi.fn(), changeApplicationStatus: vi.fn() }))
 const { getApplication, changeApplicationStatus } = await import('../../api/applications.js')
+vi.mock('../../api/feedback.js', () => ({ getFeedbackForm: vi.fn() }))
+const { getFeedbackForm } = await import('../../api/feedback.js')
 
 const auth = { status: 'authenticated', role: 'candidate', user: { name: 'Ana', role: 'candidate' } }
 const routes = [{ path: '/candidate/applications/:id', element: <ApplicationPage /> }]
@@ -58,6 +61,32 @@ describe('ApplicationPage', () => {
     expect(within(hired).getByText('Remote work')).toBeInTheDocument()
     expect(within(hired).queryByText('Flexible hours')).not.toBeInTheDocument()
     expect(screen.getByText('Confirmed by you')).toBeInTheDocument()
+  })
+
+  it('links to the feedback form once it opens', async () => {
+    getApplication.mockResolvedValue({
+      ...detailed(reviewedFixture({ status: 'hired', status_label: 'Hired', hired_at: '2026-09-14', actions: [], feedback: { state: 'open', opens_on: '2026-10-14', sent_at: null } })),
+      hired_accommodations: [accommodations[0]],
+    })
+    open()
+
+    expect(await screen.findByRole('link', { name: 'Rate the accommodations for Junior Web Developer' })).toHaveAttribute('href', '/candidate/applications/7/feedback')
+    expect(getFeedbackForm).not.toHaveBeenCalled()
+  })
+
+  it('shows the job seeker their own ratings once sent', async () => {
+    getApplication.mockResolvedValue({
+      ...detailed(reviewedFixture({ status: 'hired', status_label: 'Hired', hired_at: '2026-09-14', actions: [], feedback: { state: 'sent', opens_on: '2026-10-14', sent_at: '2026-10-15T03:00:00+00:00' } })),
+      hired_accommodations: [accommodations[0]],
+    })
+    getFeedbackForm.mockResolvedValue(sentFeedbackFixture())
+    const { container } = open()
+
+    expect(await screen.findByText('You rated the accommodations on October 15, 2026.')).toBeInTheDocument()
+    const ratings = await screen.findByRole('region', { name: 'Your ratings' })
+    expect(within(ratings).getByText('Partly delivered')).toBeInTheDocument()
+    expect(getFeedbackForm).toHaveBeenCalledWith('7')
+    expect(await axe(container)).toHaveNoViolations()
   })
 
   it('explains a removed job instead of linking to it', async () => {

@@ -1,6 +1,6 @@
 # Phase 5 Plan: Accommodation Feedback and the Trust Score
 
-> Status: **APPROVED 2026-10-15** with every recommendation in §3 (Q1–Q10). 5A is built from the [5A implementation plan](superpowers/plans/2026-10-15-phase-5a-give-feedback.md). Checked against the proposal papers ([Revised Proposal](papers/REVISED_PROPOSAL.md) §VII-G and §VII-H, [Modules and Features](papers/MODULES_AND_FEATURES.md) M7, M8, §3.1–3.3).
+> Status: **5A built (2026-10-15)**: demo steps F1–F4 verified in the browser, F5 at 360 px and with the keyboard (build notes at the end); 310 server and 366 page tests pass. APPROVED 2026-10-15 with every recommendation in §3 (Q1–Q10); 5A built from the [5A implementation plan](superpowers/plans/2026-10-15-phase-5a-give-feedback.md). Next: 5B, everyone sees the score. Checked against the proposal papers ([Revised Proposal](papers/REVISED_PROPOSAL.md) §VII-G and §VII-H, [Modules and Features](papers/MODULES_AND_FEATURES.md) M7, M8, §3.1–3.3).
 > Part of: [CONCEPT_PLAN.md](CONCEPT_PLAN.md), build phase 5 of 7
 > Builds on: [PHASE_4_PLAN.md](PHASE_4_PLAN.md) (applications; a hire already copies the job's accommodations for this phase)
 > Method: Superpowers brainstorming (this spec), then Superpowers writing-plans for 5A and 5B; Frontend Design (§7); GSD code review, UI review and security audit before finishing.
@@ -265,3 +265,25 @@ Sign language interpreter         Not enough ratings yet
 | Notification bell and list | Phase 6, if time allows |
 | Email reminders | After the defense (Could-have) |
 | Average trust score in admin analytics | Phase 6 analytics, if time allows (F8.4) |
+
+---
+
+## Phase 5A build notes (2026-10-15)
+
+Walked through in the browser on `opendoor_verify` (XAMPP MariaDB) as `candidate@`: F1 (**Feedback due** for *Office Clerk* on the dashboard), F2 (the form, with the hire copy in amber and four answers each), F3 (one answer missing → the error summary; then **I didn't use this** for the entrance, a comment, the confirmation and the thank-you, all with the keyboard only; focus starts on Cancel and lands on the thank-you), F4 (*Graphic Designer* hired today: "You can rate your employer's accommodations from November 14, 2026."; a hand-made send is refused with 403). F5 at 360 px: no page scrolls sideways and each answer is a 49 px full-width row. After F3, OpenDoor Demo Corp.'s stored score appeared at the third response (**90%**, from 3); Bayanihan Contact Center's is **88%** (87.5) from 4. Not yet done: a screen reader pass (a groupmate with NVDA, as in Phase 3) and the reviews in §9 step 5, which run once 5B is built.
+
+One change to the plan: the "feedback open" reminder (Q7) is recorded once per hire using a new `applications.feedback_reminded_at` column, rather than by searching the notifications' JSON, which SQLite and MariaDB query differently. Two requests at once still record it once.
+
+Found and fixed in the walk-through:
+- **"Rate the accommodations" links were read as "accommodationsfor Office Clerk"**: the hidden words lost their space inside the button-shaped link. The spoken name is now "Rate the accommodations for Office Clerk", starting with the visible words so voice control works.
+- **A hire still said "About 30 days after your hire date, we'll ask…"** after the form had opened or the ratings were sent. The sentence now follows the feedback: "You can now rate…", "Thank you for rating the accommodations." or, with nothing to rate, "Congratulations on your new job."
+
+Decided (say if you'd like them changed):
+- Before day 30 the feedback address shows the date it opens instead of an error; only sending is refused (403).
+- After sending, the feedback page and the application page show the job seeker's own ratings and comment ("Only you and OpenDoor's administrators see them.").
+- The six sample job seekers (`sample1@` … `sample6@opendoor.test`) can't log in, but their hires show as **Hired** on the employers' Applicants pages for *Office Clerk*, *Customer Support Associate* and *Chat Support Specialist*.
+
+For 5B:
+- `employers.trust_score` (null below 3) and `feedback_count` are ready; the breakdown per accommodation (Q4: rows rated by 3 or more) still needs its query.
+- No feedback endpoint exists for employers or admins yet; keep it that way, and pin it with a test when the trust score endpoints are added.
+

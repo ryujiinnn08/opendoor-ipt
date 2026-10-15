@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { getApplication } from '../../api/applications.js'
+import { getFeedbackForm } from '../../api/feedback.js'
 import { generalErrorFrom } from '../../api/client.js'
 import ApplicationActions from '../../components/applications/ApplicationActions.jsx'
 import ApplicationPath from '../../components/applications/ApplicationPath.jsx'
 import ApplicationStatusBadge from '../../components/applications/ApplicationStatusBadge.jsx'
+import FeedbackStatus from '../../components/feedback/FeedbackStatus.jsx'
+import FeedbackSummary from '../../components/feedback/FeedbackSummary.jsx'
 import Button from '../../components/ui/Button.jsx'
 import Icon from '../../components/ui/Icon.jsx'
 import LoadingMessage from '../../components/ui/LoadingMessage.jsx'
@@ -53,6 +56,20 @@ export default function ApplicationPage() {
   const application = current?.application ?? null
   const loadError = validId ? (current?.error ?? null) : NOT_FOUND
   const headingArea = useRef(null)
+  const sentFeedback = application?.feedback?.state === 'sent'
+  const [ratings, setRatings] = useState(null) // { id, sent } once sent feedback is loaded
+
+  // The job seeker's own ratings, once sent; a failure just leaves them out (the date still shows).
+  useEffect(() => {
+    if (!sentFeedback) return
+    let active = true
+    getFeedbackForm(id)
+      .then((form) => active && setRatings({ id, sent: form.sent }))
+      .catch(() => {})
+    return () => {
+      active = false
+    }
+  }, [id, sentFeedback])
 
   useEffect(() => {
     if (!validId) return
@@ -126,7 +143,14 @@ export default function ApplicationPage() {
                   explainHire
                   focusAfter={() => headingArea.current?.querySelector('h1')?.focus()}
                 />
+                <FeedbackStatus application={application} className="mt-4 max-w-prose" />
               </section>
+
+              {sentFeedback && ratings?.id === id && ratings.sent && (
+                <div className="mt-10">
+                  <FeedbackSummary sent={ratings.sent} />
+                </div>
+              )}
 
               <section aria-labelledby="sent-heading" className="mt-10">
                 <h2 id="sent-heading" className="text-2xl font-bold">

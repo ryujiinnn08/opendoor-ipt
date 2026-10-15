@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
-import { APPLICATION_STATUSES, JOB_STATE_TEXT } from '../../lib/applicationText.js'
+import { JOB_STATE_TEXT, nextStepText } from '../../lib/applicationText.js'
 import { formatDate } from '../../lib/format.js'
+import FeedbackStatus from '../feedback/FeedbackStatus.jsx'
 import ApplicationActions from './ApplicationActions.jsx'
 import ApplicationStatusBadge from './ApplicationStatusBadge.jsx'
 
@@ -30,7 +31,8 @@ export default function ApplicationRow({ application, onChanged, onStale, focusA
         <ApplicationStatusBadge status={application.status} />
       </div>
       <p className="mt-2 text-muted">Applied {formatDate(application.applied_at)}</p>
-      <p className="mt-1 max-w-prose">{APPLICATION_STATUSES[application.status]?.next}</p>
+      <p className="mt-1 max-w-prose">{nextStepText(application)}</p>
+      <FeedbackStatus application={application} className="mt-2 max-w-prose" />
       {/* A closed job matters only while the application waits; a removed one always. */}
       {(job.state === 'removed' || (job.state === 'not_open' && ['pending', 'reviewed'].includes(application.status))) && (
         <p className="mt-1 text-muted">{JOB_STATE_TEXT[job.state]}</p>

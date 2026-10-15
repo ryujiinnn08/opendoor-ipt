@@ -154,6 +154,7 @@ The public fields plus: `status` (the status people see: `draft|pending|open|rej
 - `hire_confirmed_by`: `employer|candidate` once Hired; `hired_at` is a day.
 - `job.state`: `open`, `not_open` (closed, past its date, or waiting for approval again) or `removed` (deleted). The application stays either way.
 - The single-application endpoint adds `job.accommodations` (as listed now) and `hired_accommodations` (as advertised on the hire date; `null` unless Hired).
+- `feedback` (5A): `null` unless Hired; else `{ "state", "opens_on", "sent_at" }` with `state` = `not_yet` (before `opens_on`, the hire date + 30 days in Philippine time), `open`, `sent`, or `nothing_to_rate` (the job listed no accommodations).
 
 ### Applicant, the employer's view (`ApplicantResource`)
 
@@ -261,7 +262,7 @@ All `candidate` only; each reads and changes **only the logged-in job seeker's o
 | GET | `/candidate/resume` | — | The uploaded PDF (`application/pdf`, inline) or 404 |
 | POST | `/candidate/resume` | `resume`: PDF only, ≤5 MB (multipart) | Profile with the new `resume`; the old file is deleted |
 | DELETE | `/candidate/resume` | — | Profile with `resume: null` |
-| GET | `/candidate/dashboard` | — | `{ "needs_count": 5, "applications": { "all": 4, "waiting": 2, "hired": 1, "closed": 1 }, "top_matches": [public jobs with match, ≤3], "missing_sections": ["headline", …] }` — sections from `headline, location, contact_number, education, skills, needs` |
+| GET | `/candidate/dashboard` | — | `{ "needs_count": 5, "applications": { "all": 4, "waiting": 2, "hired": 1, "closed": 1 }, "feedback_due": [{ "application_id": 4, "job_title": "Office Clerk", "employer_name": "OpenDoor Demo Corp." }], "top_matches": [public jobs with match, ≤3], "missing_sections": ["headline", …] }` — sections from `headline, location, contact_number, education, skills, needs` |
 
 ### 4.5 Applications
 
@@ -319,9 +320,34 @@ A hire records `hired_at` (today in Philippine time), who confirmed it, and copi
 
 The job's employer only, and not after Withdrawn. Sent with `Content-Security-Policy: sandbox`, `X-Content-Type-Options: nosniff`, `no-store`. 404 `"This applicant hasn't uploaded a résumé."`.
 
+#### `GET /applications/{id}/feedback-form` — the feedback form (the hired job seeker) · 5A
+
+```json
+{ "application_id": 4, "job": { "id": 9, "title": "Office Clerk" }, "employer": { "id": 1, "name": "OpenDoor Demo Corp." },
+  "hired_at": "2026-09-14", "state": "open", "opens_on": "2026-10-14",
+  "accommodations": [{ "id": 1, "name": "Wheelchair-accessible entrance", "group_name": "Physical access", "note": null }],
+  "sent": null }
+```
+
+`accommodations` are the ones copied at the hire, whatever the posting says now. Once sent, `sent` is `{ "sent_at", "comment", "ratings": [{ "accommodation_id", "name", "group_name", "note", "rating", "rating_label" }] }`. Only the application's own job seeker, only Hired; anyone else 403.
+
+#### `POST /applications/{id}/feedback` — rate the accommodations (the hired job seeker) · 5A
+
+```json
+{ "ratings": { "1": "delivered", "2": "not_used" }, "comment": "The ramp was blocked on Mondays." }
+```
+
+`ratings` maps **every** accommodation of the hire copy to `delivered` (1), `partial` (0.5), `not_delivered` (0) or `not_used` (not counted); at least one must be used. `comment` is optional plain text, ≤1000 characters, read only by OpenDoor's administrators. Once only; it can't be changed. **201** with the form, now `sent`. Each save recalculates the employer's trust score (`employers.trust_score`, shown once 3 responses count; 5B shows it).
+
+- 403 `"You can rate your employer's accommodations from November 14, 2026."` — before the form opens
+- 409 `"You've already sent your ratings."`
+- 422 `"This job listed no accommodations, so there's nothing to rate."`
+- 422 on `ratings.{id}`: `"Choose an answer for Flexible hours."`; on `ratings`: `"You can only rate the accommodations listed when you were hired."`, `"Rate at least one accommodation you used."`
+- 429 after 10 a minute
+
 #### Notifications (recorded, not yet shown) · 4B
 
-Each change is stored with Laravel's database notifications (table `notifications`) for the other party: `new_applicant` to the posting's owner and the HR officers of its department; `status_changed` (`status`, `actor`) to the job seeker when the employer acts, and to the managers when the job seeker withdraws or confirms a hire. They hold ids, the job title and names only, never needs or messages. The endpoints to read them (`GET /notifications`, mark as read) come in Phase 6.
+Each change is stored with Laravel's database notifications (table `notifications`) for the other party: `new_applicant` to the posting's owner and the HR officers of its department; `status_changed` (`status`, `actor`) to the job seeker when the employer acts, and to the managers when the job seeker withdraws or confirms a hire. Phase 5 adds `feedback_open` (application id, job title, employer name) for the job seeker, once per hire, the first time the dashboard or My applications is opened after the form opens. They hold ids, the job title and names only, never needs, messages or ratings. The endpoints to read them (`GET /notifications`, mark as read) come in Phase 6.
 
 ### 4.6 Employer: profile, verification, team
 
@@ -413,4 +439,5 @@ The server checks every rule (Laravel policies and resources); hiding something 
 | "Meets 4 of 5 of your needs" | — | ✓ | — | As "Your job meets 4 of their 5 needs" on applicants | — | — |
 | An application, its cover note and interview request | — | ✓ | — | ✓ (not after Withdrawn) | — | — |
 | Whom else someone applied to | — | ✓ | — | — | — | — |
+| Their accommodation ratings and comment | — | ✓ | — | — (never, only totals from 3+ responses) | — | ✓ (Phase 6) |
 | Registration number, team, emails | — | — | — | Their own company | — | ✓ |

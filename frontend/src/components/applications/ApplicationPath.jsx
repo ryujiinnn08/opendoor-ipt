@@ -1,4 +1,4 @@
-import { APPLICATION_STATUSES } from '../../lib/applicationText.js'
+import { nextStepText } from '../../lib/applicationText.js'
 import { formatDate, formatDay } from '../../lib/format.js'
 import Icon from '../ui/Icon.jsx'
 
@@ -7,7 +7,7 @@ const STATE_TEXT = { done: 'Done', current: 'Current step', ahead: 'Not yet' }
 /** The steps of this application: Sent, Opened by the employer, then the decision or Withdrawn. */
 function stepsFor(application) {
   const { status } = application
-  const sentence = APPLICATION_STATUSES[status]?.next
+  const sentence = nextStepText(application)
   const steps = [{ key: 'sent', label: 'Sent', date: formatDate(application.applied_at), state: status === 'pending' ? 'current' : 'done' }]
 
   if (status === 'withdrawn') {
