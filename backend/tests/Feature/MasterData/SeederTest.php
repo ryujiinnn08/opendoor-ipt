@@ -7,6 +7,7 @@ use App\Models\Accommodation;
 use App\Models\Application;
 use App\Models\Category;
 use App\Models\Employer;
+use App\Models\Feedback;
 use App\Models\JobPosting;
 use App\Models\User;
 use Carbon\CarbonImmutable;
@@ -33,8 +34,9 @@ class SeederTest extends TestCase
 
         $this->assertSame(10, Category::count());
         $this->assertSame(18, Accommodation::count());
-        $this->assertSame(8, User::count());
-        $this->assertSame(6, Application::count());
+        // 8 accounts and 6 sample hires (Phase 5); 6 demo and 6 sample applications.
+        $this->assertSame(14, User::count());
+        $this->assertSame(12, Application::count());
 
         $this->assertSame(17, JobPosting::count());
         $this->assertSame(
@@ -66,6 +68,7 @@ class SeederTest extends TestCase
     {
         $this->seed(DatabaseSeeder::class);
         // A Phase 2 database: the demo company already had postings, but not these two, and nobody had applied.
+        Feedback::query()->delete();
         Application::query()->delete();
         JobPosting::withTrashed()->whereIn('title', ['Graphic Designer', 'Office Clerk'])->forceDelete();
 
@@ -108,14 +111,14 @@ class SeederTest extends TestCase
         $statuses = fn (string $email) => User::firstWhere('email', $email)->applications()->with('jobPosting')->get()
             ->mapWithKeys(fn (Application $application) => [$application->jobPosting->title => $application->status->value])->sortKeys()->all();
 
-        $this->assertSame(6, Application::count());
+        $this->assertSame(6, Application::query()->whereHas('candidate', fn ($query) => $query->where('email', 'not like', 'sample%'))->count());
         $this->assertSame(
             ['Graphic Designer' => 'reviewed', 'HR Assistant' => 'rejected', 'Junior Web Developer' => 'pending', 'Office Clerk' => 'hired'],
             $statuses(UserSeeder::DEMO_CANDIDATE_EMAIL),
         );
         $this->assertSame(['HR Assistant' => 'pending', 'Junior Web Developer' => 'withdrawn'], $statuses(UserSeeder::DEMO_CANDIDATE2_EMAIL));
 
-        $hired = Application::where('status', 'hired')->sole();
+        $hired = User::firstWhere('email', UserSeeder::DEMO_CANDIDATE_EMAIL)->applications()->where('status', 'hired')->sole();
         $this->assertSame(CarbonImmutable::parse(JobPosting::today())->subDays(31)->toDateString(), $hired->hired_at->toDateString());
         $this->assertSame('employer', $hired->hire_confirmed_by->value);
         $this->assertNotEmpty($hired->hiredAccommodations);

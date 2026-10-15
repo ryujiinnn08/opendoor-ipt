@@ -4,11 +4,13 @@ namespace App\Models;
 
 use App\Enums\ApplicationActor;
 use App\Enums\ApplicationStatus;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Application extends Model
 {
@@ -38,6 +40,7 @@ class Application extends Model
             'rejected_at' => 'datetime',
             'withdrawn_at' => 'datetime',
             'hired_at' => 'date',
+            'feedback_reminded_at' => 'datetime',
         ];
     }
 
@@ -66,6 +69,50 @@ class Application extends Model
     }
 
     /**
+     * The hired job seeker's ratings of those accommodations (Phase 5), once.
+     */
+    public function feedback(): HasOne
+    {
+        return $this->hasOne(Feedback::class);
+    }
+
+    /**
+     * The day the hired job seeker can first rate the accommodations (Y-m-d, Philippine time):
+     * the hire date plus the feedback delay. Null unless Hired.
+     */
+    public function feedbackOpensOn(): ?string
+    {
+        if ($this->status !== ApplicationStatus::Hired || ! $this->hired_at) {
+            return null;
+        }
+
+        return $this->hired_at->toImmutable()->addDays(config('opendoor.feedback.delay_days'))->toDateString();
+    }
+
+    /**
+     * Null unless Hired; else sent, nothing_to_rate (the job listed no accommodations),
+     * not_yet (before feedbackOpensOn) or open. Uses the loaded feedback and the
+     * hired_accommodations_count (withCount) when present.
+     */
+    public function feedbackState(): ?string
+    {
+        $opensOn = $this->feedbackOpensOn();
+        if ($opensOn === null) {
+            return null;
+        }
+        if ($this->relationLoaded('feedback') ? $this->feedback !== null : $this->feedback()->exists()) {
+            return 'sent';
+        }
+        $copied = $this->hired_accommodations_count
+            ?? ($this->relationLoaded('hiredAccommodations') ? $this->hiredAccommodations->count() : $this->hiredAccommodations()->count());
+        if ($copied === 0) {
+            return 'nothing_to_rate';
+        }
+
+        return JobPosting::today() < $opensOn ? 'not_yet' : 'open';
+    }
+
+    /**
      * How many of this job seeker's applications each filter shows, in one query.
      *
      * @return array{all: int, waiting: int, hired: int, closed: int}
@@ -87,6 +134,20 @@ class Application extends Model
             'hired' => (int) $row->hired_count,
             'closed' => (int) $row->closed_count,
         ];
+    }
+
+    /**
+     * Hired applications whose feedback form is open now: past the delay, not yet sent and
+     * with accommodations to rate (the same rule as feedbackState() === 'open').
+     */
+    public function scopeFeedbackOpen(Builder $query): void
+    {
+        $cutoff = CarbonImmutable::parse(JobPosting::today())->subDays(config('opendoor.feedback.delay_days'))->toDateString();
+
+        $query->where('status', ApplicationStatus::Hired)
+            ->whereDate('hired_at', '<=', $cutoff)
+            ->whereDoesntHave('feedback')
+            ->whereHas('hiredAccommodations');
     }
 
     /**

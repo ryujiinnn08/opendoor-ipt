@@ -7,6 +7,7 @@ use App\Http\Controllers\ApplicationStatusController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Candidate;
 use App\Http\Controllers\Employer;
+use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\Public;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -73,6 +74,13 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('applications/{application}', [ApplicationController::class, 'show'])->where('application', '[0-9]{1,18}');
             Route::get('applications/{application}/resume', [ApplicantResumeController::class, 'show'])->where('application', '[0-9]{1,18}');
             Route::patch('applications/{application}/status', [ApplicationStatusController::class, 'update'])->where('application', '[0-9]{1,18}');
+            // Accommodation feedback (M7, Phase 5): the hired job seeker only.
+            Route::middleware('role:candidate')->group(function () {
+                Route::get('applications/{application}/feedback-form', [FeedbackController::class, 'show'])->where('application', '[0-9]{1,18}');
+                Route::post('applications/{application}/feedback', [FeedbackController::class, 'store'])
+                    ->where('application', '[0-9]{1,18}')
+                    ->middleware('throttle:10,1,feedback');
+            });
             Route::post('job-postings/{id}/applications', [ApplicationController::class, 'store'])
                 ->where('id', '[0-9]{1,18}')
                 ->middleware(['role:candidate', 'throttle:10,1,applications']);

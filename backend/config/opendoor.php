@@ -49,6 +49,22 @@ return [
         'max_months_ahead' => 6,
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Accommodation feedback and the trust score
+    |--------------------------------------------------------------------------
+    |
+    | A hired job seeker can rate the accommodations from delay_days after the
+    | hire date (Philippine time). An employer's trust score is shown once
+    | min_responses feedback forms count (plan PHASE_5 §2).
+    |
+    */
+
+    'feedback' => [
+        'delay_days' => (int) env('FEEDBACK_DELAY_DAYS', 30),
+        'min_responses' => 3,
+    ],
+
     'seed' => [
         'admin_email' => env('SEED_ADMIN_EMAIL'),
         'admin_password' => env('SEED_ADMIN_PASSWORD'),

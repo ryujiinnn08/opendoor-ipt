@@ -11,6 +11,7 @@ use App\Http\Resources\CandidateApplicationResource;
 use App\Models\Application;
 use App\Models\JobPosting;
 use App\Services\ApplicationWorkflow;
+use App\Services\FeedbackService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -22,9 +23,10 @@ use Illuminate\Support\Facades\Gate;
 class ApplicationController extends Controller
 {
     /**
-     * My applications, newest first, 12 per page, with how many each filter shows.
+     * My applications, newest first, 12 per page, with how many each filter shows. Records the
+     * "feedback open" reminders first (Q7).
      */
-    public function index(ApplicationListRequest $request): AnonymousResourceCollection
+    public function index(ApplicationListRequest $request, FeedbackService $feedback): AnonymousResourceCollection
     {
         $user = $request->user();
         if ($user->role === Role::Employer) {
@@ -34,9 +36,11 @@ class ApplicationController extends Controller
             abort(response()->json(['message' => 'Only job seekers have applications.'], 403));
         }
 
+        $feedback->remindDue($user);
         $applications = $user->applications()
             ->inFilter($request->filter())
             ->with(CandidateApplicationResource::RELATIONS)
+            ->withCount('hiredAccommodations')
             ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->paginate(12);

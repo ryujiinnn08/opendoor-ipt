@@ -60,6 +60,20 @@ class ApplicationPolicy
     }
 
     /**
+     * Rating the accommodations (M7): only the application's own job seeker, once hired.
+     */
+    public function giveFeedback(User $user, Application $application): Response
+    {
+        if ($application->user_id !== $user->id) {
+            return Response::deny(self::NOT_YOURS);
+        }
+
+        return $application->status === ApplicationStatus::Hired
+            ? Response::allow()
+            : Response::deny("Only a hired job seeker can rate this employer's accommodations.");
+    }
+
+    /**
      * Withdrawing and confirming a hire.
      */
     public function actAsCandidate(User $user, Application $application): Response

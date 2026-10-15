@@ -21,10 +21,10 @@ class CandidateApplicationResource extends JsonResource
     /**
      * Relations every response uses; eager-load them to avoid queries per application.
      */
-    public const RELATIONS = ['jobPosting.employer'];
+    public const RELATIONS = ['jobPosting.employer', 'feedback'];
 
     /** The one-application page also gets the job's accommodations and the hire copy. */
-    public const DETAIL_RELATIONS = ['jobPosting.employer', 'jobPosting.accommodations', 'hiredAccommodations'];
+    public const DETAIL_RELATIONS = ['jobPosting.employer', 'jobPosting.accommodations', 'hiredAccommodations', 'feedback'];
 
     private bool $detailed = false;
 
@@ -59,6 +59,12 @@ class CandidateApplicationResource extends JsonResource
             'cover_note' => $this->cover_note,
             'interview_request' => $this->interview_request,
             'actions' => $this->actions(),
+            // Hires only: whether the accommodations can be rated yet (Phase 5). Lists add withCount('hiredAccommodations').
+            'feedback' => $this->status === ApplicationStatus::Hired ? [
+                'state' => $this->resource->feedbackState(),
+                'opens_on' => $this->resource->feedbackOpensOn(),
+                'sent_at' => $this->feedback?->created_at?->toIso8601String(),
+            ] : null,
             'job' => [
                 'id' => $job->id,
                 'title' => $job->title,

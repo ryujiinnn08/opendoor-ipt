@@ -15,6 +15,7 @@ class Employer extends Model
 {
     use HasFactory;
 
+    /** trust_score and feedback_count are written only by TrustScore. */
     protected $fillable = ['type', 'name', 'industry', 'address', 'description'];
 
     protected $attributes = [
@@ -29,6 +30,8 @@ class Employer extends Model
             'verification_status' => VerificationStatus::class,
             'verification_submitted_at' => 'datetime',
             'verified_at' => 'datetime',
+            'trust_score' => 'float',
+            'feedback_count' => 'integer',
         ];
     }
 
