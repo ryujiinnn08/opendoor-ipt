@@ -38,6 +38,7 @@ const PORTALS = {
     name: 'Admin portal',
     menu: [
       { to: '/admin/dashboard', label: 'Dashboard' },
+      { to: '/admin/users', label: 'Users', end: false },
       { to: '/admin/categories', label: 'Categories' },
       { to: '/admin/accommodations', label: 'Accommodation types' },
       { to: '/admin/employers', label: 'Employer verification' },

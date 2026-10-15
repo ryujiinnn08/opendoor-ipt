@@ -3,6 +3,12 @@
 # the approved phase plans are the newest decisions; the papers (revised 2026-10) already include
 # Phase 2's departments and hosting choices, so they rank above the older concept plan.
 docs:
+  - path: .planning/PHASE_6_PLAN.md
+    type: SPEC
+    precedence: 0
+  - path: .planning/PHASE_5_PLAN.md
+    type: SPEC
+    precedence: 0
   - path: .planning/PHASE_4_PLAN.md
     type: SPEC
     precedence: 0

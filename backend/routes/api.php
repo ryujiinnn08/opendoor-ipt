@@ -5,6 +5,7 @@ use App\Http\Controllers\ApplicantResumeController;
 use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\ApplicationStatusController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Candidate;
 use App\Http\Controllers\Employer;
 use App\Http\Controllers\FeedbackController;
@@ -56,6 +57,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::middleware('active')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
+        // Change password (F1.6, Phase 6A): every portal.
+        Route::put('/me/password', [PasswordController::class, 'update'])->middleware('throttle:10,1,password');
 
         // Candidate portal (M2, Phase 3B): only the logged-in job seeker's own data.
         Route::middleware('role:candidate')->prefix('candidate')->group(function () {
@@ -133,6 +136,13 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('job-postings', [Admin\JobPostingApprovalController::class, 'index']);
             Route::get('job-postings/{posting}', [Admin\JobPostingApprovalController::class, 'show']);
             Route::patch('job-postings/{posting}/approve', [Admin\JobPostingApprovalController::class, 'update']);
+            Route::delete('job-postings/{posting}', [Admin\JobPostingRemovalController::class, 'destroy']);
+
+            // Users (F10.1, Phase 6A).
+            Route::get('users', [Admin\UserController::class, 'index']);
+            Route::post('users', [Admin\UserController::class, 'store']);
+            Route::get('users/{user}', [Admin\UserController::class, 'show']);
+            Route::patch('users/{user}/suspend', [Admin\UserStatusController::class, 'update']);
 
             Route::get('settings', [Admin\SettingsController::class, 'show']);
             Route::put('settings', [Admin\SettingsController::class, 'update']);

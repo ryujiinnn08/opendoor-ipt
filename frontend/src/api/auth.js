@@ -20,3 +20,8 @@ export async function fetchCurrentUser() {
   const { data } = await client.get('/api/me')
   return data.data
 }
+
+/** values: { current_password, password, password_confirmation } */
+export async function changePassword(values) {
+  await client.put('/api/me/password', values)
+}

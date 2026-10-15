@@ -1,6 +1,6 @@
 # Phase 6 Plan: Admin Tools and Notifications
 
-> Status: **DRAFT, waiting for your answers** (2026-10-15). The questions are in §3, each with a recommendation; "the other recommendations are OK" is enough. Checked against the proposal papers ([Modules and Features](papers/MODULES_AND_FEATURES.md) §3.4, M1, M4, M7, M8, M9, M10).
+> Status: **APPROVED 2026-10-15** with every recommendation in §3 (Q1–Q10). 6A is being built (§9 step 1 started with the code scaffold). Checked against the proposal papers ([Modules and Features](papers/MODULES_AND_FEATURES.md) §3.4, M1, M4, M7, M8, M9, M10).
 > Part of: [CONCEPT_PLAN.md](CONCEPT_PLAN.md), build phase 6 of 7
 > Builds on: [PHASE_5_PLAN.md](PHASE_5_PLAN.md) (feedback and the trust score; `feedback.is_hidden` and the recalculation already exist) and [PHASE_4_PLAN.md](PHASE_4_PLAN.md) (notifications are already recorded)
 > Method: GSD and Frontend Design only (§7). After approval, an implementation plan per part; GSD code review, UI review and security audit before finishing.

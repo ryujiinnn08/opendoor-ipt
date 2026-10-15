@@ -5,13 +5,17 @@ import ProtectedRoute from './auth/ProtectedRoute.jsx'
 import PortalLayout from './components/layout/PortalLayout.jsx'
 import PublicLayout from './components/layout/PublicLayout.jsx'
 import RootLayout from './components/layout/RootLayout.jsx'
+import ChangePasswordPage from './portals/account/ChangePasswordPage.jsx'
 import AccommodationsPage from './portals/admin/AccommodationsPage.jsx'
+import AddAdminPage from './portals/admin/AddAdminPage.jsx'
 import AdminDashboard from './portals/admin/AdminDashboard.jsx'
 import CategoriesPage from './portals/admin/CategoriesPage.jsx'
 import EmployerVerificationPage from './portals/admin/EmployerVerificationPage.jsx'
 import PostingApprovalsPage from './portals/admin/PostingApprovalsPage.jsx'
 import PostingReviewPage from './portals/admin/PostingReviewPage.jsx'
 import SettingsPage from './portals/admin/SettingsPage.jsx'
+import UserPage from './portals/admin/UserPage.jsx'
+import UsersPage from './portals/admin/UsersPage.jsx'
 import ApplicationPage from './portals/candidate/ApplicationPage.jsx'
 import FeedbackPage from './portals/candidate/FeedbackPage.jsx'
 import ApplyPage from './portals/candidate/ApplyPage.jsx'
@@ -125,7 +129,15 @@ export const routes = [
         { path: '/admin/job-postings', element: <PostingApprovalsPage /> },
         { path: '/admin/job-postings/:id', element: <PostingReviewPage /> },
         { path: '/admin/settings', element: <SettingsPage /> },
+        { path: '/admin/users', element: <UsersPage /> },
+        { path: '/admin/users/new', element: <AddAdminPage /> },
+        { path: '/admin/users/:id', element: <UserPage /> },
       ]),
+      // Every portal (Phase 6A): the header shows the user's own portal.
+      {
+        element: <ProtectedRoute roles={['candidate', 'employer', 'admin']} />,
+        children: [{ element: <PortalLayout />, children: [{ path: '/account/password', element: <ChangePasswordPage /> }] }],
+      },
     ],
   },
 ]

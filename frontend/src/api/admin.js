@@ -45,3 +45,31 @@ export async function updateSettings(values) {
   const { data } = await client.put('/api/admin/settings', values)
   return data.data
 }
+
+/** Phase 6A. params: { q, role, status, page } */
+export async function getUsers(params) {
+  const { data } = await client.get('/api/admin/users', { params })
+  return data
+}
+
+export async function getUser(id) {
+  const { data } = await client.get(`/api/admin/users/${id}`)
+  return data.data
+}
+
+/** Returns the new administrator with their temporary password, shown once. */
+export async function addAdmin(values) {
+  const { data } = await client.post('/api/admin/users', values)
+  return data.data
+}
+
+/** Suspend with a reason, or reactivate (no reason). */
+export async function setSuspended(id, suspended, reason) {
+  const { data } = await client.patch(`/api/admin/users/${id}/suspend`, suspended ? { suspended, reason } : { suspended })
+  return data.data
+}
+
+/** Remove a posting; the employer sees the reason. */
+export async function removePosting(id, reason) {
+  await client.delete(`/api/admin/job-postings/${id}`, { data: { reason } })
+}

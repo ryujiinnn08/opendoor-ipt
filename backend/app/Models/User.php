@@ -37,6 +37,7 @@ class User extends Authenticatable
      */
     protected $attributes = [
         'is_active' => true,
+        'must_change_password' => false,
     ];
 
     /**
@@ -61,6 +62,8 @@ class User extends Authenticatable
             'password' => 'hashed',
             'role' => Role::class,
             'is_active' => 'boolean',
+            'must_change_password' => 'boolean',
+            'last_login_at' => 'datetime',
             'consented_at' => 'datetime',
         ];
     }
@@ -120,5 +123,13 @@ class User extends Authenticatable
     public function needs(): BelongsToMany
     {
         return $this->belongsToMany(Accommodation::class, 'candidate_accommodation')->withTimestamps();
+    }
+
+    /**
+     * The account's history, newest first (Phase 6A); read only by administrators.
+     */
+    public function accountEvents(): HasMany
+    {
+        return $this->hasMany(AccountEvent::class)->latest('id');
     }
 }

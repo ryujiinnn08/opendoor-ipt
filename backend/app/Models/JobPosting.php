@@ -68,7 +68,17 @@ class JobPosting extends Model
             'closes_on' => 'date',
             'submitted_at' => 'datetime',
             'approved_at' => 'datetime',
+            'removed_at' => 'datetime',
         ];
+    }
+
+    /**
+     * The administrator who removed this posting (Phase 6A), if OpenDoor removed it. Set only by
+     * the removal, never from request input.
+     */
+    public function remover(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'removed_by');
     }
 
     public function employer(): BelongsTo
