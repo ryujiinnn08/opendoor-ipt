@@ -18,7 +18,7 @@ class PublicEmployerTest extends TestCase
         JobPosting::factory()->in($company)->open()->create();
 
         $data = $this->getJson("/api/employers/{$company->id}")->assertOk()->json('data');
-        $this->assertSame(['id', 'type', 'name', 'industry', 'address', 'description', 'logo_url', 'is_verified'], array_keys($data));
+        $this->assertSame(['id', 'type', 'name', 'industry', 'address', 'description', 'logo_url', 'is_verified', 'trust_score', 'trust_count'], array_keys($data));
         $this->assertTrue($data['is_verified']);
     }
 

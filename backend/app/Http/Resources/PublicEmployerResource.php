@@ -27,6 +27,9 @@ class PublicEmployerResource extends JsonResource
             'description' => $this->description,
             'logo_url' => $this->logoUrl(),
             'is_verified' => $this->isVerified(),
+            // The accommodation trust score (Phase 5): null, with no count, until 3 responses.
+            'trust_score' => $this->resource->shownTrustScore()['score'],
+            'trust_count' => $this->resource->shownTrustScore()['responses'],
         ];
     }
 }

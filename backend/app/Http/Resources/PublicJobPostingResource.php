@@ -42,6 +42,9 @@ class PublicJobPostingResource extends JsonResource
                 'name' => $this->employer->name,
                 'logo_url' => $this->employer->logoUrl(),
                 'is_verified' => $this->employer->isVerified(),
+                // The accommodation trust score (Phase 5): null, with no count, until 3 responses.
+                'trust_score' => $this->employer->shownTrustScore()['score'],
+                'trust_count' => $this->employer->shownTrustScore()['responses'],
             ],
             'accommodations' => $this->accommodationsInDisplayOrder()->map(fn (Accommodation $item) => [
                 'id' => $item->id,

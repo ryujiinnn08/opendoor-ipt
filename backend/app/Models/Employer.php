@@ -65,6 +65,19 @@ class Employer extends Model
         return $this->verification_status === VerificationStatus::Verified;
     }
 
+    /**
+     * The trust score as shown: a whole percent and its count of responses, both null until
+     * enough responses count (plan PHASE_5 Q3: no count before then).
+     *
+     * @return array{score: ?int, responses: ?int}
+     */
+    public function shownTrustScore(): array
+    {
+        return $this->trust_score === null
+            ? ['score' => null, 'responses' => null]
+            : ['score' => (int) round($this->trust_score), 'responses' => $this->feedback_count];
+    }
+
     public function logoUrl(): ?string
     {
         if (! $this->logo_path) {

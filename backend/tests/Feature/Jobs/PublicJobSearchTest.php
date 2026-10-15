@@ -131,7 +131,7 @@ class PublicJobSearchTest extends TestCase
         foreach (['actions', 'created_by', 'rejection_reason', 'submitted_at', 'approved_at', 'changed_after_approval', 'status'] as $key) {
             $this->assertArrayNotHasKey($key, $item);
         }
-        $this->assertSame(['id', 'type', 'name', 'logo_url', 'is_verified'], array_keys($item['employer']));
+        $this->assertSame(['id', 'type', 'name', 'logo_url', 'is_verified', 'trust_score', 'trust_count'], array_keys($item['employer']));
         $this->assertSame(['id', 'name', 'group_name', 'note'], array_keys($item['accommodations'][0]));
         $this->assertSame(['name' => 'General'], $item['department']);
     }

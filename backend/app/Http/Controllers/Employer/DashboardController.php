@@ -31,6 +31,8 @@ class DashboardController extends Controller
 
         return response()->json(['data' => [
             'postings' => $counts,
+            // The employer's own trust score for the dashboard tile (F8.2); no count below 3.
+            'trust_score' => $request->user()->membership->employer->shownTrustScore(),
             'waiting_applicants' => [
                 'total' => (int) $waiting->sum('new_count'),
                 'postings' => $waiting->take(10)->map(fn (JobPosting $posting) => [

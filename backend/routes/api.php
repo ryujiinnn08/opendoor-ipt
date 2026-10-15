@@ -39,6 +39,7 @@ Route::middleware('throttle:120,1,public-jobs')->group(function () {
     Route::get('/job-postings', [Public\JobPostingController::class, 'index']);
     Route::get('/job-postings/{id}', [Public\JobPostingController::class, 'show'])->where('id', '[0-9]{1,18}');
     Route::get('/employers/{id}', [Public\EmployerController::class, 'show'])->where('id', '[0-9]{1,18}');
+    Route::get('/employers/{id}/trust-score', [Public\TrustScoreController::class, 'show'])->where('id', '[0-9]{1,18}');
 });
 
 // Employer logos (M3) and team invites (Phase 2A).
@@ -108,6 +109,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
                 // Job postings (M4, Phase 2B): department-scoped by JobPostingPolicy.
                 Route::get('dashboard', [Employer\DashboardController::class, 'show']);
+                Route::get('trust-score', [Employer\TrustScoreController::class, 'show']);
                 Route::get('job-postings', [Employer\JobPostingController::class, 'index']);
                 Route::post('job-postings', [Employer\JobPostingController::class, 'store']);
                 Route::get('job-postings/{posting}', [Employer\JobPostingController::class, 'show']);
