@@ -17,4 +17,12 @@ php artisan config:cache
 # A failed migration stops the container, so Render keeps the previous version running.
 php artisan migrate --force
 
+# Apache refuses to start with more than one MPM; keep only prefork (mod_php needs it).
+rm -f /etc/apache2/mods-enabled/mpm_*.load /etc/apache2/mods-enabled/mpm_*.conf
+a2enmod mpm_prefork > /dev/null
+echo "Apache MPM files enabled:"
+ls /etc/apache2/mods-enabled | grep -i mpm || true
+echo "LoadModule mpm lines in Apache config:"
+grep -rn "LoadModule mpm_" /etc/apache2 2>/dev/null || true
+
 exec apache2-foreground
