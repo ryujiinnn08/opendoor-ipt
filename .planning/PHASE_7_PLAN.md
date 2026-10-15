@@ -1,6 +1,6 @@
 # Phase 7 Plan: Going Live, the Accessibility Audit and the Usability Tests
 
-> Status: **DRAFT, waiting for your answers** (2026-10-15). The questions are in §3, each with a recommendation; "the other recommendations are OK" is enough. **Q1 (the domain) is the only answer I can't guess.** Checked against the proposal papers ([Revised Proposal](papers/REVISED_PROPOSAL.md) §XI Cloud Deployment Plan, §XII-B Accessibility Evaluation, §XII-C Usability Evaluation; [Modules and Features](papers/MODULES_AND_FEATURES.md) §7, phase 7).
+> Status: **DRAFT, waiting for your answers** (2026-10-15). The questions are in §3, each with a recommendation; "the other recommendations are OK" is enough. **Q1 answered:** the website at `opendoor-ipt.ruzgal.org` and the API at `opendoor-api.ruzgal.org`. A security pass (2026-10-15, §8.1) added **Q17–Q20**, about keeping OpenDoor's login cookies away from the other `ruzgal.org` sites and hardening before go-live. Checked against the proposal papers ([Revised Proposal](papers/REVISED_PROPOSAL.md) §XI Cloud Deployment Plan, §XII-B Accessibility Evaluation, §XII-C Usability Evaluation; [Modules and Features](papers/MODULES_AND_FEATURES.md) §7, phase 7).
 > Part of: [CONCEPT_PLAN.md](CONCEPT_PLAN.md), build phase 7 of 7
 > Builds on: [PHASE_6_PLAN.md](PHASE_6_PLAN.md) (every feature is built; Phases 1–6 passed their reviews) and the hosting decisions in CONCEPT_PLAN §5.6, D6, D7, D11 and D12
 > Method: GSD and Frontend Design only. After approval, a short runbook per part; GSD security audit of the production settings before the usability tests.
@@ -32,9 +32,9 @@
 ## 1. What Phase 7 delivers
 
 ### 7A Go live (Fri Oct 16)
-- **The API on Railway**: the Laravel app and a managed MySQL 8 database, reached only at `api.<domain>` through Cloudflare.
-- **The website on Cloudflare Workers** at `<domain>`, built from GitHub on every push to `main`, calling `https://api.<domain>`.
-- **Production settings**: debug off, a fresh application key, secure cookies on one parent domain, CORS for the website only, HTTPS everywhere.
+- **The API on Railway**: the Laravel app and a managed MySQL 8 database, reached only at `opendoor-api.ruzgal.org` through Cloudflare.
+- **The website on Cloudflare Workers** at `opendoor-ipt.ruzgal.org`, built from GitHub on every push to `main`, calling `https://opendoor-api.ruzgal.org`.
+- **Production settings**: debug off, a fresh application key, host-only secure cookies that never reach the other `ruzgal.org` sites (Q17), CORS for the website only, HTTPS everywhere, the API reachable only through Cloudflare (Q18), and security headers on both (§8.1).
 - **The production database**: created by the migrations, which run before every deploy; seeded once with the administrator, the master data and the demo accounts (with a visible trust score, as the papers ask).
 - **File storage that survives deploys** for logos and résumés (Q3).
 - **The scheduled prune** of notifications older than 90 days (Q5).
@@ -73,7 +73,7 @@
 
 | # | Question | Recommendation | Why |
 |---|---|---|---|
-| Q1 | **The domain** on your Cloudflare account | **Tell me the domain.** The website goes on the domain itself (`<domain>`) and the API on `api.<domain>` | Login needs both on the same parent domain (D11). This is the one thing that blocks 7A |
+| Q1 | **The domain** on your Cloudflare account | **Answered:** `ruzgal.org`, already hosting the `quiz-me`, `portfolio` and `bakas-ni-rizal` Workers. OpenDoor gets **`opendoor-ipt.ruzgal.org`** (website) and **`opendoor-api.ruzgal.org`** (API) | Both are one level under `ruzgal.org`, so Cloudflare's free Universal SSL covers them, and both share the site `ruzgal.org`, so the session cookie counts as first-party. Adding them doesn't touch the other Workers. How the login cookie is kept away from those sites is Q17 |
 | Q2 | **The backend host** | **Railway** (Hobby plan, about US$5 a month after the trial credit), one project with the Laravel service, a MySQL 8 database and (Q3) a volume | It's the papers' first choice; it never sleeps, so the demo and the tests have no cold starts. *Alternative:* Render + Aiven, free, but it sleeps when idle and Aiven's free MySQL is small |
 | Q3 | **File storage** for logos and résumés | **A Railway volume** mounted at `storage/app`, so the code stays as it is (the `local` disk) and the papers' §XI wording changes from R2 to "a persistent Railway volume" | No code change on go-live day, and résumés never leave the API's private disk. *Alternative:* Cloudflare R2 as the papers say: the controllers move to a configurable disk (about 1 hour plus tests), R2 needs a payment method on file, and résumés would be streamed through Laravel as now |
 | Q4 | **When to go live** | **Fri Oct 16**, using the day Phase 6 saved; Sat Oct 17 stays as a buffer | A problem found on Friday can still be fixed before the audit and well before the tests. *Alternative:* Sat Oct 17 as planned |
@@ -88,6 +88,10 @@
 | Q13 | **The Could-haves** (saved jobs, forgot password, display settings, email notifications) | **Stay out** of Phase 7 | Forgot password and email notifications need an email service that isn't set up; the papers rate them all Could-have, and the days are needed for the audit and tests. They're future work in the paper |
 | Q14 | **Cloudflare's extra protection** | **Turn on**: Always Use HTTPS, HSTS, one rate-limiting rule on `/api/login` and `/api/register`. **Leave off**: Bot Fight Mode and Turnstile | Bot Fight Mode can challenge the API's own requests, and a CAPTCHA-like check is an accessibility risk days before testing with screen reader users. Laravel already limits login and registration |
 | Q15 | **The JavaScript bundle** (610 kB, Vite warns above 500 kB) | **Split it by page** (route-level `lazy()`) on audit day, only if Lighthouse's performance score on a mid-range phone is below 80 | A smaller first load helps people on prepaid mobile data; it's a small, low-risk change, but not worth doing blind |
+| Q17 | **Keeping OpenDoor's login cookies away from the other `ruzgal.org` sites** | **Host-only cookies.** The session cookie stays on `opendoor-api.ruzgal.org` alone (`SESSION_DOMAIN` unset), named `__Host-opendoor-session` so no other subdomain can set or replace it. The page asks the API for its CSRF token (a small `GET /api/csrf-token` that answers only the website, because of CORS) and sends it as a header, instead of reading the `XSRF-TOKEN` cookie. About 1–2 hours with tests | Today the page reads `XSRF-TOKEN` itself, which forces `SESSION_DOMAIN=.ruzgal.org`. Then the session and CSRF cookies are sent to `quiz-me`, `portfolio` and `bakas-ni-rizal` on every visit, and a bug or a future third-party script on any of them could replace OpenDoor's cookies. Host-only cookies remove that for free and change nothing for users. *Alternatives:* (b) serve the API through the website's own address (`opendoor-ipt.ruzgal.org/api/…`) with a proxy Worker, giving no CORS at all, but a second moving part on go-live day; (c) a dedicated `opendoor.ruzgal.org` with `api.opendoor.ruzgal.org`, which needs Cloudflare's Advanced Certificate Manager (about US$10 a month) for the second-level certificate; (d) keep `.ruzgal.org` and only rename the cookies, which avoids a clash but not the exposure |
+| Q18 | **Requests that skip Cloudflare** | **Lock the API to Cloudflare.** A Cloudflare Transform Rule adds a secret header to every request for `opendoor-api.ruzgal.org`; in production the API answers 403 without it. Railway's public `*.up.railway.app` address is removed | Otherwise anyone who finds Railway's address bypasses the WAF rule and can fake their IP address (`X-Forwarded-For`) to dodge the login and registration limits. Transform Rules are free; the middleware is small and tested |
+| Q19 | **The font** (Atkinson Hyperlegible) | **Serve it from the website itself** (the `@fontsource/atkinson-hyperlegible` package, same font and licence) instead of Google Fonts | Every visit currently sends the visitor's IP address to Google, which matters under RA 10173. It also lets the website's Content-Security-Policy allow its own files only (§8.1). *Alternative:* keep Google Fonts and allow its two hosts in the policy |
+| Q20 | **Shared computers** (PESO offices, internet cafés) | **The session ends when the browser closes** (`SESSION_EXPIRE_ON_CLOSE=true`), on top of the 2-hour idle timeout already set | Job seekers may use a shared computer and forget to log out; their disability details and applications are behind that login. The cost: closing the browser means logging in again |
 | Q16 | **The test data afterwards** | **Delete the participant accounts and their data within 30 days after the defense**; keep only the anonymous results (codes, task outcomes, SUS answers) | RA 10173 data minimization; consent forms say so |
 
 ---
@@ -99,7 +103,7 @@
 ```
 Browser ──► Cloudflare (DNS · SSL · cache · WAF rate limit · HSTS)
               │                                  │
-   <domain>   ▼                       api.<domain> ▼ (proxied CNAME, SSL Full (strict))
+   opendoor-ipt.ruzgal.org ▼          opendoor-api.ruzgal.org ▼ (proxied, SSL Full (strict), secret edge header, Q18)
    Workers static assets          Railway project "opendoor"
    React build from GitHub          ├─ api      Laravel (PHP 8.3), pre-deploy: migrate --force,
    (Workers Builds, VITE_API_URL)   │           health check /api/health, volume at storage/app (Q3)
@@ -111,7 +115,7 @@ Browser ──► Cloudflare (DNS · SSL · cache · WAF rate limit · HSTS)
 |---|---|---|
 | Laravel service | Railway builds `backend/` (root directory set to `backend`) with its built-in PHP support (Railpack: Composer install, PHP 8.3 with `pdo_mysql`), served by its web server on `$PORT`. A small `backend/railway.json` pins the build, the start command, the pre-deploy migration and the health check. No Dockerfile unless Railpack can't serve Laravel correctly (then a FrankenPHP Dockerfile, about an hour) | D6 |
 | Database | Railway MySQL 8 in the same project; the API reaches it on Railway's private network (`MYSQLHOST` etc. as reference variables), never a public port | §IX Security |
-| Website | Workers Builds connected to `opendoor-ipt`, root `frontend/`, build `npm run build`, deploy `npx wrangler deploy`; `VITE_API_URL=https://api.<domain>` as a build variable; custom domain `<domain>` on the Worker | §5.6 |
+| Website | Workers Builds connected to `opendoor-ipt`, root `frontend/`, build `npm run build`, deploy `npx wrangler deploy`; `VITE_API_URL=https://opendoor-api.ruzgal.org` as a build variable; custom domain `opendoor-ipt.ruzgal.org` on the Worker (the Worker named `opendoor` serves only that hostname) | §5.6 |
 | Pull requests | Workers Builds gives each pull request its own preview URL (frontend only; it calls the production API, so previews are for looking, not testing data changes) | §5.6 |
 
 ### 4.2 Production settings (7A)
@@ -120,17 +124,19 @@ Browser ──► Cloudflare (DNS · SSL · cache · WAF rate limit · HSTS)
 |---|---|---|
 | `APP_ENV` / `APP_DEBUG` | `production` / `false` | No stack traces to visitors (§IX) |
 | `APP_KEY` | A fresh key made for production (`php artisan key:generate --show`), stored only in Railway | Never the local key |
-| `APP_URL` / `FRONTEND_URL` | `https://api.<domain>` / `https://<domain>` | CORS allows only the website |
-| `SESSION_DRIVER` / `SESSION_DOMAIN` / `SESSION_SECURE_COOKIE` | `database` / `.<domain>` / `true` | One login across the site and the API; ending sessions on suspension needs the database driver |
-| `SANCTUM_STATEFUL_DOMAINS` | `<domain>` | The website's requests get the session |
+| `APP_URL` / `FRONTEND_URL` | `https://opendoor-api.ruzgal.org` / `https://opendoor-ipt.ruzgal.org` | CORS allows only the website |
+| `SESSION_DRIVER` / `SESSION_DOMAIN` / `SESSION_COOKIE` | `database` / **unset** (host-only) / `__Host-opendoor-session` | Q17: the cookie stays on the API's own host; ending sessions on suspension needs the database driver |
+| `SESSION_SECURE_COOKIE` / `SESSION_ENCRYPT` / `SESSION_EXPIRE_ON_CLOSE` | `true` / `true` / `true` | HTTPS-only cookie (and required by `__Host-`); the session's contents are encrypted in the database; Q20 |
+| `SANCTUM_STATEFUL_DOMAINS` | `opendoor-ipt.ruzgal.org` | The website's requests get the session |
+| `EDGE_SECRET` | A long random value, also set in the Cloudflare Transform Rule | Q18 |
 | `CACHE_STORE` / `QUEUE_CONNECTION` | `database` / `sync` | No Redis or worker to run |
 | `LOG_CHANNEL` / `LOG_LEVEL` | `stderr` / `warning` | Railway shows the logs; no request bodies or personal data are logged |
 | `DB_*` | Railway's MySQL reference variables (private host) | §4.1 |
 | `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD`, `SEED_DEMO_PASSWORD` | Team-chosen secrets (Q6) | The seeders refuse production without them |
 | `FEEDBACK_DELAY_DAYS` | `30` | The papers' rule; the demo hires are seeded so their forms are already open |
-| Trusted proxies | Already `*` (Cloudflare → Railway) | Real visitor IPs for rate limits |
+| Trusted proxies | Already `*` (Cloudflare → Railway) | Real visitor IPs for rate limits; safe only because Q18 makes Cloudflare the only way in |
 
-Nothing secret goes into the repository; `.env.example` gains the production names with placeholder values and a comment per line.
+Nothing secret goes into the repository; `.env.example` gains the production names with placeholder values and a comment per line. **Railway's variables are typed fresh, never copied from `.env.example`**, which still holds local values such as `SESSION_DOMAIN=localhost`. The health check is `/api/health`, not Laravel's `/up`, because it also checks the database.
 
 ### 4.3 The production database (7A)
 
@@ -157,9 +163,10 @@ Nothing secret goes into the repository; `.env.example` gains the production nam
 
 | Setting | Value | Source |
 |---|---|---|
-| DNS | `<domain>` → the Worker (custom domain); `api` → Railway's target, **proxied** | §5.6 |
+| DNS | `opendoor-ipt.ruzgal.org` → the `opendoor` Worker (custom domain); `opendoor-api` → Railway's target, **proxied**; the other `ruzgal.org` records untouched | §5.6 |
+| Transform Rule | For `opendoor-api.ruzgal.org`: add the request header `X-OpenDoor-Edge: <EDGE_SECRET>` | Q18 |
 | SSL/TLS | **Full (strict)**; Always Use HTTPS; HSTS (6 months, without preload for now) | §5.6; Q14 |
-| WAF | One rate-limiting rule: `/api/login` and `/api/register`, 20 requests a minute per IP, then block for a minute | §5.6; Q14 |
+| WAF | One rate-limiting rule on `opendoor-api.ruzgal.org`: `/api/login` and `/api/register`, 20 requests a minute per IP, then block for a minute | §5.6; Q14 |
 | Cache | Static assets cached at the edge; `/api/*` never cached (responses already say `no-store` where private) | |
 | Off | Bot Fight Mode, Turnstile (Q14) | |
 
@@ -222,9 +229,9 @@ The audit's fixes are done and deployed **before** the tests (§XII-B: "issues f
 
 | # | Check | Expected |
 |---|---|---|
-| L1 | Open `https://<domain>` and `https://api.<domain>/api/health` | The home page; `{"status":"ok","database":"ok"}` |
+| L1 | Open `https://opendoor-ipt.ruzgal.org` and `https://opendoor-api.ruzgal.org/api/health` | The home page; `"status": "ok"` with `"database": "ok"` |
 | L2 | `http://` addresses | Redirect to `https://` |
-| L3 | Log in as each demo role; reload; log out | Stays logged in across reloads; logout ends it; cookies are `Secure`, `HttpOnly`, `SameSite=Lax` |
+| L3 | Log in as each demo role; reload; log out | Stays logged in across reloads; logout ends it; the session cookie is `__Host-opendoor-session`, `Secure`, `HttpOnly`, `SameSite=Lax`, **with no `Domain`**; visiting `portfolio.ruzgal.org` sends no OpenDoor cookie (Q17) |
 | L4 | Browse jobs as a guest; Bayanihan Contact Center's page | Jobs listed; "**88%**, based on 4 hires" |
 | L5 | As `candidate@`: upload a PDF résumé; as `employer@`: open it from the applicant page; then redeploy the API and open it again | The file survives the redeploy (Q3) |
 | L6 | Upload a company logo; redeploy; reload | Still there |
@@ -232,6 +239,8 @@ The audit's fixes are done and deployed **before** the tests (§XII-B: "issues f
 | L8 | From another website's origin (a quick `fetch` in its console) to `/api/me` | Refused by CORS |
 | L9 | Run the cron service once by hand | Its log says "Deleted 0 notifications older than 90 days." |
 | L10 | Phase 6 demo A1, A3, B1 and B3 on the live site | Same results as on `opendoor_verify` |
+| L11 | A request straight to Railway's address, or with the wrong `X-OpenDoor-Edge` | 403 (Q18) |
+| L12 | The response headers of the website and of `/api/health` (e.g., securityheaders.com) | The headers in §8.1 are present; no `X-Powered-By` |
 
 ### 7B and 7C
 
@@ -252,9 +261,9 @@ The GSD security audit (production settings: §4.2, §4.5, §8) runs after L1–
 
 | What | By | Why |
 |---|---|---|
-| **The domain** (Q1) and access to the Cloudflare account (or you click through the steps I write) | Fri Oct 16 morning | 7A can't start without it |
+| Access to the Cloudflare account for `ruzgal.org` (or you click through the steps I write) | Fri Oct 16 morning | DNS, the Worker's custom domain, the Transform Rule (Q18) and the WAF rule |
 | **A Railway account** on the Hobby plan (a payment method for the trial and the ~US$5) | Fri Oct 16 morning | Q2 |
-| The **production secrets**: the admin email, and strong passwords for the admin and the demo accounts (set them yourselves in Railway's variables; don't send them to me) | Fri Oct 16 | Q6; I never see them |
+| The **production secrets**: the admin email, strong passwords for the admin and the demo accounts, the `APP_KEY` and the `EDGE_SECRET` (set them yourselves in Railway's and Cloudflare's settings; don't send them to me) | Fri Oct 16 | Q6, Q18; I never see them |
 | **How many participants are confirmed**, where and when (in person or remote), and whether any need an interpreter | Sat Oct 17 | §4.7; the schedule and the prepared accounts depend on it |
 | A groupmate with **Windows and NVDA** for the audit | Sat Oct 17 – Sun Oct 18 | §4.6 |
 | Who **facilitates** and who **takes notes** in each session | Sun Oct 18 | §4.7 |
@@ -272,7 +281,11 @@ Things only you can do, which I won't do for you: creating accounts on Cloudflar
 | `backend/railway.json` | Build and deploy settings: root, start command, pre-deploy `php artisan migrate --force`, health check `/api/health` | 7A |
 | `backend/.env.example` | The production variable names with placeholders and comments (§4.2) | 7A |
 | `backend/config/session.php`, `cors.php` (only if needed) | Read `SESSION_SECURE_COOKIE` and the frontend URL from the environment (mostly there already) | 7A |
-| `README.md` | **Deployment runbook**: first setup, deploy, migrate, seed, back up, restore, roll back, the cron service, the checks L1–L10 | 7A |
+| `README.md` | **Deployment runbook**: first setup, deploy, migrate, seed, back up, restore, roll back, the cron service, the dependency check, the checks L1–L12 | 7A |
+| `backend/routes/api.php`, `frontend/src/api/client.js` | `GET /api/csrf-token`; the client keeps the token in memory and sends it as `X-CSRF-TOKEN` (fetching it on start, after login and logout, and on a 419), instead of reading the `XSRF-TOKEN` cookie (S1) | 7A |
+| `backend/app/Http/Middleware/SecurityHeaders.php`, `EnsureRequestFromEdge.php` | S3 and S2, registered globally (the edge check only when `EDGE_SECRET` is set, so local development is unchanged) | 7A |
+| `backend/bootstrap/app.php`, `config/filesystems.php`, `app/Providers/AppServiceProvider.php` | The middleware, the general rate limit (S7), `'serve' => false` (S6), `uncompromised()` (S9) | 7A |
+| `frontend/public/_headers`, `frontend/index.html`, `frontend/package.json` | Website headers (S4); the self-hosted font replaces the Google Fonts links (S5) | 7A |
 | `backend/database/seeders/UsabilityTestSeeder.php` | Prepared accounts P1–P8 (each with a hire at OpenDoor Demo Corp. whose feedback form is open) and E1–E4 (verified companies, each with a job and two applicants); never part of `DatabaseSeeder`; refuses to run twice | 7C |
 | Accessibility fixes | Whatever 7B finds, plus the §4.6 leftovers; each with a page test | 7B |
 | `.planning/ACCESSIBILITY_AUDIT.md`, `.planning/USABILITY_RESULTS.md`, `.planning/USABILITY_TEST_KIT.md` | The audit report, the results, and the kit (consent text, script, tasks, SUS items, note sheet) | 7B, 7C |
@@ -294,13 +307,34 @@ No database changes are planned (Q7's freeze).
 | Secrets in the repository | Only placeholders in `.env.example`; secrets in Railway and Cloudflare variables; the GSD security audit checks the repository | 7A |
 | The database reachable from the internet | Private network only; no public MySQL port | 7A |
 | Weak or shared admin password | Set by the team as a strong secret; changed after first login (Change password, Phase 6) | 7A |
-| Session cookies sent over plain HTTP or to other sites | `Secure`, `HttpOnly`, `SameSite=Lax`, HTTPS only, HSTS; L3 | 7A |
-| Other websites calling the API with the visitor's cookie | CORS and Sanctum's stateful domains limited to `<domain>`; L8 | 7A |
+| Session cookies sent over plain HTTP or to the other `ruzgal.org` sites | Host-only `__Host-` cookie on `opendoor-api.ruzgal.org`, `Secure`, `HttpOnly`, `SameSite=Lax`, HTTPS only, HSTS; the CSRF token comes from the API, not a shared cookie (Q17); L3 | 7A |
+| The API reached around Cloudflare | Secret edge header required in production; Railway's public address removed (Q18); L11 | 7A |
+| Other websites calling the API with the visitor's cookie | CORS and Sanctum's stateful domains limited to `opendoor-ipt.ruzgal.org`; L8 | 7A |
 | Résumés exposed by a public URL | They stay on the API's private disk and are served only to their owner and that job's employer (Phase 4), with `no-store` and a sandbox header | 7A |
 | Losing data in a bad deploy | Pre-deploy migrations stop a failing deploy; backups before risky moments (Q7) | 7A |
 | Brute-force login | Laravel's per-email limit, plus Cloudflare's rate-limiting rule (Q14) | 7A |
 | Participants identifiable in the results | Codes only; disability type optional; recordings (if any) kept off the repository and deleted after analysis; accounts deleted within 30 days after the defense (Q16) | 7C |
 | Consent | Read or shown before anything else, in plain language, with the right to stop; recorded per participant | 7C |
+
+### 8.1 Security pass before go-live (2026-10-15)
+
+What was checked in the code, and what to add. **Already in place:** every address comes from environment variables (nothing hard-coded to a host); CORS allows only `FRONTEND_URL` with credentials; `APP_ENV` defaults to `production` and `APP_DEBUG` to `false` when unset; no `.env` file or application key was ever committed (the `Admin_1234`/`Demo_1234` passwords in the seeder are refused in production); `composer audit` and `npm audit` report **0 vulnerabilities**; no `dangerouslySetInnerHTML`, `eval` or browser storage in the frontend; no raw SQL built from input (every raw fragment uses bindings or fixed values); uploads are checked by content (PDF only, 5 MB; PNG/JPG/WebP only, no SVG, 2 MB) and served with `nosniff` (résumés also `Content-Security-Policy: sandbox` and `no-store`); passwords are hashed with bcrypt and need 8+ characters with upper and lower case, a number and a symbol; login, registration, invites, applying, feedback and password changes are rate-limited; sessions are regenerated at login and ended on logout, suspension and password change; private responses send `no-store`; every Phase 1–6 security audit closed its threats.
+
+| # | Measure | Why | Effort | Part |
+|---|---|---|---|---|
+| S1 | **Host-only, `__Host-` session cookie and a CSRF token from `GET /api/csrf-token`** (Q17) | Keeps OpenDoor's login away from `quiz-me`, `portfolio`, `bakas-ni-rizal` and any future `ruzgal.org` site | 1–2 h with tests | 7A |
+| S2 | **API locked to Cloudflare** with a secret edge header; Railway's public address removed (Q18) | The WAF and the IP-based limits can't be bypassed; `X-Forwarded-For` can't be faked | 1 h with tests | 7A |
+| S3 | **Security headers on every API response**: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'` (file responses keep their own), `Referrer-Policy: no-referrer`, `Permissions-Policy: camera=(), microphone=(), geolocation=()`, and no `X-Powered-By` | Nothing from the API can be framed, sniffed or turned into a page | 30 min with a test | 7A |
+| S4 | **Security headers on the website** (a `frontend/public/_headers` file, which Workers static assets serve): a Content-Security-Policy (`default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://opendoor-api.ruzgal.org; connect-src 'self' https://opendoor-api.ruzgal.org; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'`), `nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` as above. HSTS comes from Cloudflare (Q14) | If a script ever got in (a dependency, a bug), it couldn't load code or send data anywhere else; the site can't be framed for clickjacking. Styles allow `'unsafe-inline'` because the dialogs' scroll lock (Radix) adds a small `<style>` element; scripts stay strict | 1 h, checked on every page in the audit | 7A |
+| S5 | **Self-hosted font** (Q19) | No visitor IPs to Google; lets S4 stay `'self'` only | 20 min | 7A |
+| S6 | **`'serve' => false`** on the private disk (`config/filesystems.php`) | Removes Laravel's unused `/storage/…` route for private files (a Phase 3 leftover); résumés are served only through their own checked addresses | 5 min with a test | 7A |
+| S7 | **A general limit for signed-in requests** (e.g., 300 a minute per account, 120 per IP for guests) on top of the per-action limits | A stolen session or a script can't hammer search, lists or admin pages | 30 min with a test | 7A |
+| S8 | **Session hardening**: `SESSION_ENCRYPT=true`, `SESSION_EXPIRE_ON_CLOSE=true` (Q20), 120-minute idle timeout kept | Session contents unreadable in the database; shared computers log out on close | Settings only | 7A |
+| S9 | **Reject breached passwords** (`Password::defaults()->uncompromised()`, a k-anonymity check against Have I Been Pwned: only 5 characters of the password's hash leave the server) for registration, invites and password changes | Stops the most common stolen passwords, admins included | 20 min; needs outbound HTTPS from Railway | 7A |
+| S10 | **Dependency check before each deploy**: `composer audit` and `npm audit` in the runbook | Catches a newly published vulnerability | Runbook line | 7A |
+| S11 | **GSD security audit of the production settings** after L1–L12 (already in §5) | An independent check of all of the above, live | Agent run | 7A |
+
+Not recommended now: Bot Fight Mode or Turnstile (Q14, accessibility); two-factor login for admins (no email or authenticator setup before the defense; after it); a separate staging environment (§10).
 
 ---
 
@@ -308,9 +342,9 @@ No database changes are planned (Q7's freeze).
 
 | Step | When | Work | Done when |
 |---|---|---|---|
-| 1 | Fri Oct 16 AM | `railway.json`, `.env.example`, README runbook; the full migration and seeding run against a fresh MySQL 8 | Committed; MySQL run clean |
+| 1 | Fri Oct 16 AM | Security pass S1–S9 with tests (§8.1); `railway.json`, `.env.example`, README runbook; the full migration and seeding run against a fresh MySQL 8 | Committed; all tests pass; MySQL run clean |
 | 2 | Fri Oct 16 | You: Railway project, MySQL, volume, variables; Cloudflare DNS and Worker domain. Me: the steps written out, checked with you | Both services deployed |
-| 3 | Fri Oct 16 PM | First deploy, migrate, seed; cron service; L1–L10 | All pass; links sent to you for submission |
+| 3 | Fri Oct 16 PM | First deploy, migrate, seed; cron service; the Transform Rule (S2); L1–L12; GSD security audit of production (S11) | All pass; links sent to you for submission |
 | 4 | Sat Oct 17 | GSD security audit of production; automated axe and Lighthouse on every page | Results logged |
 | 5 | Sat Oct 17 – Sun Oct 18 | Manual WCAG check, NVDA scripts (groupmate), fixes and leftovers, each deployed; `UsabilityTestSeeder` and the test kit; audit report | X1–X4; kit ready; prepared accounts seeded Sun evening |
 | 6 | Mon Oct 19 AM | Backup; schema freeze; a dry-run session with a groupmate | Kit works end to end |
