@@ -1,9 +1,9 @@
 # Phase 5 Plan: Accommodation Feedback and the Trust Score
 
-> Status: **Phase 5 built (2026-10-15)**: 5A demo steps F1–F5 and 5B demo steps T1–T7 verified in the browser (build notes at the end); 323 server and 381 page tests pass. Still to do from §9 step 5: the reviews (Superpowers; GSD code review, UI review, security audit) and a screen reader pass. APPROVED 2026-10-15 with every recommendation in §3 (Q1–Q10); built from the [5A](superpowers/plans/2026-10-15-phase-5a-give-feedback.md) and [5B](superpowers/plans/2026-10-15-phase-5b-show-the-score.md) implementation plans. Checked against the proposal papers ([Revised Proposal](papers/REVISED_PROPOSAL.md) §VII-G and §VII-H, [Modules and Features](papers/MODULES_AND_FEATURES.md) M7, M8, §3.1–3.3).
+> Status: **Phase 5 built (2026-10-15)**: 5A demo steps F1–F5 and 5B demo steps T1–T7 verified in the browser (build notes at the end); 323 server and 381 page tests pass. Still to do from §9 step 5: the GSD reviews (code review, UI review, security audit) and a screen reader pass. APPROVED 2026-10-15 with every recommendation in §3 (Q1–Q10); built from the [5A](superpowers/plans/2026-10-15-phase-5a-give-feedback.md) and [5B](superpowers/plans/2026-10-15-phase-5b-show-the-score.md) implementation plans. Checked against the proposal papers ([Revised Proposal](papers/REVISED_PROPOSAL.md) §VII-G and §VII-H, [Modules and Features](papers/MODULES_AND_FEATURES.md) M7, M8, §3.1–3.3).
 > Part of: [CONCEPT_PLAN.md](CONCEPT_PLAN.md), build phase 5 of 7
 > Builds on: [PHASE_4_PLAN.md](PHASE_4_PLAN.md) (applications; a hire already copies the job's accommodations for this phase)
-> Method: Superpowers brainstorming (this spec), then Superpowers writing-plans for 5A and 5B; Frontend Design (§7); GSD code review, UI review and security audit before finishing.
+> Method: this spec and the 5A and 5B implementation plans were written with Superpowers; from 2026-10-15 on, OpenDoor uses only GSD and Frontend Design (§7). GSD code review, UI review and security audit before finishing.
 
 ---
 
@@ -253,7 +253,7 @@ Sign language interpreter         Not enough ratings yet
 | 2 | `FeedbackForm`, Feedback page, application page and My applications updates, dashboard **Feedback due** | Demo F1–F4 work; I show you 5A and continue unless you stop me |
 | 3 | Server: trust score on employer, job and list responses; public and employer trust score endpoints | 5B server tests pass |
 | 4 | `TrustScoreCard`, job and employer pages, `JobCard` fact, employer Trust score page, dashboard tile, menu | Demo T1–T6 work |
-| 5 | Checks (Superpowers review; GSD code review, UI review, security audit; browser walk-through F5, T7); API.md; build notes; commit and push | Phase 5 finished |
+| 5 | Checks (GSD code review, UI review, security audit; browser walk-through F5, T7); API.md; build notes; commit and push | Phase 5 finished |
 
 ---
 
