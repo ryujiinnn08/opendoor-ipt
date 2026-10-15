@@ -156,4 +156,17 @@ describe('UserPage', () => {
 
     expect(setSuspended).toHaveBeenCalledWith(4, true, 'Posted fake jobs.')
   })
+
+  it('keeps the same heading while the account loads, so focus given to it stays', async () => {
+    let finish
+    getUser.mockReturnValue(new Promise((resolve) => (finish = resolve)))
+    renderRoutes(routes, { path: '/admin/users/3', auth: admin })
+
+    const heading = screen.getByRole('heading', { level: 1, name: 'Account' })
+    heading.focus()
+    await act(async () => finish(maria))
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Maria Santos' })).toBe(heading)
+    expect(heading).toHaveFocus()
+  })
 })

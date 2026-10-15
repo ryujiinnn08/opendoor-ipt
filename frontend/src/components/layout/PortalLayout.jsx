@@ -47,8 +47,10 @@ export default function PortalLayout() {
   async function handleLogout() {
     setLoggingOut(true)
     // Leave the portal first: clearing the user while still inside it would make the
-    // route guard redirect to the login page instead of the home page.
-    navigate('/', { replace: true, state: { loggedOut: true } })
+    // route guard redirect to the login page instead of the home page. The navigation is a
+    // transition, so wait for it to finish before clearing the user (A8 check: logging out of
+    // Notifications landed on the login page).
+    await navigate('/', { replace: true, state: { loggedOut: true } })
     await logout()
     announce('You have logged out.')
   }

@@ -218,6 +218,14 @@ export default function FeedbackModerationPage() {
 
 function FeedbackRow({ feedback, author, revealing, onReveal, onHide, onShow }) {
   const headingId = `feedback-${feedback.id}`
+  const authorRef = useRef(null)
+  const authorName = author?.name
+
+  // The button is replaced by the name, so focus moves to it instead of falling to the page
+  // (A8 keyboard check).
+  useEffect(() => {
+    if (authorName) authorRef.current?.focus()
+  }, [authorName])
 
   return (
     <li className="border-b border-border py-6 first:border-t">
@@ -257,7 +265,7 @@ function FeedbackRow({ feedback, author, revealing, onReveal, onHide, onShow }) 
 
         <div className="mt-4">
           {author?.name ? (
-            <p>
+            <p ref={authorRef} tabIndex={-1} className="outline-none focus-visible:ring-4 focus-visible:ring-primary">
               Written by <span className="font-bold">{author.name}</span> ({author.email}).
             </p>
           ) : (

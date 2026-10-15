@@ -46,4 +46,21 @@ describe('PortalLayout', () => {
     expect(logout).toHaveBeenCalled()
     expect(announce).toHaveBeenCalledWith('You have logged out.')
   })
+
+  it('clears the user only after leaving the portal, so the guard never sends them to login', async () => {
+    let router
+    let whereWhenLoggedOut
+    const logout = vi.fn(async () => {
+      whereWhenLoggedOut = router.state.location.pathname
+    })
+    ;({ router } = renderRoutes(routes, {
+      path: '/admin/dashboard',
+      auth: { status: 'authenticated', role: 'admin', user: { name: 'OpenDoor Admin', role: 'admin' }, logout },
+    }))
+
+    await userEvent.click(screen.getByRole('button', { name: 'Log out' }))
+
+    await vi.waitFor(() => expect(logout).toHaveBeenCalled())
+    expect(whereWhenLoggedOut).toBe('/')
+  })
 })

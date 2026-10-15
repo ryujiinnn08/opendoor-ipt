@@ -116,7 +116,11 @@ export default function AdminDashboard() {
               <NumberRow
                 label="Suspended accounts"
                 value={counts.suspended_accounts}
-                link={counts.suspended_accounts > 0 ? { to: '/admin/users?status=suspended', text: 'See who' } : null}
+                link={
+                  counts.suspended_accounts > 0
+                    ? { to: '/admin/users?status=suspended', text: 'See who', label: 'See who is suspended' }
+                    : null
+                }
               />
               <NumberRow label="Open jobs" value={counts.open_jobs} />
               <NumberRow label="Applications" value={counts.applications} />
@@ -166,7 +170,7 @@ function NumberRow({ label, value, detail, link }) {
         <span className="text-xl font-bold tabular-nums">{value}</span>
         {detail && <span className="text-muted">({detail})</span>}
         {link && (
-          <Link to={link.to} className={TEXT_LINK}>
+          <Link to={link.to} aria-label={link.label} className={TEXT_LINK}>
             {link.text}
           </Link>
         )}

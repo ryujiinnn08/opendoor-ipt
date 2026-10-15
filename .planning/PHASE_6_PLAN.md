@@ -1,6 +1,6 @@
 # Phase 6 Plan: Admin Tools and Notifications
 
-> Status: **APPROVED 2026-10-15** with every recommendation in §3 (Q1–Q10). **6A built** (§9 steps 1–2): server and pages, demo steps A1–A7 checked in the browser at desktop and 360 px; A8's keyboard and screen reader pass is still open. **6B notifications and feedback moderation built** (§9 step 3), demo steps B1–B3 checked in the browser; **report a posting and admin analytics are cut** (Q1, decided 2026-10-15; after the defense). §9 step 4 done: GSD code review, UI review (19/24 before fixes) and security audit run and their findings fixed (review notes at the end). 394 server and 426 page tests pass. Still open: A8's keyboard and screen reader pass. Checked against the proposal papers ([Modules and Features](papers/MODULES_AND_FEATURES.md) §3.4, M1, M4, M7, M8, M9, M10).
+> Status: **APPROVED 2026-10-15** with every recommendation in §3 (Q1–Q10). **6A built** (§9 steps 1–2): server and pages, demo steps A1–A7 checked in the browser at desktop and 360 px; A8's keyboard and screen reader pass is still open. **6B notifications and feedback moderation built** (§9 step 3), demo steps B1–B3 checked in the browser; **report a posting and admin analytics are cut** (Q1, decided 2026-10-15; after the defense). §9 step 4 done: GSD code review, UI review (19/24 before fixes) and security audit run and their findings fixed (review notes at the end). 394 server and 428 page tests pass. **A8 keyboard walk-through done** (desktop, 360 px and 200% zoom; notes at the end); still open: the screen reader part of A8, for a groupmate with NVDA. Checked against the proposal papers ([Modules and Features](papers/MODULES_AND_FEATURES.md) §3.4, M1, M4, M7, M8, M9, M10).
 > Part of: [CONCEPT_PLAN.md](CONCEPT_PLAN.md), build phase 6 of 7
 > Builds on: [PHASE_5_PLAN.md](PHASE_5_PLAN.md) (feedback and the trust score; `feedback.is_hidden` and the recalculation already exist) and [PHASE_4_PLAN.md](PHASE_4_PLAN.md) (notifications are already recorded)
 > Method: GSD and Frontend Design only (§7). After approval, an implementation plan per part; GSD code review, UI review and security audit before finishing.
@@ -330,4 +330,18 @@ Accepted, not changed:
 - Ending sessions on suspension relies on `SESSION_DRIVER=database` (production uses it); with another driver the `active` middleware still logs the person out on their next request.
 - A notification about a posting that was later removed links to a page that says it can't be found.
 - The Change password success message stays until the page is left; the shared-list tiles stay on the dashboard (§4.3 kept them); the Search button's alignment uses a fixed offset at large widths.
+
+## A8 keyboard walk-through (2026-10-15)
+
+Every Phase 6 page was used with the keyboard only in the browser: the Users list and search, a user's page with Suspend and Reactivate, Add an administrator (including its error summary), Change password, the Remove posting dialog, Feedback moderation (Show who wrote this), the admin dashboard, and Notifications as an employer. Each was then checked at 360 px and at 640 px wide (200% zoom of a 1280 px screen) for sideways scrolling and reachable dialogs.
+
+What worked: a logical tab order everywhere; a visible 3 px focus outline (or the 4 px ring on messages) on every stop; focus on the page heading after each navigation; dialogs keep focus inside, open on the reason field (or on Cancel for confirmations), close with Escape and return focus to the button that opened them; after Suspend, Reactivate or a removal, focus moves to the success message; the error summary takes focus and its links jump to the fields; no page scrolls sideways at 360 px or 640 px, and a dialog taller than the screen scrolls inside itself.
+
+Found and fixed:
+- **Opening an account lost focus to the page**: the loading "Account" heading was replaced by a new heading, so the focus RootLayout had given it fell to `<body>`. The heading now stays the same element while the account loads.
+- **"Show who wrote this" lost focus to the page**: the button is replaced by the author's name; focus now moves to the "Written by…" line.
+- **Logging out of Notifications landed on the login page** instead of the home page: React Router runs the navigation as a transition, and clearing the user re-rendered the old page first, whose guard redirected. Logout now waits for the navigation before clearing the user (this could happen from any portal page, depending on timing).
+- **"See who" (suspended accounts) made no sense out of context** in a screen reader's links list; its name is now "See who is suspended".
+
+For the NVDA pass: the "Show password" buttons, the feedback rows' "Hide this feedback on …" and "Show who wrote this" repeat per row (each inside its own labelled article or field), and the admin menu wraps to two or more rows on narrow screens.
 

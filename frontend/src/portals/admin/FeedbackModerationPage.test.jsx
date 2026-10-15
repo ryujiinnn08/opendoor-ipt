@@ -54,6 +54,8 @@ describe('FeedbackModerationPage', () => {
 
     expect(revealFeedbackAuthor).toHaveBeenCalledWith(5)
     expect(await screen.findByText('Sample Hire 4')).toBeInTheDocument()
+    // The button is gone, so focus moves to the name instead of falling to the page.
+    expect(screen.getByText(/^Written by/)).toHaveFocus()
     expect(await screen.findByText('Ana Cruz looked at who wrote it on October 16, 2026.')).toBeInTheDocument()
   })
 

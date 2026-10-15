@@ -51,7 +51,7 @@ describe('AdminDashboard', () => {
     const numbers = (await screen.findByRole('heading', { name: 'OpenDoor in numbers' })).closest('section')
     expect(within(numbers).getByText('42')).toBeInTheDocument()
     expect(within(numbers).getByText('(7 companies, 1 individual)')).toBeInTheDocument()
-    expect(within(numbers).getByRole('link', { name: 'See who' })).toHaveAttribute(
+    expect(within(numbers).getByRole('link', { name: 'See who is suspended' })).toHaveAttribute(
       'href',
       '/admin/users?status=suspended',
     )

@@ -97,10 +97,26 @@ function UserAccount({ id }) {
     setActing(null)
   }
 
+  // One <h1> in the same place while loading and after, so the focus RootLayout gives it after
+  // navigating isn't lost when the account arrives (A8 keyboard check).
+  const header = (action) => (
+    <div className="flex flex-wrap items-start justify-between gap-x-8 gap-y-4">
+      <div className="max-w-prose">
+        <PageHeading>{user?.name ?? 'Account'}</PageHeading>
+        {user && (
+          <p className="mt-2 text-lg">
+            {ROLE_LABELS[user.role]}, {user.email}
+          </p>
+        )}
+      </div>
+      {action}
+    </div>
+  )
+
   if (loadError) {
     return (
       <>
-        <PageHeading>Account</PageHeading>
+        {header(null)}
         <Notice tone="error" className="mt-6">
           <p>{loadError}</p>
           <Link to="/admin/users" className={TEXT_LINK}>
@@ -114,7 +130,7 @@ function UserAccount({ id }) {
   if (!user) {
     return (
       <>
-        <PageHeading>Account</PageHeading>
+        {header(null)}
         <LoadingMessage>Loading the account…</LoadingMessage>
       </>
     )
@@ -122,22 +138,16 @@ function UserAccount({ id }) {
 
   return (
     <>
-      <div className="flex flex-wrap items-start justify-between gap-x-8 gap-y-4">
-        <div className="max-w-prose">
-          <PageHeading>{user.name}</PageHeading>
-          <p className="mt-2 text-lg">
-            {ROLE_LABELS[user.role]}, {user.email}
-          </p>
-        </div>
-        {!user.is_you &&
+      {header(
+        !user.is_you &&
           (user.is_active ? (
             <Button variant="secondary" onClick={() => setActing({ action: 'suspend', open: true })}>
               Suspend {user.name}
             </Button>
           ) : (
             <Button onClick={() => setActing({ action: 'reactivate', open: true })}>Reactivate {user.name}</Button>
-          ))}
-      </div>
+          )),
+      )}
 
       {message && (
         <div ref={messageRef} tabIndex={-1} className="mt-6 outline-none focus-visible:ring-4 focus-visible:ring-primary">
