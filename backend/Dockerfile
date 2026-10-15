@@ -4,7 +4,8 @@ FROM php:8.3-apache
 RUN apt-get update \
  && apt-get install -y --no-install-recommends git unzip libzip-dev libicu-dev \
  && docker-php-ext-install pdo_mysql zip bcmath intl opcache \
- && a2enmod rewrite headers \
+ && rm -f /etc/apache2/mods-enabled/mpm_*.load /etc/apache2/mods-enabled/mpm_*.conf \
+ && a2enmod mpm_prefork rewrite headers \
  && rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
