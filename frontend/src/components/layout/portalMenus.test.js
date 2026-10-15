@@ -11,15 +11,18 @@ describe('portalFor', () => {
       'Company profile',
       'Team',
       'Job postings',
+      'Trust score',
     ])
     expect(labels({ role: 'employer', membership: { role: 'hr', employer: company, department: { name: 'IT' } } })).toEqual([
       'Dashboard',
       'Job postings',
+      'Trust score',
     ])
     expect(labels({ role: 'employer', membership: { role: 'owner', employer: { type: 'individual' } } })).toEqual([
       'Dashboard',
       'My profile',
       'Job postings',
+      'Trust score',
     ])
     expect(labels({ role: 'employer', membership: null })).toEqual(['Set up your profile'])
   })

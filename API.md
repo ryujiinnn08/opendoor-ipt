@@ -118,7 +118,8 @@ What anyone sees of an **open** posting. It never includes the author, status, r
   "location": "Anywhere in the Philippines", "employment_type": "full_time", "work_setup": "remote",
   "interview_format": "online", "closes_on": "2026-11-12",
   "category": { "id": 1, "name": "Information Technology" }, "department": { "name": "IT" },
-  "employer": { "id": 1, "type": "company", "name": "OpenDoor Demo Corp.", "logo_url": null, "is_verified": true },
+  "employer": { "id": 1, "type": "company", "name": "OpenDoor Demo Corp.", "logo_url": null, "is_verified": true,
+                "trust_score": 92, "trust_count": 3 },
   "accommodations": [ { "id": 6, "name": "Written or captioned meetings", "group_name": "Communication", "note": null }, "…" ] }
 ```
 
@@ -126,6 +127,8 @@ For a **logged-in job seeker with needs**, two more keys:
 
 - `match`: how the job meets their needs. `{ "needs_total": 5, "needs_met": 1, "missing": ["Accessible restroom", "…"] }`; the single-job endpoint adds `needs`, each `{ "id", "name", "group_name", "provided": true|false, "note" }`. A need counts as met only when the posting lists that accommodation.
 - `my_application` (single job only, when they applied): `{ "id": 1, "status": "pending", "status_label": "Pending", "applied_at": "…" }`.
+
+`employer.trust_score` (5B) is the accommodation trust score as a whole percent and `trust_count` the number of hires who rated; both `null` until 3 have (no count before then).
 
 Values: `employment_type` `full_time|part_time|contract|internship`; `work_setup` `on_site|hybrid|remote`; `interview_format` `online|on_site|online_or_on_site`.
 
@@ -200,7 +203,7 @@ Never the job seeker's shape. In a list:
                     "submitted_at": "…", "verified_at": "…", "rejection_reason": null } }
 ```
 
-`type`: `company|individual`. `verification_status`: `not_submitted|pending|verified|rejected`. `registration_type`: `dti|sec|cda`. The **public** employer shape (`PublicEmployerResource`) keeps only `id, type, name, industry, address, description, logo_url, is_verified`: never the registration number, team or emails.
+`type`: `company|individual`. `verification_status`: `not_submitted|pending|verified|rejected`. `registration_type`: `dti|sec|cda`. The **public** employer shape (`PublicEmployerResource`) keeps only `id, type, name, industry, address, description, logo_url, is_verified, trust_score, trust_count`: never the registration number, team or emails.
 
 ---
 
@@ -248,6 +251,18 @@ Returns a paged list of public job postings (with `match` for a job seeker with 
 | GET | `/job-postings/{id}` | Anyone | One **open** job (public shape; `match` with `needs` and `my_application` for its job seeker). Anything else: 404 |
 | GET | `/employers/{id}` | Anyone | Public employer (only one with an approved posting); its jobs come from `/job-postings?employer={id}` |
 | GET | `/employers/{id}/logo` | Anyone | The logo image |
+| GET | `/employers/{id}/trust-score` | Anyone | The trust score summary below (same employers as `/employers/{id}`) · 5B |
+
+**Trust score summary** (5B), the only shape the score is ever sent in:
+
+```json
+{ "employer": { "id": 3, "name": "Bayanihan Contact Center Inc." }, "score": 88, "responses": 4,
+  "breakdown": [{ "id": 4, "name": "Adjustable workstation", "group_name": "Physical access",
+                  "delivered": 0, "partial": 2, "not_delivered": 1, "rated": 3 }],
+  "not_enough": [{ "id": 2, "name": "Accessible restroom", "group_name": "Physical access" }] }
+```
+
+`score` = the average of every counted rating (Delivered 1, Partly 0.5, Not delivered 0; "I didn't use this" and hidden feedback left out) × 100, rounded. Below 3 responses `score`, `responses`, `breakdown` and `not_enough` are all `null`. A `breakdown` row needs 3 or more people to have rated that accommodation; fewer, and it is only named in `not_enough`. Never a name, date, comment or individual response.
 
 ### 4.4 Job seeker
 
@@ -360,7 +375,8 @@ Each change is stored with Laravel's database notifications (table `notification
 | PUT | `/employer/profile` | Owner | `name`, `industry` (companies), `address`, `description` (≤2000) | Employer |
 | POST, DELETE | `/employer/profile/logo` | Owner | `logo`: PNG, JPG or WebP, ≤2 MB (multipart) | Employer |
 | POST | `/employer/verification` | Company owner | `registration_type` (`dti`\|`sec`\|`cda`), `business_reg_no` (5–20 of `A–Z 0–9 -`) | Employer, verification `pending`. Changing the number later removes the Verified badge until checked again |
-| GET | `/employer/dashboard` | Owner or HR | — | `{ "postings": { "draft", "pending", "open", "rejected", "closed" }, "waiting_applicants": { "total": 2, "postings": [ { "id", "title", "new" } ] } }` (≤10, most first; HR: their department) |
+| GET | `/employer/trust-score` | Any member | — | Their own employer's trust score summary (as `/employers/{id}/trust-score`) · 5B |
+| GET | `/employer/dashboard` | Owner or HR | — | `{ "postings": { "draft", "pending", "open", "rejected", "closed" }, "trust_score": { "score": 92, "responses": 3 }, "waiting_applicants": { "total": 2, "postings": [ { "id", "title", "new" } ] } }` (≤10, most first; HR: their department) |
 | GET | `/employer/departments` | Company owner | — | Departments with `member_limit`, `effective_limit`, `places_used`, `has_free_place`, `hr_officers` (`id, name, email, joined_at`), `open_invites`; `meta: { "cap", "default_limit" }` |
 | POST | `/employer/departments` | Company owner | `name` (unique in the company), `member_limit` (≤ the admin's cap) | 201, Department |
 | PUT | `/employer/departments/{id}` | Company owner | Same | Department |
@@ -440,4 +456,5 @@ The server checks every rule (Laravel policies and resources); hiding something 
 | An application, its cover note and interview request | — | ✓ | — | ✓ (not after Withdrawn) | — | — |
 | Whom else someone applied to | — | ✓ | — | — | — | — |
 | Their accommodation ratings and comment | — | ✓ | — | — (never, only totals from 3+ responses) | — | ✓ (Phase 6) |
+| An employer's trust score, count and breakdown (3+ responses; rows rated by 3+) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Registration number, team, emails | — | — | — | Their own company | — | ✓ |

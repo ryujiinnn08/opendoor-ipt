@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { axe } from 'vitest-axe'
@@ -13,6 +13,15 @@ const routes = [{ path: '/jobs/:id', element: <JobPage /> }]
 
 describe('JobPage', () => {
   beforeEach(() => vi.clearAllMocks())
+
+  it("shows the employer's trust score, linking to the breakdown", async () => {
+    getJob.mockResolvedValue({ ...job, employer: { ...job.employer, trust_score: 88, trust_count: 4 } })
+    renderRoutes(routes, { path: '/jobs/2' })
+
+    const card = await screen.findByRole('region', { name: 'Accommodation trust score' })
+    expect(card).toHaveTextContent('88%, based on 4 hires')
+    expect(within(card).getByRole('link', { name: 'See how each accommodation was rated' })).toHaveAttribute('href', '/employers/1')
+  })
 
   it('shows an open job with its employer link', async () => {
     getJob.mockResolvedValue(job)

@@ -3,6 +3,7 @@ import { employerKind } from '../../auth/employerAccess.js'
 // Menu items per portal. Pages from later phases are added here as they are built.
 // `end: false` keeps an item marked on its sub-pages (e.g., a posting's edit page).
 const JOB_POSTINGS = { to: '/employer/job-postings', label: 'Job postings', end: false }
+const TRUST_SCORE = { to: '/employer/trust-score', label: 'Trust score' }
 
 const EMPLOYER_MENUS = {
   none: [{ to: '/employer/setup', label: 'Set up your profile' }],
@@ -11,12 +12,14 @@ const EMPLOYER_MENUS = {
     { to: '/employer/company', label: 'Company profile' },
     { to: '/employer/team', label: 'Team' },
     JOB_POSTINGS,
+    TRUST_SCORE,
   ],
-  hr: [{ to: '/employer/dashboard', label: 'Dashboard' }, JOB_POSTINGS],
+  hr: [{ to: '/employer/dashboard', label: 'Dashboard' }, JOB_POSTINGS, TRUST_SCORE],
   individual: [
     { to: '/employer/dashboard', label: 'Dashboard' },
     { to: '/employer/profile', label: 'My profile' },
     JOB_POSTINGS,
+    TRUST_SCORE,
   ],
 }
 

@@ -51,26 +51,26 @@
 **Interfaces:**
 - Produces: `TrustScore::summary(Employer $employer): array{score: ?int, responses: ?int, breakdown: ?list<array{id: int, name: string, group_name: string, delivered: int, partial: int, not_delivered: int, rated: int}>, not_enough: ?list<array{id: int, name: string, group_name: string}>}` (breakdown and not_enough in `Accommodation::inDisplayOrder`; all four null below 3). `GET /api/employers/{id}/trust-score` → `{ data: { employer: {id, name}, ...summary } }` (404 like the employer page); `GET /api/employer/trust-score` → the same for the member's employer.
 
-- [ ] **Step 1: Tests** (`TrustScoreSummaryTest`): `test_the_score_is_a_whole_percent_with_its_count`; `test_nothing_is_counted_below_three` (2 responses → all null on both endpoints, and the employer's own); `test_rows_need_three_ratings`; `test_not_used_is_not_a_rating`; `test_hidden_feedback_leaves_the_breakdown`; `test_retired_types_are_still_listed`; `test_no_response_details_leak` (response JSON contains no candidate name, comment or `sent_at`); `test_every_member_sees_their_own` (owner, HR, individual; candidate 403; admin 403); `test_employers_and_admins_have_no_feedback_endpoint` (feedback-form and feedback POST 403 for owner, HR, admin); `test_the_public_score_needs_a_public_employer` (404 without an approved posting).
-- [ ] **Step 2: Implement** and run. Expected: PASS.
+- [x] **Step 1: Tests** (`TrustScoreSummaryTest`): `test_the_score_is_a_whole_percent_with_its_count`; `test_nothing_is_counted_below_three` (2 responses → all null on both endpoints, and the employer's own); `test_rows_need_three_ratings`; `test_not_used_is_not_a_rating`; `test_hidden_feedback_leaves_the_breakdown`; `test_retired_types_are_still_listed`; `test_no_response_details_leak` (response JSON contains no candidate name, comment or `sent_at`); `test_every_member_sees_their_own` (owner, HR, individual; candidate 403; admin 403); `test_employers_and_admins_have_no_feedback_endpoint` (feedback-form and feedback POST 403 for owner, HR, admin); `test_the_public_score_needs_a_public_employer` (404 without an approved posting).
+- [x] **Step 2: Implement** and run. Expected: PASS.
 
 ### Task 2: The score on jobs, employers and the dashboard
 
-- [ ] **Step 1: Tests** (`TrustScoreDisplayTest`): job list, job page and employer page carry `employer.trust_score` (88) and `trust_count` (4) for a scored employer and both `null` for one below 3; the list query count doesn't grow with jobs; employer dashboard `trust_score: { score, responses }`.
-- [ ] **Step 2: Implement** and run the full server suite. **Commit** (backend).
+- [x] **Step 1: Tests** (`TrustScoreDisplayTest`): job list, job page and employer page carry `employer.trust_score` (88) and `trust_count` (4) for a scored employer and both `null` for one below 3; the list query count doesn't grow with jobs; employer dashboard `trust_score: { score, responses }`.
+- [x] **Step 2: Implement** and run the full server suite. **Commit** (backend).
 
 ### Task 3: TrustScoreCard, job lists and the public pages
 
 **Interfaces:** `getTrustScore(employerId)`, `getMyTrustScore()`; `scoreSentence(score, responses)` → "88%, based on 4 hires" parts; `rowText(row)` → "4 of 5 delivered, 1 partly"; `listFact(employer)` → "Trust score: 88% (4 hires)" / "No trust score yet"; `<TrustScoreCard summary employerName? short? employerLink? headingLevel? />`.
 
-- [ ] **Step 1: Tests**: rowText for every mix; TrustScoreCard full (sentence, breakdown rows, not-enough names, axe) and below 3 (the not-enough sentence, no number anywhere); short form links to the employer page; JobCard shows the fact line; JobPage shows the short card; EmployerPage loads the summary and shows the full card.
-- [ ] **Step 2: Implement** and run.
+- [x] **Step 1: Tests**: rowText for every mix; TrustScoreCard full (sentence, breakdown rows, not-enough names, axe) and below 3 (the not-enough sentence, no number anywhere); short form links to the employer page; JobCard shows the fact line; JobPage shows the short card; EmployerPage loads the summary and shows the full card.
+- [x] **Step 2: Implement** and run.
 
 ### Task 4: The employer's Trust score page, tile and menu
 
-- [ ] **Step 1: Tests**: TrustScorePage with a score (card, "What the score means") and below 3 (how it works, no count); dashboard tile text and link; menu has **Trust score** for owner, HR and individual.
-- [ ] **Step 2: Implement**; `npm test`, `npm run lint`. **Commit** (frontend).
+- [x] **Step 1: Tests**: TrustScorePage with a score (card, "What the score means") and below 3 (how it works, no count); dashboard tile text and link; menu has **Trust score** for owner, HR and individual.
+- [x] **Step 2: Implement**; `npm test`, `npm run lint`. **Commit** (frontend).
 
 ### Task 5: Walk-through and notes
 
-- [ ] T1–T7 on `opendoor_verify` in the browser; build notes; API.md; push.
+- [x] T1–T7 on `opendoor_verify` in the browser; build notes; API.md; push.

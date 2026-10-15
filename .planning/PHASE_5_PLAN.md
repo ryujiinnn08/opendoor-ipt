@@ -1,6 +1,6 @@
 # Phase 5 Plan: Accommodation Feedback and the Trust Score
 
-> Status: **5A built (2026-10-15)**: demo steps F1–F4 verified in the browser, F5 at 360 px and with the keyboard (build notes at the end); 310 server and 366 page tests pass. APPROVED 2026-10-15 with every recommendation in §3 (Q1–Q10); 5A built from the [5A implementation plan](superpowers/plans/2026-10-15-phase-5a-give-feedback.md). Next: 5B, everyone sees the score. Checked against the proposal papers ([Revised Proposal](papers/REVISED_PROPOSAL.md) §VII-G and §VII-H, [Modules and Features](papers/MODULES_AND_FEATURES.md) M7, M8, §3.1–3.3).
+> Status: **Phase 5 built (2026-10-15)**: 5A demo steps F1–F5 and 5B demo steps T1–T7 verified in the browser (build notes at the end); 323 server and 381 page tests pass. Still to do from §9 step 5: the reviews (Superpowers; GSD code review, UI review, security audit) and a screen reader pass. APPROVED 2026-10-15 with every recommendation in §3 (Q1–Q10); built from the [5A](superpowers/plans/2026-10-15-phase-5a-give-feedback.md) and [5B](superpowers/plans/2026-10-15-phase-5b-show-the-score.md) implementation plans. Checked against the proposal papers ([Revised Proposal](papers/REVISED_PROPOSAL.md) §VII-G and §VII-H, [Modules and Features](papers/MODULES_AND_FEATURES.md) M7, M8, §3.1–3.3).
 > Part of: [CONCEPT_PLAN.md](CONCEPT_PLAN.md), build phase 5 of 7
 > Builds on: [PHASE_4_PLAN.md](PHASE_4_PLAN.md) (applications; a hire already copies the job's accommodations for this phase)
 > Method: Superpowers brainstorming (this spec), then Superpowers writing-plans for 5A and 5B; Frontend Design (§7); GSD code review, UI review and security audit before finishing.
@@ -286,4 +286,16 @@ Decided (say if you'd like them changed):
 For 5B:
 - `employers.trust_score` (null below 3) and `feedback_count` are ready; the breakdown per accommodation (Q4: rows rated by 3 or more) still needs its query.
 - No feedback endpoint exists for employers or admins yet; keep it that way, and pin it with a test when the trust score endpoints are added.
+
+## Phase 5B build notes (2026-10-15)
+
+Walked through in the browser on a freshly seeded `opendoor_verify`: T1 as a guest (Bayanihan Contact Center: "**88%**, based on 4 hires", four rows in words such as "0 of 3 delivered, 2 partly, 1 not delivered", and five accommodations rated by fewer than 3 named with "Not enough ratings yet"); T2 (OpenDoor Demo Corp.: "Not enough responses yet…", no count); T3 (after `candidate@` rated *Office Clerk*: "**92%**, based on 3 hires" with both rows); T4 (Browse jobs: every job shows "Trust score: 88% (4 hires)" or "No trust score yet"); T5 as `employer@` (the dashboard tile, **Trust score** in the menu, the Trust score page with the card and "What the score means"); T6 (as `employer@`, both feedback addresses answer 403 and the applicant page carries no ratings or comments; server tests cover HR, admins, other job seekers and guests); T7 at 360 px (Trust score page, employer dashboard, employer page: nothing scrolls sideways). The cards have one link each, reachable by keyboard. Not yet done: the screen reader pass and the §9 step 5 reviews.
+
+Changes to the plan: none. The job page shows the short card (score and count) under **Apply**, linking to the employer page for the breakdown; the employer page doesn't repeat the score on each of its own jobs.
+
+Decided (say if you'd like them changed):
+- The breakdown lists rows with 3 or more ratings first, then the "Not enough ratings yet" names, rather than mixing them in one order.
+- The employer dashboard tile shows the score for owners, HR officers and individual employers alike (the score belongs to the whole company).
+
+Known limit, for the defense Q&A: when an employer's score first appears, it is built from exactly 3 people the employer hired. With all 3 rating an accommodation the same way (e.g. "3 of 3 delivered"), the employer learns how each of them answered for it. This is the papers' threshold (§VII-G); raising it (say, to 5) would make it safer but would delay every score.
 

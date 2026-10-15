@@ -77,4 +77,18 @@ describe('JobCard', () => {
 
     expect(screen.getByText('No accommodations listed.')).toBeInTheDocument()
   })
+
+  it("shows the employer's trust score as one fact", () => {
+    renderCard({ job: { ...job, employer: { ...job.employer, trust_score: 88, trust_count: 4 } } })
+    expect(screen.getByText('Trust score: 88% (4 hires)')).toBeInTheDocument()
+  })
+
+  it('says when there is no trust score yet, but not on the employer’s own page', () => {
+    const { unmount } = renderCard({ job: { ...job, employer: { ...job.employer, trust_score: null, trust_count: null } } })
+    expect(screen.getByText('No trust score yet')).toBeInTheDocument()
+    unmount()
+
+    renderCard({ showEmployer: false })
+    expect(screen.queryByText(/trust score/i)).not.toBeInTheDocument()
+  })
 })

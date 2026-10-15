@@ -9,6 +9,7 @@ import Notice from '../../components/ui/Notice.jsx'
 import PageHeader from '../../components/ui/PageHeader.jsx'
 import VerificationBadge from '../../components/ui/VerificationBadge.jsx'
 import { PRIMARY_LINK, TEXT_LINK } from '../../components/ui/buttonLinkStyles.js'
+import { basedOnText } from '../../lib/trustScoreText.js'
 
 // Non-zero posting counts are listed in this order.
 const COUNT_TEXT = {
@@ -28,6 +29,24 @@ function TileLoadError({ children, onRetry }) {
         Try again
       </Button>
     </Notice>
+  )
+}
+
+/** The employer's own trust score (F8.2), linking to its page; no count below 3 responses. */
+function TrustTile({ dashboard }) {
+  const trust = dashboard.data?.trust_score
+
+  return (
+    <DashboardTile title="Trust score" to="/employer/trust-score" linkLabel="See your trust score">
+      {dashboard.failed && <TileLoadError onRetry={dashboard.retry}>We couldn't load your trust score.</TileLoadError>}
+      {trust && trust.score != null && (
+        <>
+          <strong>{trust.score}%</strong>
+          {basedOnText(trust.responses)}
+        </>
+      )}
+      {trust && trust.score == null && 'Not enough responses yet.'}
+    </DashboardTile>
   )
 }
 
@@ -139,24 +158,26 @@ export default function EmployerDashboard() {
             At <span className="font-bold">{employer.name}</span>, you're an HR officer in{' '}
             <span className="font-bold">{department.name}</span> and manage its job postings.
           </p>
-          <ul className="mt-8 grid gap-4 md:grid-cols-2">
+          <ul className="mt-8 grid gap-4 md:grid-cols-3">
             <DashboardTile title={employer.name}>
               <span className="mt-1 block">
                 <VerificationBadge status={employer.verification_status} />
               </span>
             </DashboardTile>
             <PostingsTile title={`${department.name} job postings`} dashboard={dashboard} />
+            <TrustTile dashboard={dashboard} />
           </ul>
         </>
       )}
       {kind === 'individual' && (
         <>
           <p className="mt-4 max-w-prose">You're hiring as an individual employer.</p>
-          <ul className="mt-8 grid gap-4 md:grid-cols-2">
+          <ul className="mt-8 grid gap-4 md:grid-cols-3">
             <DashboardTile title="My profile" to="/employer/profile" linkLabel="Edit my profile">
               What job seekers see about you on your postings.
             </DashboardTile>
             <PostingsTile title="Job postings" dashboard={dashboard} />
+            <TrustTile dashboard={dashboard} />
           </ul>
         </>
       )}
@@ -189,7 +210,7 @@ function OwnerDashboard({ employer, dashboard }) {
         <span className="font-bold">{employer.name}</span> is your company. You manage its profile, team and job
         postings.
       </p>
-      <ul className="mt-8 grid gap-4 md:grid-cols-3">
+      <ul className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <DashboardTile title="Company profile" to="/employer/company" linkLabel="Go to company profile">
           <span className="mb-2 block">
             <VerificationBadge status={employer.verification_status} />
@@ -215,6 +236,7 @@ function OwnerDashboard({ employer, dashboard }) {
           )}
         </DashboardTile>
         <PostingsTile title="Job postings" dashboard={dashboard} />
+        <TrustTile dashboard={dashboard} />
       </ul>
     </>
   )

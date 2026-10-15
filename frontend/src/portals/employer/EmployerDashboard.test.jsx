@@ -32,6 +32,30 @@ describe('EmployerDashboard', () => {
     expect(within(tile).getByRole('link', { name: 'Manage job postings' })).toHaveAttribute('href', '/employer/job-postings')
   })
 
+  it('shows the trust score tile to every kind of employer', async () => {
+    getEmployerDashboard.mockResolvedValue({ postings: { draft: 0, pending: 0, open: 1, rejected: 0, closed: 0 }, trust_score: { score: 88, responses: 4 } })
+    const memberships = [
+      { role: 'owner', employer: company, department: null },
+      { role: 'hr', employer: company, department: { id: 5, name: 'IT' } },
+      { role: 'owner', employer: { ...company, type: 'individual' }, department: null },
+    ]
+    for (const membership of memberships) {
+      const { unmount } = renderRoutes([{ path: '/', element: <EmployerDashboard /> }], { auth: auth(membership) })
+      const tile = (await screen.findByRole('heading', { name: 'Trust score' })).closest('li')
+      expect(await within(tile).findByText((_, element) => element.tagName === 'DIV' && element.textContent === '88%, based on 4 hires')).toBeInTheDocument()
+      expect(within(tile).getByRole('link', { name: 'See your trust score' })).toHaveAttribute('href', '/employer/trust-score')
+      unmount()
+    }
+  })
+
+  it('says not enough responses yet, with no count', async () => {
+    getEmployerDashboard.mockResolvedValue({ postings: { draft: 0, pending: 0, open: 1, rejected: 0, closed: 0 }, trust_score: { score: null, responses: null } })
+    renderRoutes([{ path: '/', element: <EmployerDashboard /> }], { auth: auth({ role: 'owner', employer: company, department: null }) })
+
+    const tile = (await screen.findByRole('heading', { name: 'Trust score' })).closest('li')
+    expect(await within(tile).findByText('Not enough responses yet.')).toBeInTheDocument()
+  })
+
   it("names the HR officer's department", async () => {
     getEmployerDashboard.mockResolvedValue({ postings: { draft: 0, pending: 0, open: 0, rejected: 0, closed: 0 } })
     renderRoutes([{ path: '/', element: <EmployerDashboard /> }], {

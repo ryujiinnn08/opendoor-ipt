@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { generalErrorFrom } from '../../api/client.js'
 import { getEmployer, searchJobs } from '../../api/jobs.js'
+import { getTrustScore } from '../../api/trustScore.js'
+import TrustScoreCard from '../../components/feedback/TrustScoreCard.jsx'
 import JobCard from '../../components/jobs/JobCard.jsx'
 import Button from '../../components/ui/Button.jsx'
 import LoadingMessage from '../../components/ui/LoadingMessage.jsx'
@@ -16,7 +18,8 @@ import { RECORD_ID } from '../../lib/recordId.js'
 const NOT_FOUND = "We couldn't find this employer. They may not have published a job yet."
 
 /**
- * An employer's public page (F3.5): details, Verified badge and open jobs. Never the
+ * An employer's public page (F3.5): details, Verified badge, the accommodation trust score with
+ * its breakdown (F7.4, F7.5) and open jobs. Never the
  * registration number, team or email addresses (the API doesn't send them). Every state
  * renders the same PageHeader first, so the focused <h1> is kept.
  */
@@ -36,6 +39,7 @@ export default function EmployerPage({ basePath = '/jobs' }) {
   const [loadedResults, setResults] = useState(null) // { employerId, page, jobs, meta }
   const results = loadedResults?.employerId === employer?.id ? loadedResults : null
   const [jobsError, setJobsError] = useState(null)
+  const [trust, setTrust] = useState(null) // { employerId, summary }
   const jobsHeading = useRef(null)
   const loadedPage = useRef(null)
   const focusJobsOnLoad = useRef(false)
@@ -51,6 +55,18 @@ export default function EmployerPage({ basePath = '/jobs' }) {
       active = false
     }
   }, [id, validId, requestKey])
+
+  // The breakdown loads with the employer; until then (or if it fails) the score from the employer is shown.
+  useEffect(() => {
+    if (!employer?.id || employer.trust_score == null) return
+    let active = true
+    getTrustScore(employer.id)
+      .then((summary) => active && setTrust({ employerId: employer.id, summary }))
+      .catch(() => {})
+    return () => {
+      active = false
+    }
+  }, [employer?.id, employer?.trust_score])
 
   // Jobs load only once the employer is known, so a bad address never lists other employers' jobs.
   const employerId = employer?.id
@@ -133,6 +149,12 @@ export default function EmployerPage({ basePath = '/jobs' }) {
                 </div>
               ))}
           </dl>
+
+          <div className="mt-10 max-w-3xl">
+            <TrustScoreCard
+              summary={trust?.employerId === employer.id ? trust.summary : { score: employer.trust_score, responses: employer.trust_count }}
+            />
+          </div>
 
           <section aria-labelledby="employer-jobs-heading" className="mt-12">
             {jobsError && (

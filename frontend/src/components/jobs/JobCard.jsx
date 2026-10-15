@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { formatDay } from '../../lib/format.js'
 import { providesParts } from '../../lib/jobText.js'
+import { listFact } from '../../lib/trustScoreText.js'
 import { EMPLOYMENT_TYPES, optionLabel, WORK_SETUPS } from '../../lib/postingOptions.js'
 import AccommodationGroupIcon from '../postings/AccommodationGroupIcon.jsx'
 import MatchBadge from './MatchBadge.jsx'
@@ -48,6 +49,8 @@ export default function JobCard({ job, to, showEmployer = true }) {
         {facts.map(([label, value]) => (
           <li key={label}>{`${label}: ${value}`}</li>
         ))}
+        {/* The employer's accommodation trust score (Phase 5, Q6); not repeated on its own page. */}
+        {showEmployer && <li>{listFact(employer)}</li>}
       </ul>
 
       {shown.length === 0 ? (

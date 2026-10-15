@@ -31,6 +31,7 @@ import JobPostingPreviewPage from './portals/employer/JobPostingPreviewPage.jsx'
 import JobPostingsPage from './portals/employer/JobPostingsPage.jsx'
 import SetupPage from './portals/employer/SetupPage.jsx'
 import TeamPage from './portals/employer/TeamPage.jsx'
+import TrustScorePage from './portals/employer/TrustScorePage.jsx'
 import AccessibilityPage from './portals/public/AccessibilityPage.jsx'
 import BrowseJobsPage from './portals/public/BrowseJobsPage.jsx'
 import EmployerPage from './portals/public/EmployerPage.jsx'
@@ -101,6 +102,7 @@ export const routes = [
             { path: '/employer/job-postings/:id/edit', element: <JobPostingFormPage /> },
             { path: '/employer/job-postings/:id/applicants', element: <ApplicantsPage /> },
             { path: '/employer/applications/:id', element: <ApplicantPage /> },
+            { path: '/employer/trust-score', element: <TrustScorePage /> },
           ],
         },
         {

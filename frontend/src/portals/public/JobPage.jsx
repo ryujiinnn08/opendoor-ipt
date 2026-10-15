@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { generalErrorFrom } from '../../api/client.js'
 import { getJob } from '../../api/jobs.js'
 import ApplyBox from '../../components/applications/ApplyBox.jsx'
+import TrustScoreCard from '../../components/feedback/TrustScoreCard.jsx'
 import NeedsFit from '../../components/jobs/NeedsFit.jsx'
 import JobDetails from '../../components/postings/JobDetails.jsx'
 import Button from '../../components/ui/Button.jsx'
@@ -73,6 +74,11 @@ export default function JobPage({ basePath = '/jobs', employerBasePath = '/emplo
               <>
                 {job.match?.needs && <NeedsFit match={job.match} />}
                 <ApplyBox job={job} />
+                <TrustScoreCard
+                  summary={{ score: job.employer.trust_score, responses: job.employer.trust_count }}
+                  short
+                  employerHref={`${employerBasePath}/${job.employer.id}`}
+                />
               </>
             }
           />

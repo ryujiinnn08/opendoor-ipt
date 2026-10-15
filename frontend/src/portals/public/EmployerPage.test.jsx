@@ -4,10 +4,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { axe } from 'vitest-axe'
 import { publicJobFixture as job } from '../../test/publicJobFixture.js'
 import { renderRoutes } from '../../test/renderWithProviders.jsx'
+import { trustScoreFixture } from '../../test/trustScoreFixture.js'
 import EmployerPage from './EmployerPage.jsx'
 
 vi.mock('../../api/jobs.js', () => ({ getEmployer: vi.fn(), searchJobs: vi.fn() }))
 const { getEmployer, searchJobs } = await import('../../api/jobs.js')
+vi.mock('../../api/trustScore.js', () => ({ getTrustScore: vi.fn() }))
+const { getTrustScore } = await import('../../api/trustScore.js')
 
 const routes = [{ path: '/employers/:id', element: <EmployerPage /> }]
 const company = {
@@ -27,6 +30,28 @@ describe('EmployerPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     searchJobs.mockResolvedValue({ jobs, meta: meta() })
+  })
+
+  it('shows the trust score with its breakdown', async () => {
+    getEmployer.mockResolvedValue({ ...company, trust_score: 88, trust_count: 4 })
+    getTrustScore.mockResolvedValue(trustScoreFixture())
+    const { container } = renderRoutes(routes, { path: '/employers/1' })
+
+    const card = await screen.findByRole('region', { name: 'Accommodation trust score' })
+    expect(card).toHaveTextContent('88%, based on 4 hires')
+    expect(await within(card).findByText('0 of 3 delivered, 2 partly, 1 not delivered')).toBeInTheDocument()
+    expect(getTrustScore).toHaveBeenCalledWith(1)
+    await screen.findByRole('heading', { name: 'Open jobs (2)' })
+    expect(screen.queryByText(/No trust score yet|Trust score: /)).not.toBeInTheDocument()
+    expect(await axe(container)).toHaveNoViolations()
+  })
+
+  it('says not enough responses yet, without asking for a breakdown', async () => {
+    getEmployer.mockResolvedValue({ ...company, trust_score: null, trust_count: null })
+    renderRoutes(routes, { path: '/employers/1' })
+
+    expect(await screen.findByText('Not enough responses yet. The score appears once 3 hired employees have rated this employer.')).toBeInTheDocument()
+    expect(getTrustScore).not.toHaveBeenCalled()
   })
 
   it('shows a company and its open jobs', async () => {
