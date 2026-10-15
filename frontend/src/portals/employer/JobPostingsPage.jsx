@@ -26,6 +26,7 @@ const EMPTY = {
   draft: 'No drafts.',
   rejected: 'No rejected postings.',
   closed: 'No closed postings.',
+  removed: 'OpenDoor has not removed any of your postings.',
 }
 
 // With a department filter, the empty text names the department.
@@ -36,6 +37,7 @@ const EMPTY_IN_DEPARTMENT = {
   draft: (name) => `No drafts in ${name}.`,
   rejected: (name) => `No rejected postings in ${name}.`,
   closed: (name) => `No closed postings in ${name}.`,
+  removed: (name) => `OpenDoor has not removed any postings in ${name}.`,
 }
 
 function successText(action, posting, updated) {

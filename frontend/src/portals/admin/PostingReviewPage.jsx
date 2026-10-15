@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { decidePosting, getPostingForReview } from '../../api/admin.js'
+import { decidePosting, getPostingForReview, removePosting } from '../../api/admin.js'
 import { fieldErrorsFrom, generalErrorFrom } from '../../api/client.js'
 import JobDetails from '../../components/postings/JobDetails.jsx'
 import PostingStatusBadge from '../../components/postings/PostingStatusBadge.jsx'
@@ -10,20 +10,24 @@ import LoadingMessage from '../../components/ui/LoadingMessage.jsx'
 import Notice from '../../components/ui/Notice.jsx'
 import PageHeader from '../../components/ui/PageHeader.jsx'
 import ReasonDialog from '../../components/ui/ReasonDialog.jsx'
+import { useAnnounce } from '../../components/ui/announcerContext.js'
 import { TEXT_LINK } from '../../components/ui/buttonLinkStyles.js'
 import { formatDate, formatDay } from '../../lib/format.js'
 import { manilaToday } from '../../lib/postingOptions.js'
 
 /**
- * One posting for the admin to approve or reject (plan PHASE_2 decision 33). Drafts can't be
- * opened here; the API answers 404 for them.
+ * One posting for the admin to approve or reject (plan PHASE_2 decision 33), or remove with a
+ * reason the employer sees (plan PHASE_6 §4.2). Drafts can't be opened here; the API answers 404.
  */
 export default function PostingReviewPage() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const announce = useAnnounce()
   const [posting, setPosting] = useState(null)
   const [loadError, setLoadError] = useState(null)
-  const [deciding, setDeciding] = useState(null) // { decision, open, busy, error }
+  const [deciding, setDeciding] = useState(null) // { decision: 'approve' | 'reject' | 'remove', open, busy, error, done }
+  const [removedMessage, setRemovedMessage] = useState(null)
+  const removedRef = useRef(null)
 
   useEffect(() => {
     getPostingForReview(id)
@@ -34,6 +38,30 @@ export default function PostingReviewPage() {
         ),
       )
   }, [id])
+
+  async function remove(reason) {
+    setDeciding((current) => ({ ...current, busy: true, error: null }))
+    try {
+      await removePosting(posting.id, reason)
+      setPosting(await getPostingForReview(posting.id))
+      const text = `"${posting.title}" was removed. The employer can see your reason.`
+      setRemovedMessage(text)
+      announce(text)
+      setDeciding((current) => ({ ...current, busy: false, open: false, done: true }))
+    } catch (error) {
+      const fieldErrors = fieldErrorsFrom(error)
+      setDeciding(
+        (current) => current && { ...current, busy: false, error: Object.values(fieldErrors)[0] ?? generalErrorFrom(error) },
+      )
+    }
+  }
+
+  function afterRemoveClose(event) {
+    if (!deciding?.done) return
+    event.preventDefault()
+    removedRef.current?.focus()
+    setDeciding(null)
+  }
 
   async function decide(reason) {
     setDeciding((current) => ({ ...current, busy: true, error: null }))
@@ -83,7 +111,8 @@ export default function PostingReviewPage() {
     )
   }
 
-  const waiting = posting.status === 'pending'
+  const removal = posting.removal
+  const waiting = posting.status === 'pending' && !removal
   const datePassed = Boolean(posting.closes_on) && posting.closes_on < manilaToday()
 
   return (
@@ -91,14 +120,32 @@ export default function PostingReviewPage() {
       <PageHeader
         title={posting.title}
         documentTitle={`Review: ${posting.title}`}
-        intro="Job seekers see this posting once you approve it."
+        intro={
+          removal
+            ? "Job seekers can't see this posting. Its applicants keep their applications."
+            : waiting
+              ? 'Job seekers see this posting once you approve it.'
+              : undefined
+        }
       />
       <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
-        <PostingStatusBadge status={posting.status} />
+        <PostingStatusBadge status={removal ? 'removed' : posting.status} />
         {posting.submitted_at && <span className="text-muted">Submitted {formatDate(posting.submitted_at)}</span>}
       </div>
 
-      {posting.changed_after_approval && (
+      {removedMessage && (
+        <div ref={removedRef} tabIndex={-1} className="mt-6 outline-none focus-visible:ring-4 focus-visible:ring-primary">
+          <Notice tone="success">{removedMessage}</Notice>
+        </div>
+      )}
+      {removal && (
+        <p className="mt-6 max-w-prose border-l-4 border-text pl-5">
+          Removed by OpenDoor on {formatDate(removal.removed_at)}
+          {removal.removed_by ? ` (${removal.removed_by})` : ''}: {removal.reason}
+        </p>
+      )}
+
+      {!removal && posting.changed_after_approval && (
         <Notice className="mt-6">This posting was approved before and has since been changed. Read it all again before you decide.</Notice>
       )}
       {waiting && datePassed && (
@@ -132,11 +179,41 @@ export default function PostingReviewPage() {
         </section>
       )}
 
+      {!removal && (
+        <section aria-labelledby="remove-heading" className="mt-12 border-t border-border pt-8">
+          <h2 id="remove-heading" className="text-2xl font-bold">
+            Remove this posting
+          </h2>
+          <p className="mt-2 max-w-prose">
+            Remove it if it's misleading, for example if the accommodations it lists aren't really provided. Applicants keep
+            their applications, and the employer can still decide on them.
+          </p>
+          <Button variant="secondary" className="mt-4" onClick={() => setDeciding({ decision: 'remove', open: true })}>
+            Remove {posting.title}
+          </Button>
+        </section>
+      )}
+
       <p className="mt-12">
         <Link to="/admin/job-postings" className={TEXT_LINK}>
           Back to posting approvals
         </Link>
       </p>
+
+      <ReasonDialog
+        open={Boolean(deciding?.open && deciding.decision === 'remove')}
+        onOpenChange={closeDialog}
+        title={`Remove ${posting.title}?`}
+        description="Job seekers won't see it again, and the employer can't edit or reopen it. You can't undo this."
+        label="Reason (the employer sees this)"
+        hint="Say what was wrong, e.g., Accommodations listed aren't available at this site."
+        confirmLabel="Remove posting"
+        minLength={5}
+        onConfirm={remove}
+        busy={deciding?.busy}
+        error={deciding?.error}
+        onCloseAutoFocus={afterRemoveClose}
+      />
 
       <ConfirmDialog
         open={Boolean(deciding?.open && deciding.decision === 'approve')}

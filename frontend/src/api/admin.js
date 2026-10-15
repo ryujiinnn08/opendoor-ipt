@@ -57,10 +57,10 @@ export async function getUser(id) {
   return data.data
 }
 
-/** Returns the new administrator with their temporary password, shown once. */
+/** Returns { user, temporaryPassword }: the new administrator and their password, shown once. */
 export async function addAdmin(values) {
   const { data } = await client.post('/api/admin/users', values)
-  return data.data
+  return { user: data.data, temporaryPassword: data.temporary_password }
 }
 
 /** Suspend with a reason, or reactivate (no reason). */

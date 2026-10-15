@@ -6,6 +6,8 @@ const STATUSES = {
   open: { tone: 'success', icon: 'check', label: 'Open' },
   rejected: { tone: 'danger', icon: 'cross', label: 'Rejected' },
   closed: { tone: 'neutral', icon: 'lock', label: 'Closed' },
+  // Removed by an administrator (Phase 6A); the reason is shown in a sentence beside it.
+  removed: { tone: 'neutral', icon: 'cross', label: 'Removed by OpenDoor' },
 }
 
 /** A posting's status as an icon and text, never color alone. */

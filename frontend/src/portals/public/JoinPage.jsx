@@ -16,17 +16,9 @@ import { useAnnounce } from '../../components/ui/announcerContext.js'
 import useFormErrors from '../../hooks/useFormErrors.js'
 import { summaryFrom } from '../../lib/errorSummary.js'
 import { formatDate } from '../../lib/format.js'
-import { checkPassword } from '../../lib/passwordRules.js'
+import { PASSWORD_MESSAGES, checkPassword } from '../../lib/passwordRules.js'
 
 const FIELDS = ['name', 'email', 'password', 'password_confirmation', 'consent']
-
-const PASSWORD_MESSAGES = {
-  length: 'Use at least 8 characters.',
-  upper: 'Add an uppercase letter (A-Z) and a lowercase letter (a-z).',
-  lower: 'Add an uppercase letter (A-Z) and a lowercase letter (a-z).',
-  number: 'Add a number (0-9).',
-  symbol: 'Add a special character, such as ! or @.',
-}
 
 function validate(values) {
   const errors = {}

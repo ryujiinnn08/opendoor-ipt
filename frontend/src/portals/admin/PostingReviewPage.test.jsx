@@ -10,9 +10,10 @@ vi.mock('../../api/admin.js', () => ({
   getPostingQueue: vi.fn(),
   getPostingForReview: vi.fn(),
   decidePosting: vi.fn(),
+  removePosting: vi.fn(),
 }))
 
-const { getPostingQueue, getPostingForReview, decidePosting } = await import('../../api/admin.js')
+const { getPostingQueue, getPostingForReview, decidePosting, removePosting } = await import('../../api/admin.js')
 
 const routes = [
   { path: '/admin/job-postings', element: <PostingApprovalsPage /> },
@@ -147,5 +148,26 @@ describe('PostingApprovalsPage', () => {
 
     expect(await screen.findByRole('heading', { level: 2, name: 'Waiting (1)' })).toBeInTheDocument()
     expect(screen.queryByText(/We could not reach OpenDoor/)).not.toBeInTheDocument()
+  })
+
+  it('removes a posting with a reason the employer sees, and shows it removed', async () => {
+    const reason = "Accommodations listed aren't available at this site."
+    const removed = { ...fixture, status: 'open', removal: { removed_at: '2026-10-16T10:00:00+08:00', reason, removed_by: 'Admin' } }
+    getPostingForReview.mockResolvedValueOnce({ ...fixture, status: 'open' }).mockResolvedValueOnce(removed)
+    removePosting.mockResolvedValue()
+    const announce = vi.fn()
+    renderRoutes(routes, { path: '/admin/job-postings/2', auth: admin, announce })
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Remove Junior Web Developer' }))
+    const dialog = screen.getByRole('dialog', { name: 'Remove Junior Web Developer?' })
+    expect(within(dialog).getByText(/You can't undo this/)).toBeInTheDocument()
+    await userEvent.type(within(dialog).getByLabelText('Reason (the employer sees this)'), reason)
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Remove posting' }))
+
+    expect(removePosting).toHaveBeenCalledWith(2, reason)
+    expect(await screen.findByText('"Junior Web Developer" was removed. The employer can see your reason.')).toBeInTheDocument()
+    expect(announce).toHaveBeenCalledWith('"Junior Web Developer" was removed. The employer can see your reason.')
+    expect(screen.getByText(`Removed by OpenDoor on October 16, 2026 (Admin): ${reason}`)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Remove Junior Web Developer' })).not.toBeInTheDocument()
   })
 })

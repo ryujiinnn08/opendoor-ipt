@@ -1,14 +1,15 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import LoadingMessage from '../components/ui/LoadingMessage.jsx'
 import { useAuth } from './authContext.js'
-import { dashboardFor } from './redirects.js'
+import { CHANGE_PASSWORD_PATH, dashboardFor } from './redirects.js'
 
 /**
- * Shows child routes only to logged-in users with one of `roles`.
- * The server enforces the same rules; this only keeps navigation sensible.
+ * Shows child routes only to logged-in users with one of `roles`. Someone still on a temporary
+ * password is sent to Change password first (plan PHASE_6 Q4). The server enforces the same
+ * rules; this only keeps navigation sensible.
  */
 export default function ProtectedRoute({ roles }) {
-  const { status, role } = useAuth()
+  const { status, role, user } = useAuth()
   const location = useLocation()
 
   if (status === 'loading') return <LoadingMessage />
@@ -19,6 +20,10 @@ export default function ProtectedRoute({ roles }) {
   }
 
   if (!roles.includes(role)) return <Navigate to={dashboardFor(role)} replace />
+
+  if (user?.must_change_password && location.pathname !== CHANGE_PASSWORD_PATH) {
+    return <Navigate to={CHANGE_PASSWORD_PATH} replace />
+  }
 
   return <Outlet />
 }

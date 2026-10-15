@@ -70,6 +70,24 @@ describe('JobPostingsPage', () => {
     expect(getDepartments).toHaveBeenCalledTimes(1)
   })
 
+  it('shows a posting OpenDoor removed with the reason, and nothing to open or change', async () => {
+    getJobPostings.mockResolvedValue([
+      {
+        ...fixture,
+        actions: [],
+        removal: { removed_at: '2026-10-16T10:00:00+08:00', reason: "Accommodations listed aren't available at this site." },
+      },
+    ])
+    renderRoutes(routes, { path: '/employer/job-postings?status=removed', auth: individual })
+
+    expect(await screen.findByText("Removed by OpenDoor on October 16, 2026: Accommodations listed aren't available at this site.")).toBeInTheDocument()
+    expect(getJobPostings).toHaveBeenCalledWith(expect.objectContaining({ status: 'removed' }))
+    expect(screen.getByText('Removed by OpenDoor', { selector: 'span' })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Junior Web Developer' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /^Edit/ })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Removed' })).toHaveAttribute('aria-current', 'true')
+  })
+
   it('says what to do when there are no postings', async () => {
     getJobPostings.mockResolvedValue([])
     renderRoutes(routes, { path: '/employer/job-postings', auth: individual })

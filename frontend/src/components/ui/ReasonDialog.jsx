@@ -5,7 +5,8 @@ import Modal, { ModalClose } from './Modal.jsx'
 
 /**
  * A confirmation dialog that needs a written reason, e.g., rejecting a company's verification.
- * onConfirm(reason) is called with the trimmed reason.
+ * onConfirm(reason) is called with the trimmed reason. The confirm button is red unless
+ * `confirmVariant` says otherwise (e.g., suspending, which can be undone).
  */
 export default function ReasonDialog({
   open,
@@ -15,6 +16,8 @@ export default function ReasonDialog({
   label = 'Reason',
   hint,
   confirmLabel,
+  confirmVariant = 'danger',
+  minLength = 1,
   onConfirm,
   busy,
   error,
@@ -23,20 +26,29 @@ export default function ReasonDialog({
   return (
     <Modal open={open} onOpenChange={onOpenChange} title={title} description={description} onCloseAutoFocus={onCloseAutoFocus}>
       {/* The dialog content unmounts when closed, so the reason starts empty each time. */}
-      <ReasonForm label={label} hint={hint} confirmLabel={confirmLabel} onConfirm={onConfirm} busy={busy} error={error} />
+      <ReasonForm
+        label={label}
+        hint={hint}
+        confirmLabel={confirmLabel}
+        confirmVariant={confirmVariant}
+        minLength={minLength}
+        onConfirm={onConfirm}
+        busy={busy}
+        error={error}
+      />
     </Modal>
   )
 }
 
-function ReasonForm({ label, hint, confirmLabel, onConfirm, busy, error }) {
+function ReasonForm({ label, hint, confirmLabel, confirmVariant, minLength, onConfirm, busy, error }) {
   const [reason, setReason] = useState('')
   const [fieldError, setFieldError] = useState(null)
 
   function handleSubmit(event) {
     event.preventDefault()
     if (busy) return
-    if (!reason.trim()) {
-      setFieldError('Enter a reason.')
+    if (!reason.trim() || reason.trim().length < minLength) {
+      setFieldError(reason.trim() ? `Use at least ${minLength} characters.` : 'Enter a reason.')
       document.getElementById('reason')?.focus()
       return
     }
@@ -64,7 +76,7 @@ function ReasonForm({ label, hint, confirmLabel, onConfirm, busy, error }) {
         inputClassName="w-full"
       />
       <div className="flex flex-wrap gap-3">
-        <Button type="submit" variant="danger" loading={busy} loadingText="Working…">
+        <Button type="submit" variant={confirmVariant} loading={busy} loadingText="Working…">
           {confirmLabel}
         </Button>
         <ModalClose asChild>

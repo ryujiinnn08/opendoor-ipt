@@ -12,7 +12,7 @@ import FormField from '../../components/ui/FormField.jsx'
 import PageHeading from '../../components/ui/PageHeading.jsx'
 import PasswordField from '../../components/ui/PasswordField.jsx'
 import RadioCardGroup from '../../components/ui/RadioCardGroup.jsx'
-import { checkPassword } from '../../lib/passwordRules.js'
+import { PASSWORD_MESSAGES, checkPassword } from '../../lib/passwordRules.js'
 
 const ROLES = [
   {
@@ -31,14 +31,6 @@ const FIELDS = ['role', 'name', 'email', 'password', 'password_confirmation', 'c
 
 // The summary links to the first radio button for the role question.
 const FIELD_IDS = { role: 'role-candidate' }
-
-const PASSWORD_MESSAGES = {
-  length: 'Use at least 8 characters.',
-  upper: 'Add an uppercase letter (A-Z) and a lowercase letter (a-z).',
-  lower: 'Add an uppercase letter (A-Z) and a lowercase letter (a-z).',
-  number: 'Add a number (0-9).',
-  symbol: 'Add a special character, such as ! or @.',
-}
 
 function validate(values) {
   const errors = {}

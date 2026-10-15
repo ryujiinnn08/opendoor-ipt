@@ -14,3 +14,12 @@ export function checkPassword(value) {
 export function passwordMeetsRules(value) {
   return checkPassword(value).every((rule) => rule.met)
 }
+
+/** What to fix when a rule isn't met, by rule id (the form's error message). */
+export const PASSWORD_MESSAGES = {
+  length: 'Use at least 8 characters.',
+  upper: 'Add an uppercase letter (A-Z) and a lowercase letter (a-z).',
+  lower: 'Add an uppercase letter (A-Z) and a lowercase letter (a-z).',
+  number: 'Add a number (0-9).',
+  symbol: 'Add a special character, such as ! or @.',
+}

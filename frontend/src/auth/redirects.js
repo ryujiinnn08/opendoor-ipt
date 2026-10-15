@@ -4,6 +4,9 @@ const DASHBOARDS = {
   admin: '/admin/dashboard',
 }
 
+/** Change password, in every portal (Phase 6A). */
+export const CHANGE_PASSWORD_PATH = '/account/password'
+
 export function dashboardFor(role) {
   return DASHBOARDS[role] ?? '/'
 }

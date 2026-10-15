@@ -32,6 +32,8 @@ export const POSTING_FILTERS = [
   { value: 'draft', label: 'Drafts' },
   { value: 'rejected', label: 'Rejected' },
   { value: 'closed', label: 'Closed' },
+  // Removed by OpenDoor (Phase 6A); never part of All.
+  { value: 'removed', label: 'Removed' },
 ]
 
 const MAX_MONTHS_AHEAD = 6

@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/authContext.js'
 import { employerSummary } from '../../auth/employerAccess.js'
-import { dashboardFor } from '../../auth/redirects.js'
+import { CHANGE_PASSWORD_PATH, dashboardFor } from '../../auth/redirects.js'
 import { useAnnounce } from '../ui/announcerContext.js'
 import Button from '../ui/Button.jsx'
 import { portalFor } from './portalMenus.js'
@@ -40,10 +40,18 @@ export default function PortalLayout() {
             <span className="font-bold text-muted">{portal.name}</span>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <p>
-              <span className="sr-only">Logged in as</span> <span className="font-bold">{user.name}</span>
-              {summary && <span className="block text-sm text-muted">{summary}</span>}
-            </p>
+            <div>
+              <p>
+                <span className="sr-only">Logged in as</span> <span className="font-bold">{user.name}</span>
+                {summary && <span className="block text-sm text-muted">{summary}</span>}
+              </p>
+              <Link
+                to={CHANGE_PASSWORD_PATH}
+                className="inline-flex min-h-11 items-center text-sm font-bold text-primary underline underline-offset-4 hover:no-underline"
+              >
+                Change password
+              </Link>
+            </div>
             <Button variant="secondary" onClick={handleLogout} loading={loggingOut} loadingText="Logging out…">
               Log out
             </Button>
