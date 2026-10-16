@@ -1,11 +1,11 @@
-// The Figma Button component (UI_REVAMP_PLAN §4.2): pills in Lexend SemiBold, MD 52 px and
+// The Figma Button component (UI_REVAMP_PLAN §4.2): 8 px corners in Lexend SemiBold (UI_FEEDBACK_PLAN §3.1), MD 48 px and
 // SM 44 px tall, so every target is at least 44 px. Button.jsx and links that look like buttons
 // share these classes; a link stays a link when the action goes to another page.
 export const BUTTON_BASE =
-  'group inline-flex items-center justify-center gap-2 rounded-full border-2 font-display font-semibold no-underline transition-[color,background-color,border-color,box-shadow,scale] duration-200 ease-soft active:scale-[0.97]'
+  'group inline-flex items-center justify-center gap-2 rounded-md border-2 font-display font-semibold no-underline transition-[color,background-color,border-color,box-shadow,scale] duration-200 ease-soft active:scale-[0.97]'
 
 export const BUTTON_SIZES = {
-  md: 'min-h-13 px-6 py-2.5 text-lg',
+  md: 'min-h-12 px-5 py-2 text-base',
   sm: 'min-h-11 px-4 py-1.5 text-sm',
 }
 

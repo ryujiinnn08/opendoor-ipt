@@ -6,6 +6,7 @@ import Button from '../../components/ui/Button.jsx'
 import FormField from '../../components/ui/FormField.jsx'
 import LoadingMessage from '../../components/ui/LoadingMessage.jsx'
 import Notice from '../../components/ui/Notice.jsx'
+import { backState } from '../../lib/backState.js'
 import PageHeader from '../../components/ui/PageHeader.jsx'
 import Pagination from '../../components/ui/Pagination.jsx'
 import SelectField from '../../components/ui/SelectField.jsx'
@@ -131,7 +132,7 @@ export default function UsersPage() {
             <li key={user.id} className="border-b border-border py-5 first:border-t">
               <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-2">
                 <h3 className="text-xl font-bold">
-                  <Link to={`/admin/users/${user.id}`} className={TEXT_LINK}>
+                  <Link to={`/admin/users/${user.id}`} state={backState(location)} className={TEXT_LINK}>
                     {user.name}
                   </Link>
                 </h3>

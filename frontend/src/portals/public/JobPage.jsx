@@ -47,7 +47,7 @@ export default function JobPage({ basePath = '/jobs', employerBasePath = '/emplo
 
   return (
     <>
-      <PageHeader title={title} />
+      <PageHeader back={{ to: basePath, label: 'Back to jobs' }} title={title} />
 
       {loadError && (
         <Notice tone={loadError === NOT_OPEN ? 'info' : 'error'} className="mt-6">
@@ -72,8 +72,8 @@ export default function JobPage({ basePath = '/jobs', employerBasePath = '/emplo
             employerHref={`${employerBasePath}/${job.employer.id}`}
             fit={
               <>
-                {job.match?.needs && <NeedsFit match={job.match} />}
                 <ApplyBox job={job} />
+                {job.match?.needs && <NeedsFit match={job.match} />}
                 <TrustScoreCard
                   summary={{ score: job.employer.trust_score, responses: job.employer.trust_count }}
                   short
@@ -82,11 +82,6 @@ export default function JobPage({ basePath = '/jobs', employerBasePath = '/emplo
               </>
             }
           />
-          <p className="mt-12">
-            <Link to={basePath} className={TEXT_LINK}>
-              Back to jobs
-            </Link>
-          </p>
         </>
       )}
     </>

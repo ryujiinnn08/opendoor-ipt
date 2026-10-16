@@ -29,7 +29,7 @@ export default function JobPostingPreviewPage() {
   if (loadError) {
     return (
       <>
-        <PageHeader title="Job posting" />
+        <PageHeader back={{ to: '/employer/job-postings', label: 'Back to job postings' }} title="Job posting" />
         <Notice tone="error" className="mt-6">
           <p>{loadError}</p>
           <Link to="/employer/job-postings" className={TEXT_LINK}>
@@ -43,7 +43,7 @@ export default function JobPostingPreviewPage() {
   if (!posting) {
     return (
       <>
-        <PageHeader title="Job posting" />
+        <PageHeader back={{ to: '/employer/job-postings', label: 'Back to job postings' }} title="Job posting" />
         <LoadingMessage>Loading the posting…</LoadingMessage>
       </>
     )
@@ -51,7 +51,7 @@ export default function JobPostingPreviewPage() {
 
   return (
     <>
-      <PageHeader
+      <PageHeader back={{ to: '/employer/job-postings', label: 'Back to job postings' }}
         title={posting.title}
         documentTitle={`Preview: ${posting.title}`}
         intro="This is how job seekers will see your posting once it's open."
@@ -81,11 +81,6 @@ export default function JobPostingPreviewPage() {
 
       <JobDetails posting={posting} />
 
-      <p className="mt-12">
-        <Link to="/employer/job-postings" className={TEXT_LINK}>
-          Back to job postings
-        </Link>
-      </p>
     </>
   )
 }

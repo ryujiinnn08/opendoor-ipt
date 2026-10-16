@@ -28,3 +28,17 @@ export function providesText(names) {
   const list = shown.map(({ item, before }) => `${before}${item}`).join('')
   return `Provides ${list}${more > 0 ? ` and ${more} more` : ''}`
 }
+
+const DAY = 24 * 60 * 60 * 1000
+const daysBetween = (from, to) => Math.round((Date.parse(to) - Date.parse(from)) / DAY)
+
+/**
+ * Small labels on a job card (UI_FEEDBACK_PLAN §2), from data the job already has: "New" in its
+ * first 3 days, "Closing soon" in its last 7. `today` is Manila's date, 'YYYY-MM-DD'.
+ */
+export function jobLabels(job, today) {
+  const labels = []
+  if (job.posted_on && daysBetween(job.posted_on, today) <= 3) labels.push('New')
+  if (job.closes_on && daysBetween(today, job.closes_on) <= 7) labels.push('Closing soon')
+  return labels
+}

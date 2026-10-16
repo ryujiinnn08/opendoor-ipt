@@ -2,9 +2,12 @@
 
 namespace App\Http\Requests\Public;
 
+use App\Enums\EmploymentType;
+use App\Enums\WorkSetup;
 use App\Models\JobPosting;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 /**
  * Query parameters of the public job list. Anything a person could hand-edit into the
@@ -47,6 +50,11 @@ class JobSearchRequest extends FormRequest
             'category' => ['nullable', 'integer', 'exists:categories,id'],
             'accommodations' => ['nullable', 'array', 'max:50'],
             'accommodations.*' => ['integer', 'distinct', 'exists:accommodations,id'],
+            // LinkedIn-style filters (UI_FEEDBACK_PLAN §3.3): any of the ticked values.
+            'work_setup' => ['nullable', 'array', 'max:'.count(WorkSetup::cases())],
+            'work_setup.*' => ['string', 'distinct', Rule::enum(WorkSetup::class)],
+            'employment_type' => ['nullable', 'array', 'max:'.count(EmploymentType::cases())],
+            'employment_type.*' => ['string', 'distinct', Rule::enum(EmploymentType::class)],
             'employer' => ['nullable', 'integer'],
             'sort' => ['nullable', 'in:newest,closing,match'],
             'match' => ['nullable', 'boolean'],
@@ -56,7 +64,7 @@ class JobSearchRequest extends FormRequest
     }
 
     /**
-     * @return array{q: ?string, category: ?int, accommodations: list<int>, employer: ?int, sort: string, per_page: int, match: bool}
+     * @return array{q: ?string, category: ?int, accommodations: list<int>, work_setup: list<string>, employment_type: list<string>, employer: ?int, sort: string, per_page: int, match: bool}
      */
     public function filters(): array
     {
@@ -66,6 +74,8 @@ class JobSearchRequest extends FormRequest
             'q' => $q === '' ? null : $q,
             'category' => $this->filled('category') ? (int) $this->validated('category') : null,
             'accommodations' => array_values(array_map('intval', $this->validated('accommodations') ?? [])),
+            'work_setup' => array_values($this->validated('work_setup') ?? []),
+            'employment_type' => array_values($this->validated('employment_type') ?? []),
             'employer' => $this->filled('employer') ? (int) $this->validated('employer') : null,
             'sort' => $this->validated('sort') ?? 'newest',
             'per_page' => (int) ($this->validated('per_page') ?? self::PER_PAGE),

@@ -16,10 +16,10 @@ describe('JobDetails', () => {
     expect(screen.getAllByRole('heading', { level: 2 })[0]).toHaveTextContent('Accommodations provided')
   })
 
-  it('shows the details at a glance', () => {
+  it('shows the job details', () => {
     render(<JobDetails posting={posting} />)
 
-    const glance = screen.getByRole('region', { name: 'At a glance' })
+    const glance = screen.getByRole('region', { name: 'Job details' })
     expect(within(glance).getByText('Remote')).toBeInTheDocument()
     expect(within(glance).getByText('Full-time')).toBeInTheDocument()
     expect(within(glance).getByText('November 30, 2026')).toBeInTheDocument()
@@ -29,6 +29,20 @@ describe('JobDetails', () => {
     render(<JobDetails posting={posting} employerHref="/employers/1" />, { wrapper: MemoryRouter })
 
     expect(screen.getByRole('link', { name: 'Acme Corp.' })).toHaveAttribute('href', '/employers/1')
+  })
+
+  it('adds About the company on the public job page (UI_FEEDBACK_PLAN P4)', () => {
+    const employer = { ...publicJobFixture.employer, industry: 'Software', address: 'Makati City', description: 'We build accessible apps.' }
+    const { unmount } = render(<JobDetails posting={{ ...publicJobFixture, employer }} employerHref="/employers/1" />, { wrapper: MemoryRouter })
+
+    const about = screen.getByRole('region', { name: 'About the company' })
+    expect(within(about).getByText('We build accessible apps.')).toBeInTheDocument()
+    expect(within(about).getByRole('link', { name: /trust score and open jobs/ })).toHaveAttribute('href', '/employers/1')
+    unmount()
+
+    // The preview and the admin review have no employer page to link to.
+    render(<JobDetails posting={{ ...publicJobFixture, employer }} />)
+    expect(screen.queryByRole('region', { name: 'About the company' })).not.toBeInTheDocument()
   })
 
   it('shows the Verified badge from the public shape', () => {

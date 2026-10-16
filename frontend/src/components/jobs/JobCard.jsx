@@ -1,13 +1,13 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
+import { backState } from '../../lib/backState.js'
 import { formatDay } from '../../lib/format.js'
-import { providesParts } from '../../lib/jobText.js'
-import { listFact } from '../../lib/trustScoreText.js'
-import { EMPLOYMENT_TYPES, optionLabel, WORK_SETUPS } from '../../lib/postingOptions.js'
-import MatchBadge from './MatchBadge.jsx'
-import { toneFor } from '../../lib/tileTone.js'
-import IconTile from '../ui/IconTile.jsx'
+import { jobLabels, providesParts } from '../../lib/jobText.js'
+import { EMPLOYMENT_TYPES, manilaToday, optionLabel, WORK_SETUPS } from '../../lib/postingOptions.js'
+import TrustScoreChip from '../feedback/TrustScoreChip.jsx'
 import Tag from '../ui/Tag.jsx'
 import VerificationBadge from '../ui/VerificationBadge.jsx'
+import EmployerMark from './EmployerMark.jsx'
+import MatchBadge from './MatchBadge.jsx'
 
 /** Joins short facts with a visible middle dot that screen readers hear as a comma. */
 export function DotList({ items }) {
@@ -25,31 +25,42 @@ export function DotList({ items }) {
 }
 
 /**
- * The Figma JobCard: an icon tile, the title as heading and link, the employer with its badge,
- * a line of facts, how it meets the job seeker's needs, the accommodations as tags, and the trust
- * score with the closing date. Rendered as an <li>, so put it in a <ul>. showEmployer={false}
- * leaves out the employer line where the page is already about that employer.
+ * A job in a list (UI_FEEDBACK_PLAN §2–3, after Indeed and LinkedIn): the employer's logo, the
+ * title as heading and link, the employer with its badge, a line of facts, the "New" and
+ * "Closing soon" labels, the trust score as a badge, how it meets the job seeker's needs, and the
+ * accommodations as tags. Rendered as an <li>, so put it in a <ul>. showEmployer={false} leaves
+ * out the employer line where the page is already about that employer.
  */
 export default function JobCard({ job, to, showEmployer = true }) {
   const { employer } = job
+  const location = useLocation()
   const { shown, more } = providesParts(job.accommodations ?? [])
-  const facts = [optionLabel(EMPLOYMENT_TYPES, job.employment_type), optionLabel(WORK_SETUPS, job.work_setup), job.location].filter(Boolean)
-  const footer = [showEmployer ? listFact(employer) : null, job.closes_on ? `Apply by ${formatDay(job.closes_on)}` : null].filter(Boolean)
+  const facts = [optionLabel(WORK_SETUPS, job.work_setup), optionLabel(EMPLOYMENT_TYPES, job.employment_type), job.location].filter(Boolean)
+  const labels = jobLabels(job, manilaToday())
 
   return (
-    <li className="flex gap-4 rounded-lg border-2 border-border bg-surface p-5 transition-[border-color,box-shadow] duration-300 ease-soft hover:border-lilac hover:shadow-[0_10px_28px_rgba(36,27,58,0.08)] sm:p-6">
-      <IconTile icon="briefcase" tone={toneFor(job.id)} />
+    <li className="flex gap-4 border-b border-border bg-surface p-5 transition-colors duration-200 ease-soft first:rounded-t-lg last:rounded-b-lg last:border-b-0 hover:bg-subtle sm:p-6">
+      <EmployerMark employer={employer} />
 
       <div className="min-w-0 flex-1">
-        <h3 className="font-display text-2xl font-semibold">
-          <Link to={to} className="inline-flex min-h-11 items-center text-primary underline underline-offset-4 hover:text-primary-hover hover:no-underline">
+        {labels.length > 0 && (
+          <ul aria-label="Labels" className="mb-1 flex flex-wrap gap-2">
+            {labels.map((label) => (
+              <li key={label} className={`rounded-md px-2 py-0.5 text-xs font-bold ${label === 'New' ? 'bg-info-soft text-accent' : 'bg-warning-soft text-warning'}`}>
+                {label}
+              </li>
+            ))}
+          </ul>
+        )}
+        <h3 className="font-display text-lg font-semibold">
+          <Link to={to} state={backState(location)} className="inline-flex min-h-11 items-center text-primary underline-offset-4 hover:text-primary-hover hover:underline">
             {job.title}
           </Link>
         </h3>
 
         {showEmployer && (
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <p className="font-bold">{employer.name}</p>
+            <p>{employer.name}</p>
             {employer.type === 'company' && employer.is_verified && <VerificationBadge status="verified" />}
             {employer.type !== 'company' && <p className="text-sm text-muted">Individual employer</p>}
           </div>
@@ -60,6 +71,8 @@ export default function JobCard({ job, to, showEmployer = true }) {
             <DotList items={facts} />
           </p>
         )}
+
+        {showEmployer && <TrustScoreChip employer={employer} className="mt-3" />}
 
         {job.match && <MatchBadge match={job.match} />}
 
@@ -81,11 +94,7 @@ export default function JobCard({ job, to, showEmployer = true }) {
           </ul>
         )}
 
-        {footer.length > 0 && (
-          <p className="mt-3 text-sm text-muted">
-            <DotList items={footer} />
-          </p>
-        )}
+        {job.closes_on && <p className="mt-3 text-sm text-muted">Apply by {formatDay(job.closes_on)}</p>}
       </div>
     </li>
   )

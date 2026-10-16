@@ -56,7 +56,7 @@ export default function PasswordField({ id, label, hint, error, value, onChange,
           aria-controls={id}
           aria-pressed={visible}
           aria-label={`${visible ? 'Hide' : 'Show'} password`}
-          className={`${buttonClasses('secondary', 'sm')} min-h-13 shrink-0`}
+          className={`${buttonClasses('secondary', 'sm')} min-h-12 shrink-0`}
         >
           {visible ? 'Hide' : 'Show'}
         </button>

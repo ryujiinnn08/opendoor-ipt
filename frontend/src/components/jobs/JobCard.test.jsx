@@ -3,6 +3,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import { axe } from 'vitest-axe'
 import { publicJobFixture as job } from '../../test/publicJobFixture.js'
+import { manilaToday } from '../../lib/postingOptions.js'
 import JobCard from './JobCard.jsx'
 
 function renderCard(props) {
@@ -26,7 +27,7 @@ describe('JobCard', () => {
     expect(screen.getByRole('heading', { name: 'Junior Web Developer' })).toBeInTheDocument()
     expect(screen.getByText('Acme Corp.')).toBeInTheDocument()
     expect(screen.getByText('Verified company')).toBeInTheDocument()
-    expect(screen.getByText(wholeText('P', 'Full-time · , Remote · , Anywhere in the Philippines'))).toBeInTheDocument()
+    expect(screen.getByText(wholeText('P', 'Remote · , Full-time · , Anywhere in the Philippines'))).toBeInTheDocument()
     expect(screen.getByText(/Apply by November 30, 2026/)).toBeInTheDocument()
     expect(within(screen.getByRole('list', { name: 'Accommodations offered' })).getAllByRole('listitem').map((item) => item.textContent)).toEqual([
       'Remote work',
@@ -72,20 +73,31 @@ describe('JobCard', () => {
     expect(screen.queryByText(/of your needs/)).not.toBeInTheDocument()
   })
 
+  it('labels new jobs and jobs closing soon', () => {
+    const today = manilaToday()
+    renderCard({ job: { ...job, posted_on: today, closes_on: today } })
+    expect(within(screen.getByRole('list', { name: 'Labels' })).getAllByRole('listitem').map((item) => item.textContent)).toEqual(['New', 'Closing soon'])
+  })
+
+  it('shows the employer’s initials when there is no logo', () => {
+    const { container } = renderCard({ job: { ...job, employer: { ...job.employer, logo_url: null } } })
+    expect(container.querySelector('[aria-hidden="true"]').textContent).toBe('AC')
+  })
+
   it('says when a job lists no accommodations', () => {
     renderCard({ job: { ...job, accommodations: [] } })
 
     expect(screen.getByText('No accommodations listed.')).toBeInTheDocument()
   })
 
-  it("shows the employer's trust score as one fact", () => {
+  it("shows the employer's trust score as a badge (UI_FEEDBACK_PLAN P7)", () => {
     renderCard({ job: { ...job, employer: { ...job.employer, trust_score: 88, trust_count: 4 } } })
-    expect(screen.getByText('Trust score: 88% (4 hires)')).toBeInTheDocument()
+    expect(screen.getAllByText(wholeText('SPAN', '88% trust score · 4 ratings'))).not.toHaveLength(0)
   })
 
   it('says when there is no trust score yet, but not on the employer’s own page', () => {
     const { unmount } = renderCard({ job: { ...job, employer: { ...job.employer, trust_score: null, trust_count: null } } })
-    expect(screen.getByText('No trust score yet')).toBeInTheDocument()
+    expect(screen.getByText('Trust score: not rated yet')).toBeInTheDocument()
     unmount()
 
     renderCard({ showEmployer: false })

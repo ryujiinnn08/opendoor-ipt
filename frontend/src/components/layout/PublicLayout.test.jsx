@@ -41,8 +41,7 @@ describe('PublicLayout', () => {
     renderRoutes(routes, { path: '/', auth: { status: 'authenticated', role: 'candidate', user: { name: 'Maria', role: 'candidate' } } })
     expect(screen.getByRole('link', { name: 'Dashboard' })).toHaveAttribute('href', '/candidate/dashboard')
     expect(screen.getByRole('link', { name: 'Find jobs' })).toHaveAttribute('href', '/candidate/jobs')
-    expect(screen.getByRole('link', { name: 'Account' })).toHaveAttribute('href', '/account/display')
-    expect(screen.getByRole('button', { name: 'Log out' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Account' })).toHaveAttribute('aria-expanded', 'false')
     expect(screen.getByRole('link', { name: /Notifications/ })).toBeInTheDocument()
   })
 

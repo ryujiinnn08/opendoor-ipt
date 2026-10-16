@@ -21,7 +21,7 @@ export default function ErrorSummary({ errors, focusKey }) {
       ref={ref}
       tabIndex={-1}
       aria-labelledby="error-summary-title"
-      className="mb-8 animate-reveal rounded-2xl border-2 border-danger bg-danger-soft p-4"
+      className="mb-8 animate-reveal rounded-lg border-2 border-danger bg-danger-soft p-4"
     >
       <h2 id="error-summary-title" className="text-xl font-bold text-danger">
         There is a problem

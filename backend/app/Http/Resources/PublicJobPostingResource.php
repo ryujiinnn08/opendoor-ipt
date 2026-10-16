@@ -34,6 +34,8 @@ class PublicJobPostingResource extends JsonResource
             'work_setup' => $this->work_setup?->value,
             'interview_format' => $this->interview_format?->value,
             'closes_on' => $this->closes_on?->toDateString(),
+            // The day it went live in Manila (for "New" on job cards); the exact approval time stays private.
+            'posted_on' => $this->approved_at?->timezone(config('opendoor.postings.timezone'))->toDateString(),
             'category' => $this->category ? ['id' => $this->category->id, 'name' => $this->category->name] : null,
             'department' => $this->department ? ['name' => $this->department->name] : null,
             'employer' => [
@@ -45,6 +47,12 @@ class PublicJobPostingResource extends JsonResource
                 // The accommodation trust score (Phase 5): null, with no count, until 3 responses.
                 'trust_score' => $this->employer->shownTrustScore()['score'],
                 'trust_count' => $this->employer->shownTrustScore()['responses'],
+                // About the company, on the job page only (the list stays small).
+                ...($this->resource->withEmployerAbout ? [
+                    'industry' => $this->employer->industry,
+                    'address' => $this->employer->address,
+                    'description' => $this->employer->description,
+                ] : []),
             ],
             'accommodations' => $this->accommodationsInDisplayOrder()->map(fn (Accommodation $item) => [
                 'id' => $item->id,

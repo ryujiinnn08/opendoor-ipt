@@ -29,6 +29,7 @@ class JobPostingController extends Controller
         $job = JobPosting::publiclyVisible()->with(PublicJobPostingResource::RELATIONS)->findOrFail($id);
         $job->match = CandidateNeeds::for($request->user())?->matchFor($job, withNeeds: true);
         $job->myApplication = $this->myApplication($request->user(), $job);
+        $job->withEmployerAbout = true;
 
         return new PublicJobPostingResource($job);
     }

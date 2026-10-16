@@ -21,9 +21,3 @@ export function rowText({ delivered, partial, not_delivered: notDelivered, rated
   if (notDelivered > 0) parts.push(`${notDelivered} not delivered`)
   return parts.join(', ')
 }
-
-/** The one fact on job lists: "Trust score: 88% (4 hires)" or "No trust score yet". */
-export function listFact(employer) {
-  if (employer?.trust_score == null) return 'No trust score yet'
-  return `Trust score: ${employer.trust_score}% (${employer.trust_count} ${employer.trust_count === 1 ? 'hire' : 'hires'})`
-}

@@ -23,14 +23,22 @@ function setup(path, options) {
 
 describe('useJobSearchParams', () => {
   it('reads the filters from the address', () => {
-    const { current } = setup('/jobs?q=web&category=3&accommodations=1,2&sort=closing&page=2')
-    expect(current.filters).toEqual({ q: 'web', category: '3', accommodations: [1, 2], sort: 'closing', page: 2 })
-    expect(current.activeFilterCount).toBe(3)
+    const { current } = setup('/jobs?q=web&category=3&accommodations=1,2&work_setup=remote,hybrid&type=full_time&sort=closing&page=2')
+    expect(current.filters).toEqual({
+      q: 'web',
+      category: '3',
+      accommodations: [1, 2],
+      workSetup: ['hybrid', 'remote'],
+      employmentType: ['full_time'],
+      sort: 'closing',
+      page: 2,
+    })
+    expect(current.activeFilterCount).toBe(6)
   })
 
   it('ignores values it does not understand', () => {
-    const { current } = setup('/jobs?sort=price&page=abc&accommodations=1,x&category=it')
-    expect(current.filters).toEqual({ q: '', category: '', accommodations: [1], sort: 'newest', page: 1 })
+    const { current } = setup('/jobs?sort=price&page=abc&accommodations=1,x&category=it&work_setup=moon,remote,remote&type=gig')
+    expect(current.filters).toEqual({ q: '', category: '', accommodations: [1], workSetup: ['remote'], employmentType: [], sort: 'newest', page: 1 })
   })
 
   it('ignores numbers no list could have', () => {

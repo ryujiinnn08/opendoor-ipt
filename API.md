@@ -134,7 +134,7 @@ For a **logged-in job seeker with needs**, two more keys:
 - `match`: how the job meets their needs. `{ "needs_total": 5, "needs_met": 1, "missing": ["Accessible restroom", "…"] }`; the single-job endpoint adds `needs`, each `{ "id", "name", "group_name", "provided": true|false, "note" }`. A need counts as met only when the posting lists that accommodation.
 - `my_application` (single job only, when they applied): `{ "id": 1, "status": "pending", "status_label": "Pending", "applied_at": "…" }`.
 
-`employer.trust_score` (5B) is the accommodation trust score as a whole percent and `trust_count` the number of hires who rated; both `null` until 3 have (no count before then).
+`employer.trust_score` (5B) is the accommodation trust score as a whole percent and `trust_count` the number of hires who rated; both `null` until 3 have (no count before then). `posted_on` is the day the job went live (Manila date). `GET /api/job-postings/{id}` also adds `employer.industry`, `employer.address` and `employer.description` for About the company.
 
 Values: `employment_type` `full_time|part_time|contract|internship`; `work_setup` `on_site|hybrid|remote`; `interview_format` `online|on_site|online_or_on_site`.
 
@@ -249,6 +249,8 @@ A suspended account (`is_active = false`) gets **403** `"This account has been s
 | `q` | ≤100 characters, ≤8 words | Every word must appear in the title, description, location or employer name |
 | `category` | category id | One category |
 | `accommodations[]` | ≤50 ids | The job must provide **every** one |
+| `work_setup[]` | `on_site`, `hybrid`, `remote` | The job has **any** of them |
+| `employment_type[]` | `full_time`, `part_time`, `contract`, `internship` | The job has **any** of them |
 | `employer` | id | One employer's open jobs |
 | `sort` | `newest` (default), `closing`, `match` | `match` needs a job seeker with needs; otherwise it falls back to `newest` |
 | `match` | `1`/`0` | Job seekers with needs: only jobs meeting at least one need ("Matches my needs"); ignored for anyone else |

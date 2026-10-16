@@ -27,11 +27,12 @@ describe('PortalLayout', () => {
     expect(within(main).getByRole('link', { name: 'Dashboard' })).toHaveAttribute('aria-current', 'page')
     expect(main).toHaveTextContent('Employers')
     expect(main).toHaveTextContent('Postings')
+    expect(within(main).getByRole('link', { name: 'Data' })).toHaveAttribute('href', '/admin/categories')
     const account = screen.getByRole('navigation', { name: 'Account' })
-    expect(within(account).getByRole('link', { name: 'Data' })).toHaveAttribute('href', '/admin/categories')
-    // The initials are decoration; the link is named by its word.
-    expect(within(account).getByRole('link', { name: 'Account' })).toHaveAttribute('href', '/account/display')
-    expect(within(account).getByText('OA')).toHaveAttribute('aria-hidden', 'true')
+    // The initials are decoration; the menu button is named by its word.
+    const menu = within(account).getByRole('button', { name: 'Account' })
+    expect(menu).toHaveAttribute('aria-expanded', 'false')
+    expect(within(menu).getByText('OA')).toHaveAttribute('aria-hidden', 'true')
     // Administrators have their queues instead of notifications (PHASE_6 §4.4).
     expect(within(account).queryByRole('link', { name: /Notifications/ })).not.toBeInTheDocument()
   })
@@ -45,6 +46,7 @@ describe('PortalLayout', () => {
       announce,
     })
 
+    await userEvent.click(screen.getByRole('button', { name: 'Account' }))
     await userEvent.click(screen.getByRole('button', { name: 'Log out' }))
 
     expect(await screen.findByText('Home page')).toBeInTheDocument()
@@ -65,9 +67,29 @@ describe('PortalLayout', () => {
       auth: { status: 'authenticated', role: 'admin', user: { name: 'OpenDoor Admin', role: 'admin' }, logout },
     }))
 
+    await userEvent.click(screen.getByRole('button', { name: 'Account' }))
     await userEvent.click(screen.getByRole('button', { name: 'Log out' }))
 
     await vi.waitFor(() => expect(logout).toHaveBeenCalled())
     expect(whereWhenLoggedOut).toBe('/')
+  })
+
+  it('opens the account menu in one click and closes it with Escape (UI_FEEDBACK_PLAN §3.2)', async () => {
+    const user = userEvent.setup()
+    renderRoutes(routes, {
+      path: '/admin/dashboard',
+      auth: { status: 'authenticated', role: 'admin', user: { name: 'OpenDoor Admin', email: 'admin@example.com', role: 'admin' } },
+    })
+
+    const menu = screen.getByRole('button', { name: 'Account' })
+    await user.click(menu)
+    expect(menu).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByText('admin@example.com')).toBeVisible()
+    expect(screen.getByRole('link', { name: 'Display settings' })).toHaveAttribute('href', '/account/display')
+    expect(screen.getByRole('link', { name: 'Change password' })).toHaveAttribute('href', '/account/password')
+
+    await user.keyboard('{Escape}')
+    expect(menu).toHaveAttribute('aria-expanded', 'false')
+    expect(menu).toHaveFocus()
   })
 })

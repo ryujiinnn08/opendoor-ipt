@@ -74,7 +74,7 @@ export default function AddAdminPage() {
     const { user, password } = created
     return (
       <div className="max-w-2xl">
-        <PageHeader title="Add an administrator" />
+        <PageHeader back={{ to: '/admin/users', label: 'Back to users' }} title="Add an administrator" />
         <section aria-labelledby="created-heading" className="mt-8 rounded-lg border-2 border-success bg-surface p-5 sm:p-6">
           <h2 ref={resultHeading} id="created-heading" tabIndex={-1} className="text-2xl font-bold outline-none">
             {user.name} is now an administrator
@@ -105,7 +105,7 @@ export default function AddAdminPage() {
 
   return (
     <div className="max-w-2xl">
-      <PageHeader
+      <PageHeader back={{ to: '/admin/users', label: 'Back to users' }}
         title="Add an administrator"
         intro="Administrators verify companies, approve postings and manage accounts. OpenDoor makes a temporary password for them, which you give them yourself."
       />

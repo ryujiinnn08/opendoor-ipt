@@ -196,7 +196,7 @@ export default function JobPostingFormPage() {
   if (loadError) {
     return (
       <div className="max-w-3xl">
-        <PageHeader title={heading} />
+        <PageHeader back={{ to: '/employer/job-postings', label: 'Back to job postings' }} title={heading} />
         <Notice tone="error" className="mt-6">
           <p>{loadError}</p>
           <Link to="/employer/job-postings" className={TEXT_LINK}>
@@ -210,7 +210,7 @@ export default function JobPostingFormPage() {
   if (!values) {
     return (
       <div className="max-w-3xl">
-        <PageHeader title={heading} />
+        <PageHeader back={{ to: '/employer/job-postings', label: 'Back to job postings' }} title={heading} />
         <LoadingMessage>Loading the form…</LoadingMessage>
       </div>
     )
@@ -220,7 +220,7 @@ export default function JobPostingFormPage() {
 
   return (
     <div className="max-w-3xl">
-      <PageHeader
+      <PageHeader back={{ to: '/employer/job-postings', label: 'Back to job postings' }}
         title={heading}
         intro={
           status === 'draft'

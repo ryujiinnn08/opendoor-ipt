@@ -16,6 +16,8 @@
   --od-brand-primary-dark: #47306f;
 
   --od-surface-page: #ffffff;
+  /* The page behind the white cards (UI_FEEDBACK_PLAN §3.1): a quiet violet-grey. */
+  --od-surface-canvas: #f6f5f9;
   --od-surface-subtle: #f5f1fc;
   --od-surface-tint: #ebe3f7;
   --od-surface-current: #dccff1;
@@ -51,6 +53,7 @@
   --od-brand-primary: #3b2466;
   --od-brand-primary-dark: #2a1850;
   --od-surface-subtle: #ffffff;
+  --od-surface-canvas: #ffffff;
   --od-border-subtle: #241b3a;
   --od-border-input: #000000;
   --od-border-focus: #000000;
@@ -70,6 +73,7 @@
   :root[data-contrast='high'] {
     --od-surface-page: #ffffff;
     --od-surface-subtle: #ffffff;
+    --od-surface-canvas: #ffffff;
     --od-text-default: #000000;
     --od-text-muted: #000000;
     --od-border-subtle: #000000;

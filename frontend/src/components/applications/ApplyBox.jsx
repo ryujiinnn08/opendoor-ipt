@@ -4,7 +4,7 @@ import { formatDate } from '../../lib/format.js'
 import { PRIMARY_LINK, TEXT_LINK } from '../ui/buttonLinkStyles.js'
 
 /**
- * The Apply area on a job page (plan PHASE_4 §4.1), under "How this job fits your needs".
+ * The Apply area on a job page (plan PHASE_4 §4.1), first in its side column (UI_FEEDBACK_PLAN §3.4).
  * Guests log in and come back to the Apply page; a job seeker who applied is sent to their
  * application; employers and admins are told who applies.
  */
@@ -14,7 +14,7 @@ export default function ApplyBox({ job }) {
   const applied = job.my_application
 
   return (
-    <section aria-labelledby="apply-heading">
+    <section aria-labelledby="apply-heading" className="rounded-lg border border-border bg-surface p-5 sm:p-6">
       <h2 id="apply-heading" className="text-2xl font-bold">
         Apply
       </h2>

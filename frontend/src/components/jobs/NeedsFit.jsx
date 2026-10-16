@@ -9,7 +9,7 @@ import Icon from '../ui/Icon.jsx'
  */
 export default function NeedsFit({ match }) {
   return (
-    <section aria-labelledby="needs-fit-heading" className="border-l-4 border-text pl-5">
+    <section aria-labelledby="needs-fit-heading" className="rounded-lg border border-border border-l-4 border-l-text bg-surface p-5 sm:p-6">
       <h2 id="needs-fit-heading" className="text-2xl font-bold">
         How this job fits your needs
       </h2>

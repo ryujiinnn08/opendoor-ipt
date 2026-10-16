@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { pageItems } from '../../lib/pageItems.js'
 
-const ITEM = 'inline-flex min-h-11 min-w-11 items-center justify-center rounded-full px-3 font-bold'
+const ITEM = 'inline-flex min-h-11 min-w-11 items-center justify-center rounded-md px-3 font-bold'
 const LINK = `${ITEM} text-primary underline underline-offset-4 hover:bg-primary-soft hover:no-underline`
 
 /**

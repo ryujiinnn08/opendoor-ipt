@@ -2,7 +2,7 @@ import { buttonClasses, TEXT_LINK } from './buttonLinkStyles.js'
 import Icon from './Icon.jsx'
 
 /**
- * The design's pill button: variant primary, secondary, danger, danger-outline or link; size md
+ * The button: variant primary, secondary, danger, danger-outline or link; size md
  * or sm; an optional `icon` before the label. `arrow` adds the orange arrow pill (decoration:
  * hidden from screen readers and in Quiet mode), for the one main call to action on a page.
  *

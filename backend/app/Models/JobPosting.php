@@ -39,6 +39,9 @@ class JobPosting extends Model
      */
     public ?array $myApplication = null;
 
+    /** Whether the public job page shows "About the company" (UI_FEEDBACK_PLAN §3.4). Not a column. */
+    public bool $withEmployerAbout = false;
+
     /**
      * The status, employer, department, author and approval dates are set by
      * JobPostingWorkflow, never from request input.

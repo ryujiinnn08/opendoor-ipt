@@ -16,7 +16,7 @@ export default function Notice({ tone = 'info', title, children, className = '' 
   const { box, ink, icon } = TONES[tone] ?? TONES.info
 
   return (
-    <div className={`flex animate-reveal gap-3 rounded-2xl border-2 p-4 text-text ${box} ${className}`}>
+    <div className={`flex animate-reveal gap-3 rounded-lg border-2 p-4 text-text ${box} ${className}`}>
       <Icon name={icon} className={`mt-0.5 size-6 ${ink}`} />
       <div className="min-w-0 max-w-prose">
         {title && <p className={`font-bold ${ink}`}>{title}</p>}

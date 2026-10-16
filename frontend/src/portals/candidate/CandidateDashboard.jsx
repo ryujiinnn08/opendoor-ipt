@@ -99,7 +99,7 @@ export default function CandidateDashboard() {
               </h2>
               {dashboard.top_matches.length > 0 ? (
                 <>
-                  <ul className="mt-4">
+                  <ul className="mt-4 overflow-hidden rounded-lg border border-border bg-surface">
                     {dashboard.top_matches.map((job) => (
                       <JobCard key={job.id} job={job} to={`/candidate/jobs/${job.id}`} />
                     ))}

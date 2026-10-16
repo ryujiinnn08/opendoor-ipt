@@ -4,7 +4,7 @@ import { fieldErrorsFrom, generalErrorFrom } from '../../api/client.js'
 import { searchJobs } from '../../api/jobs.js'
 import { getAccommodationGroups, getCategories } from '../../api/masterData.js'
 import { useAuth } from '../../auth/authContext.js'
-import AccommodationFilterPanel from '../../components/jobs/AccommodationFilterPanel.jsx'
+import FilterChips from '../../components/jobs/FilterChips.jsx'
 import JobCard from '../../components/jobs/JobCard.jsx'
 import Button from '../../components/ui/Button.jsx'
 import EmptyState from '../../components/ui/EmptyState.jsx'
@@ -13,12 +13,12 @@ import LoadingMessage from '../../components/ui/LoadingMessage.jsx'
 import Notice from '../../components/ui/Notice.jsx'
 import PageHeader from '../../components/ui/PageHeader.jsx'
 import Pagination from '../../components/ui/Pagination.jsx'
-import SelectField from '../../components/ui/SelectField.jsx'
 import { TEXT_LINK } from '../../components/ui/buttonLinkStyles.js'
 import { useAnnounce } from '../../components/ui/announcerContext.js'
 import useDebouncedValue from '../../hooks/useDebouncedValue.js'
 import useJobSearchParams from '../../hooks/useJobSearchParams.js'
 import { jobCountText } from '../../lib/jobText.js'
+import { EMPLOYMENT_TYPES, WORK_SETUPS } from '../../lib/postingOptions.js'
 
 const STALE_FILTERS = "Some filters in this address don't exist any more."
 
@@ -29,10 +29,10 @@ const SORTS = [
 const MATCHING_SORTS = [{ value: 'match', label: 'Best match' }, ...SORTS]
 const PUBLIC_INTRO = 'Find open jobs and see which accommodations each one provides.'
 const NO_MATCHES = 'No open jobs meet your needs yet.'
-const SHOW_OPTIONS = [
-  ['matches', 'Matches my needs'],
-  ['all', 'All jobs'],
-]
+
+function labelsFor(options, values) {
+  return options.filter((option) => values.includes(option.value)).map((option) => option.label)
+}
 
 /** Every filter except the page, to tell a page change from a filter change. */
 function withoutPage({ page: _page, ...rest }) {
@@ -170,27 +170,6 @@ export default function BrowseJobsPage({ basePath = '/jobs', title = 'Browse job
     </Button>
   )
 
-  const showSwitch = matchMode && (
-    <fieldset className="mt-6">
-      <legend className="font-bold">Show</legend>
-      <div className="mt-1 flex flex-wrap gap-x-6">
-        {SHOW_OPTIONS.map(([value, label]) => (
-          <label key={value} className="inline-flex min-h-11 items-center gap-3 font-bold">
-            <input
-              type="radio"
-              name="show"
-              value={value}
-              checked={filters.show === value}
-              onChange={() => setFilters({ show: value })}
-              className="size-6 accent-primary"
-            />
-            {label}
-          </label>
-        ))}
-      </div>
-    </fieldset>
-  )
-
   // Find jobs keeps this heading while the needs load, so a focused <h1> isn't replaced.
   if (waiting) {
     return (
@@ -212,7 +191,16 @@ export default function BrowseJobsPage({ basePath = '/jobs', title = 'Browse job
 
   // The empty-list text describes the list on screen, not a newer one that's still loading.
   const shown = results?.filters ?? filters
-  const shownSomethingOn = Boolean(shown.q.trim()) || shown.category !== '' || shown.accommodations.length > 0
+  const shownSomethingOn =
+    Boolean(shown.q.trim()) || shown.category !== '' || shown.accommodations.length > 0 || shown.workSetup.length > 0 || shown.employmentType.length > 0
+  // Every filter on the list shown, by name (UI_FEEDBACK_PLAN P5), not "4 filters on".
+  const accommodationNames = new Map(groups.flatMap((group) => group.accommodations.map((item) => [item.id, item.name])))
+  const activeNames = [
+    ...labelsFor(WORK_SETUPS, shown.workSetup),
+    ...labelsFor(EMPLOYMENT_TYPES, shown.employmentType),
+    categories.find((item) => String(item.id) === shown.category)?.name,
+    ...shown.accommodations.map((id) => accommodationNames.get(id)),
+  ].filter(Boolean)
   function showAllJobs() {
     // The Show all jobs button goes away with the empty list; start at the results heading.
     resultsHeading.current?.focus()
@@ -258,27 +246,20 @@ export default function BrowseJobsPage({ basePath = '/jobs', title = 'Browse job
         <Button type="submit">Search</Button>
       </form>
 
-      {showSwitch}
+      <FilterChips
+        filters={filters}
+        onChange={setFilters}
+        onClear={clearAndKeepPlace}
+        categories={categories}
+        groups={groups}
+        sorts={matchMode ? MATCHING_SORTS : SORTS}
+        matchMode={matchMode}
+        activeCount={activeFilterCount}
+        listsError={listsError}
+      />
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[18rem_minmax(0,1fr)]">
-        <AccommodationFilterPanel
-          filters={filters}
-          categories={categories}
-          groups={groups}
-          onChange={setFilters}
-          onClear={clearAndKeepPlace}
-          activeCount={activeFilterCount}
-          listsError={listsError}
-        />
-
+      <div className="mt-6">
         <section aria-labelledby="job-results-heading" aria-busy={Boolean(results) && results.filters !== filters && loadError?.filters !== filters} className="min-w-0">
-          <SelectField
-            id="job-sort"
-            label="Sort by"
-            options={matchMode ? MATCHING_SORTS : SORTS}
-            value={filters.sort}
-            onChange={(event) => setFilters({ sort: event.target.value })}
-          />
 
           {loadError?.general && (
             <Notice tone="error" className="mb-6">
@@ -311,9 +292,10 @@ export default function BrowseJobsPage({ basePath = '/jobs', title = 'Browse job
               >
                 {jobCountText(results.meta.total)}
               </h2>
+              {activeNames.length > 0 && <p className="mt-1 text-sm text-muted">Showing: {activeNames.join(', ')}</p>}
 
               {results.jobs.length > 0 ? (
-                <ul className="mt-4">
+                <ul className="mt-4 overflow-hidden rounded-lg border border-border bg-surface">
                   {results.jobs.map((job) => (
                     <JobCard key={job.id} job={job} to={`${basePath}/${job.id}`} />
                   ))}

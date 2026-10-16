@@ -1,8 +1,8 @@
-// The Figma Field, Checkbox and Radio components (UI_REVAMP_PLAN §4.2): 52 px fields with a
-// 12 px radius and a 3:1 border; the error state is a red border plus the message above it.
+// The Figma Field, Checkbox and Radio components (UI_REVAMP_PLAN §4.2): 48 px fields with an
+// 8 px radius and a 3:1 border; the error state is a red border plus the message above it.
 export function inputClasses(hasError, extra = '') {
   return [
-    'block min-h-13 w-full rounded-md border-2 bg-surface px-4 py-3 text-text placeholder:text-muted',
+    'block min-h-12 w-full rounded-md border-2 bg-surface px-4 py-3 text-text placeholder:text-muted',
     hasError ? 'border-danger' : 'border-input',
     extra,
   ].join(' ')

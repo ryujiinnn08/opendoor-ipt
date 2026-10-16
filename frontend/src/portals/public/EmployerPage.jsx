@@ -112,7 +112,7 @@ export default function EmployerPage({ basePath = '/jobs' }) {
 
   return (
     <>
-      <PageHeader title={employer?.name ?? (loadError === NOT_FOUND ? 'Employer not found' : 'Employer')} />
+      <PageHeader back={{ to: basePath, label: 'Back to jobs' }} title={employer?.name ?? (loadError === NOT_FOUND ? 'Employer not found' : 'Employer')} />
 
       {loadError && (
         <Notice tone={loadError === NOT_FOUND ? 'info' : 'error'} className="mt-6">
@@ -173,7 +173,7 @@ export default function EmployerPage({ basePath = '/jobs' }) {
                   {results.meta.total > 0 ? `Open jobs (${results.meta.total})` : 'No open jobs right now.'}
                 </h2>
                 {results.jobs.length > 0 && (
-                  <ul className="mt-4">
+                  <ul className="mt-4 overflow-hidden rounded-lg border border-border bg-surface">
                     {results.jobs.map((job) => (
                       <JobCard key={job.id} job={job} to={`${basePath}/${job.id}`} showEmployer={false} />
                     ))}

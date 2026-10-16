@@ -99,7 +99,7 @@ function PostingReview({ id }) {
   if (loadError) {
     return (
       <>
-        <PageHeader title="Review posting" />
+        <PageHeader back={{ to: '/admin/job-postings', label: 'Back to posting approvals' }} title="Review posting" />
         <Notice tone="error" className="mt-6">
           <p>{loadError}</p>
           <Link to="/admin/job-postings" className={TEXT_LINK}>
@@ -113,7 +113,7 @@ function PostingReview({ id }) {
   if (!posting) {
     return (
       <>
-        <PageHeader title="Review posting" />
+        <PageHeader back={{ to: '/admin/job-postings', label: 'Back to posting approvals' }} title="Review posting" />
         <LoadingMessage>Loading the posting…</LoadingMessage>
       </>
     )
@@ -125,7 +125,7 @@ function PostingReview({ id }) {
 
   return (
     <>
-      <PageHeader
+      <PageHeader back={{ to: '/admin/job-postings', label: 'Back to posting approvals' }}
         title={posting.title}
         documentTitle={`Review: ${posting.title}`}
         intro={
@@ -202,11 +202,6 @@ function PostingReview({ id }) {
         </section>
       )}
 
-      <p className="mt-12">
-        <Link to="/admin/job-postings" className={TEXT_LINK}>
-          Back to posting approvals
-        </Link>
-      </p>
 
       <ReasonDialog
         open={Boolean(deciding?.open && deciding.decision === 'remove')}

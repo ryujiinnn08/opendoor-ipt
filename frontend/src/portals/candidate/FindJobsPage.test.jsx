@@ -45,8 +45,8 @@ describe('FindJobsPage', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Find jobs' })).toBeInTheDocument()
     expect(screen.getByText('Jobs ranked by how many of your 2 needs they meet.')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Change my needs' })).toHaveAttribute('href', '/candidate/needs')
-    expect(screen.getByRole('radio', { name: 'Matches my needs' })).toBeChecked()
-    expect(screen.getByLabelText('Sort by')).toHaveValue('match')
+    expect(screen.getByRole('button', { name: 'Matches my needs' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'Sort: Best match' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Junior Web Developer' })).toHaveAttribute('href', '/candidate/jobs/2')
   })
 
@@ -54,21 +54,22 @@ describe('FindJobsPage', () => {
     const { router } = renderPage()
     await screen.findByText('Meets 1 of 2 of your needs')
 
-    await userEvent.click(screen.getByRole('radio', { name: 'All jobs' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Matches my needs' }))
 
     expect(router.state.location.search).toBe('?show=all')
     await waitFor(() => expect(searchJobs).toHaveBeenLastCalledWith(expect.objectContaining({ match: false, show: 'all' })))
-    expect(screen.getByRole('radio', { name: 'All jobs' })).toHaveFocus()
+    expect(screen.getByRole('button', { name: 'Matches my needs' })).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.getByRole('button', { name: 'Matches my needs' })).toHaveFocus()
   })
 
   it('restores Matches my needs with Back', async () => {
     const { router } = renderPage()
     await screen.findByText('Meets 1 of 2 of your needs')
-    await userEvent.click(screen.getByRole('radio', { name: 'All jobs' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Matches my needs' }))
 
     await act(() => router.navigate(-1))
 
-    expect(screen.getByRole('radio', { name: 'Matches my needs' })).toBeChecked()
+    expect(screen.getByRole('button', { name: 'Matches my needs' })).toHaveAttribute('aria-pressed', 'true')
     await waitFor(() => expect(searchJobs).toHaveBeenLastCalledWith(expect.objectContaining({ match: true, show: 'matches' })))
   })
 
@@ -125,7 +126,7 @@ describe('FindJobsPage', () => {
     const { container } = renderPage()
     await screen.findByText('Meets 1 of 2 of your needs')
 
-    expect(within(container).getByRole('group', { name: 'Show' })).toBeInTheDocument()
+    expect(within(container).getByRole('button', { name: 'Matches my needs' })).toBeInTheDocument()
     expect(await axe(container)).toHaveNoViolations()
   })
 })

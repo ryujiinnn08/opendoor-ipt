@@ -7,8 +7,8 @@ import { Link } from 'react-router-dom'
  */
 export default function BrandLink({ to = '/' }) {
   return (
-    <Link to={to} className="inline-flex min-h-11 shrink-0 items-center gap-2.5 font-display text-[1.625rem] font-semibold tracking-tight text-accent">
-      <img src="/opendoor-logo.svg" alt="" width="32" height="40" className="h-10 w-8" />
+    <Link to={to} className="inline-flex min-h-11 shrink-0 items-center gap-2 font-display text-[1.375rem] font-semibold tracking-tight text-accent">
+      <img src="/opendoor-logo.svg" alt="" width="28" height="36" className="h-9 w-7" />
       OpenDoor
     </Link>
   )

@@ -114,9 +114,23 @@ class PublicJobSearchTest extends TestCase
         $this->assertCount(3, $this->getJson("/api/job-postings?accommodations[]={$ramp->id}")->json('data'));
     }
 
+    public function test_work_setup_and_employment_type_filters_keep_any_ticked_value(): void
+    {
+        $remote = JobPosting::factory()->open()->create(['work_setup' => 'remote', 'employment_type' => 'full_time']);
+        $hybridIntern = JobPosting::factory()->open()->create(['work_setup' => 'hybrid', 'employment_type' => 'internship']);
+        $onSite = JobPosting::factory()->open()->create(['work_setup' => 'on_site', 'employment_type' => 'part_time']);
+
+        $ids = fn (string $query) => collect($this->getJson("/api/job-postings?{$query}")->assertOk()->json('data.*.id'))->sort()->values()->all();
+        $this->assertSame([$remote->id], $ids('work_setup[]=remote'));
+        $this->assertSame(collect([$remote->id, $hybridIntern->id])->sort()->values()->all(), $ids('work_setup[]=remote&work_setup[]=hybrid'));
+        $this->assertSame([$onSite->id], $ids('employment_type[]=part_time'));
+        $this->assertSame([$hybridIntern->id], $ids('work_setup[]=hybrid&work_setup[]=on_site&employment_type[]=internship'));
+        $this->assertSame([], $ids('work_setup[]=remote&employment_type[]=contract'));
+    }
+
     public function test_crafted_parameters_are_refused(): void
     {
-        foreach (['category=999999', 'accommodations[]=abc', 'accommodations[]=999999', 'sort=price', 'per_page=50', 'page=0', 'employer=abc'] as $query) {
+        foreach (['work_setup[]=moon', 'work_setup=remote', 'employment_type[]=gig', 'work_setup[]=remote&work_setup[]=remote', 'category=999999', 'accommodations[]=abc', 'accommodations[]=999999', 'sort=price', 'per_page=50', 'page=0', 'employer=abc'] as $query) {
             $this->getJson("/api/job-postings?{$query}")->assertUnprocessable();
         }
     }
@@ -134,6 +148,11 @@ class PublicJobSearchTest extends TestCase
         $this->assertSame(['id', 'type', 'name', 'logo_url', 'is_verified', 'trust_score', 'trust_count'], array_keys($item['employer']));
         $this->assertSame(['id', 'name', 'group_name', 'note'], array_keys($item['accommodations'][0]));
         $this->assertSame(['name' => 'General'], $item['department']);
+        $this->assertSame($posting->approved_at->timezone('Asia/Manila')->toDateString(), $item['posted_on']);
+
+        // The job page adds About the company; the list leaves it out.
+        $employer = $this->getJson("/api/job-postings/{$posting->id}")->json('data.employer');
+        $this->assertSame(['id', 'type', 'name', 'logo_url', 'is_verified', 'trust_score', 'trust_count', 'industry', 'address', 'description'], array_keys($employer));
     }
 
     public function test_job_details_show_open_postings_and_hide_the_rest(): void

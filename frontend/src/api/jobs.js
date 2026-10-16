@@ -2,16 +2,19 @@ import client from './client.js'
 
 /**
  * Open jobs, 12 per page unless perPage is smaller. Empty filters are left out of the request;
- * accommodations is sent as accommodations[] (every one must be provided). `match: true` keeps
+ * accommodations is sent as accommodations[] (every one must be provided); workSetup and
+ * employmentType as work_setup[] and employment_type[] (any one of them). `match: true` keeps
  * jobs meeting at least one of the logged-in job seeker's needs (the server ignores it for anyone
  * else). Returns { jobs, meta: { current_page, last_page, per_page, total } }; for a job seeker
  * with needs every job also has `match`.
  */
-export async function searchJobs({ q, category, accommodations = [], employer, sort, page, perPage, match } = {}) {
+export async function searchJobs({ q, category, accommodations = [], workSetup = [], employmentType = [], employer, sort, page, perPage, match } = {}) {
   const params = {
     q: q?.trim() || undefined,
     category: category || undefined,
     accommodations: accommodations.length > 0 ? accommodations : undefined,
+    work_setup: workSetup.length > 0 ? workSetup : undefined,
+    employment_type: employmentType.length > 0 ? employmentType : undefined,
     employer: employer || undefined,
     sort: sort || undefined,
     page: page || undefined,

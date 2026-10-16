@@ -99,7 +99,7 @@ export default function ApplyPage() {
 
   return (
     <>
-      <PageHeader title={title} intro={job ? job.employer.name : undefined} />
+      <PageHeader back={{ to: `/candidate/jobs/${id}`, label: 'Back to the job' }} title={title} intro={job ? job.employer.name : undefined} />
 
       {loadError && (
         <Notice tone={loadError === NOT_TAKING ? 'info' : 'error'} className="mt-6">

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { basedOnText, listFact, rowText } from './trustScoreText.js'
+import { basedOnText, rowText } from './trustScoreText.js'
 
 describe('trustScoreText', () => {
   it('writes each breakdown row as words, leaving out zeros', () => {
@@ -9,10 +9,7 @@ describe('trustScoreText', () => {
     expect(rowText({ delivered: 0, partial: 0, not_delivered: 3, rated: 3 })).toBe('0 of 3 delivered, 3 not delivered')
   })
 
-  it('writes the count and the list fact', () => {
+  it('writes the count', () => {
     expect(basedOnText(5)).toBe(', based on 5 hires')
-    expect(listFact({ trust_score: 88, trust_count: 4 })).toBe('Trust score: 88% (4 hires)')
-    expect(listFact({ trust_score: null, trust_count: null })).toBe('No trust score yet')
-    expect(listFact({})).toBe('No trust score yet')
   })
 })

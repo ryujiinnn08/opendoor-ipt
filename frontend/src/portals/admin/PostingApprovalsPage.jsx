@@ -7,6 +7,7 @@ import Button from '../../components/ui/Button.jsx'
 import FilterTabs from '../../components/ui/FilterTabs.jsx'
 import LoadingMessage from '../../components/ui/LoadingMessage.jsx'
 import Notice from '../../components/ui/Notice.jsx'
+import { backState } from '../../lib/backState.js'
 import PageHeader from '../../components/ui/PageHeader.jsx'
 import StatusBadge from '../../components/ui/StatusBadge.jsx'
 import VerificationBadge from '../../components/ui/VerificationBadge.jsx'
@@ -110,6 +111,7 @@ export default function PostingApprovalsPage() {
                 <h3 className="text-xl font-bold">
                   <Link
                     to={`/admin/job-postings/${posting.id}`}
+                    state={backState(location)}
                     className="inline-flex min-h-11 items-center text-primary underline underline-offset-4 hover:no-underline"
                   >
                     {posting.title}

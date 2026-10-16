@@ -5,7 +5,7 @@ import { useAuth } from '../../auth/authContext.js'
 import { dashboardFor } from '../../auth/redirects.js'
 import { useAnnounce } from '../ui/announcerContext.js'
 import EmailVerificationBanner from '../verification/EmailVerificationBanner.jsx'
-import { ACCOUNT_ITEM, portalFor } from './portalMenus.js'
+import { accountMenuFor, portalFor } from './portalMenus.js'
 import SiteFooter from './SiteFooter.jsx'
 import SiteHeader from './SiteHeader.jsx'
 import UtilityBar from './UtilityBar.jsx'
@@ -53,10 +53,16 @@ export default function PortalLayout() {
   }
 
   const right = [
-    ...portal.right,
     ...(notified ? [{ to: '/notifications', label: 'Notifications', icon: 'bell', count: unread }] : []),
-    { ...ACCOUNT_ITEM, avatar: initialsOf(user.name) },
-    { label: 'Log out', icon: 'log-out', onClick: handleLogout, loading: loggingOut, loadingText: 'Logging out…' },
+    {
+      menu: true,
+      label: 'Account',
+      avatar: initialsOf(user.name),
+      name: user.name,
+      email: user.email,
+      items: accountMenuFor(user),
+      logout: { label: 'Log out', icon: 'log-out', onClick: handleLogout, loading: loggingOut, loadingText: 'Logging out…' },
+    },
   ]
 
   return (
@@ -78,7 +84,7 @@ export default function PortalLayout() {
   )
 }
 
-/** "Maria Santos" → "MS", for the round badge beside Account (decoration). */
+/** "Maria Santos" → "MS", for the round badge on the account menu (decoration). */
 function initialsOf(name = '') {
   const words = name.trim().split(/\s+/).filter(Boolean)
   return [words[0], words.length > 1 ? words.at(-1) : null]

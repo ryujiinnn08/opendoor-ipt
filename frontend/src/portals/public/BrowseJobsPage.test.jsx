@@ -43,7 +43,7 @@ describe('BrowseJobsPage', () => {
     renderRoutes(routes, { path: '/jobs?q=web&category=4' })
 
     expect(await screen.findByRole('heading', { level: 2, name: '15 jobs' })).toBeInTheDocument()
-    expect(searchJobs).toHaveBeenCalledWith({ q: 'web', category: '4', accommodations: [], sort: 'newest', page: 1 })
+    expect(searchJobs).toHaveBeenCalledWith({ q: 'web', category: '4', accommodations: [], workSetup: [], employmentType: [], sort: 'newest', page: 1 })
     expect(screen.getByRole('link', { name: 'Junior Web Developer' })).toHaveAttribute('href', '/jobs/2')
     expect(screen.getByRole('searchbox', { name: 'Search jobs' })).toHaveValue('web')
   })
@@ -72,11 +72,14 @@ describe('BrowseJobsPage', () => {
     expect(announce).not.toHaveBeenCalled()
 
     searchJobs.mockResolvedValue(results(12))
-    await userEvent.selectOptions(await screen.findByLabelText('Category'), 'Healthcare')
+    await userEvent.click(screen.getByRole('button', { name: 'Category' }))
+    await userEvent.click(await screen.findByRole('radio', { name: 'Healthcare' }))
 
     await waitFor(() => expect(announce).toHaveBeenCalledWith('12 jobs found'))
     expect(router.state.location.search).toBe('?category=4')
-    expect(screen.getByLabelText('Category')).toHaveFocus()
+    expect(screen.getByRole('radio', { name: 'Healthcare' })).toHaveFocus()
+    // The chip names the category instead of counting filters (UI_FEEDBACK_PLAN P5).
+    expect(screen.getByRole('button', { name: 'Category: Healthcare' })).toHaveAttribute('aria-expanded', 'true')
   })
 
   it('moves focus to the results heading after a page change', async () => {
@@ -87,7 +90,7 @@ describe('BrowseJobsPage', () => {
     await userEvent.click(screen.getByRole('link', { name: 'Next' }))
 
     await screen.findByRole('link', { name: 'Data Encoder' })
-    expect(searchJobs).toHaveBeenLastCalledWith({ q: '', category: '', accommodations: [], sort: 'newest', page: 2 })
+    expect(searchJobs).toHaveBeenLastCalledWith({ q: '', category: '', accommodations: [], workSetup: [], employmentType: [], sort: 'newest', page: 2 })
     await waitFor(() => expect(screen.getByRole('heading', { level: 2, name: '15 jobs' })).toHaveFocus())
   })
 
@@ -144,7 +147,8 @@ describe('BrowseJobsPage', () => {
     await screen.findByRole('heading', { level: 2, name: '15 jobs' })
 
     searchJobs.mockRejectedValueOnce({ response: { status: 500, data: {} } })
-    await userEvent.selectOptions(await screen.findByLabelText('Category'), 'Healthcare')
+    await userEvent.click(screen.getByRole('button', { name: 'Category' }))
+    await userEvent.click(await screen.findByRole('radio', { name: 'Healthcare' }))
 
     await waitFor(() => expect(announce).toHaveBeenCalledWith('Something went wrong on our side. Please try again in a moment.'))
     expect(container.querySelector('[aria-busy="true"]')).toBeNull()
@@ -229,10 +233,42 @@ describe('BrowseJobsPage', () => {
     expect(screen.queryByRole('link', { name: 'Register as a job seeker' })).not.toBeInTheDocument()
   })
 
+  it('filters by work setup and employment type, and names every filter on the list', async () => {
+    const user = userEvent.setup()
+    const { router } = renderRoutes(routes, { path: '/jobs' })
+    await screen.findByRole('heading', { level: 2, name: '15 jobs' })
+
+    await user.click(screen.getByRole('button', { name: 'Work setup' }))
+    await user.click(screen.getByRole('checkbox', { name: 'Remote' }))
+    await user.click(screen.getByRole('checkbox', { name: 'Hybrid' }))
+    await user.keyboard('{Escape}')
+    expect(screen.getByRole('button', { name: 'Work setup: Hybrid +1' })).toHaveFocus()
+
+    await user.click(screen.getByRole('button', { name: 'Employment type' }))
+    await user.click(screen.getByRole('checkbox', { name: 'Internship' }))
+
+    expect(router.state.location.search).toBe('?work_setup=hybrid%2Cremote&type=internship')
+    await waitFor(() => expect(searchJobs).toHaveBeenLastCalledWith(expect.objectContaining({ workSetup: ['hybrid', 'remote'], employmentType: ['internship'] })))
+    expect(await screen.findByText('Showing: Hybrid, Remote, Internship')).toBeInTheDocument()
+  })
+
+  it('picks accommodations in a dialog', async () => {
+    const user = userEvent.setup()
+    const { router } = renderRoutes(routes, { path: '/jobs' })
+    await screen.findByRole('heading', { level: 2, name: '15 jobs' })
+
+    await user.click(screen.getByRole('button', { name: 'Accommodations' }))
+    await user.click(await screen.findByRole('checkbox', { name: 'Wheelchair-accessible entrance' }))
+    await user.click(screen.getByRole('button', { name: 'Show jobs' }))
+
+    expect(router.state.location.search).toBe('?accommodations=1')
+    expect(screen.getByRole('button', { name: 'Accommodations: 1 accommodation' })).toHaveFocus()
+  })
+
   it('has no accessibility violations', async () => {
     const { container } = renderRoutes(routes, { path: '/jobs?category=4' })
     await screen.findByRole('heading', { level: 2, name: '15 jobs' })
-    await screen.findByRole('checkbox', { name: 'Wheelchair-accessible entrance' })
+    await screen.findByRole('button', { name: 'Category: Healthcare' })
 
     expect(await axe(container)).toHaveNoViolations()
   })

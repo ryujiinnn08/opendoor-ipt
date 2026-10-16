@@ -106,7 +106,7 @@ export default function ApplicationPage() {
   return (
     <>
       <div ref={headingArea}>
-        <PageHeader title={title} />
+        <PageHeader back={{ to: '/candidate/applications', label: 'Back to My applications' }} title={title} />
       </div>
 
       {loadError && (
@@ -206,11 +206,6 @@ export default function ApplicationPage() {
             </div>
           </div>
 
-          <p className="mt-12">
-            <Link to="/candidate/applications" className={TEXT_LINK}>
-              Back to My applications
-            </Link>
-          </p>
         </>
       )}
     </>

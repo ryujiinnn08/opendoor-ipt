@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
+import { backState } from '../../lib/backState.js'
 import { JOB_STATE_TEXT, nextStepText } from '../../lib/applicationText.js'
 import { formatDate } from '../../lib/format.js'
 import FeedbackStatus from '../feedback/FeedbackStatus.jsx'
@@ -11,6 +12,7 @@ import ApplicationStatusBadge from './ApplicationStatusBadge.jsx'
  * The list decides where focus goes after a change (the row may have left the filter).
  */
 export default function ApplicationRow({ application, onChanged, onStale, focusAfter }) {
+  const location = useLocation()
   const rowId = `application-${application.id}`
   const { job } = application
 
@@ -21,6 +23,7 @@ export default function ApplicationRow({ application, onChanged, onStale, focusA
           <h3 className="text-xl font-bold">
             <Link
               to={`/candidate/applications/${application.id}`}
+              state={backState(location)}
               className="inline-flex min-h-11 items-center text-primary underline underline-offset-4 hover:no-underline"
             >
               {job.title}

@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from 'react'
 import { useLocation, useSearchParams } from 'react-router-dom'
+import { EMPLOYMENT_TYPES, WORK_SETUPS } from '../lib/postingOptions.js'
 import { RECORD_ID as ID } from '../lib/recordId.js'
 
 export const JOB_SORTS = ['newest', 'closing']
@@ -11,10 +12,16 @@ const MAX_PAGE = 10000
 
 /**
  * Job list filters kept in the address, so Back, Forward and shared links show the same list:
- * ?q=web&category=3&accommodations=1,2&sort=closing&page=2. Values the page doesn't
+ * ?q=web&category=3&accommodations=1,2&work_setup=remote,hybrid&type=full_time&sort=closing&page=2. Values the page doesn't
  * understand (a hand-edited address) fall back to the defaults. In matching mode (Find jobs)
  * there is also `show` (Matches my needs, or `show=all`) and the Best match sort.
  */
+/** The known values of a comma list in the address, each once, in the options' order. */
+function listOf(searchParams, key, options) {
+  const given = (searchParams.get(key) ?? '').split(',')
+  return options.map((option) => option.value).filter((value) => given.includes(value))
+}
+
 function parse(searchParams, matching) {
   const category = searchParams.get('category') ?? ''
   const sort = searchParams.get('sort')
@@ -29,6 +36,8 @@ function parse(searchParams, matching) {
     q: searchParams.get('q') ?? '',
     category: ID.test(category) ? category : '',
     accommodations: [...new Set(accommodations)],
+    workSetup: listOf(searchParams, 'work_setup', WORK_SETUPS),
+    employmentType: listOf(searchParams, 'type', EMPLOYMENT_TYPES),
     sort: sorts.includes(sort) ? sort : sorts[0],
     page: ID.test(page) && Number(page) <= MAX_PAGE ? Number(page) : 1,
   }
@@ -42,6 +51,8 @@ function toQuery(filters, matching) {
   if (filters.q.trim()) params.set('q', filters.q.trim())
   if (filters.category) params.set('category', filters.category)
   if (filters.accommodations.length > 0) params.set('accommodations', filters.accommodations.join(','))
+  if (filters.workSetup.length > 0) params.set('work_setup', filters.workSetup.join(','))
+  if (filters.employmentType.length > 0) params.set('type', filters.employmentType.join(','))
   if (filters.sort !== (matching ? MATCHING_SORTS : JOB_SORTS)[0]) params.set('sort', filters.sort)
   if (matching && filters.show === 'all') params.set('show', 'all')
   if (filters.page > 1) params.set('page', String(filters.page))
@@ -69,9 +80,9 @@ export default function useJobSearchParams({ matching = false } = {}) {
     [filters, matching, setSearchParams],
   )
 
-  /** Removes the category and accommodation filters; keeps the search words, sort and Show switch. */
+  /** Removes every filter; keeps the search words, sort and Matches my needs. */
   const clearFilters = useCallback(
-    () => setFilters({ category: '', accommodations: [] }),
+    () => setFilters({ category: '', accommodations: [], workSetup: [], employmentType: [] }),
     [setFilters],
   )
 
@@ -83,7 +94,7 @@ export default function useJobSearchParams({ matching = false } = {}) {
     [filters, matching, pathname],
   )
 
-  const activeFilterCount = (filters.category ? 1 : 0) + filters.accommodations.length
+  const activeFilterCount = (filters.category ? 1 : 0) + filters.accommodations.length + filters.workSetup.length + filters.employmentType.length
 
   return { filters, setFilters, clearFilters, hrefForPage, activeFilterCount }
 }

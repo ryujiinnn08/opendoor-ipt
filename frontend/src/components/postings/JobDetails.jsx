@@ -1,7 +1,11 @@
 import { Link } from 'react-router-dom'
 import { formatDay } from '../../lib/format.js'
 import { EMPLOYMENT_TYPES, INTERVIEW_FORMATS, optionLabel, WORK_SETUPS } from '../../lib/postingOptions.js'
+import TrustScoreChip from '../feedback/TrustScoreChip.jsx'
+import { DotList } from '../jobs/JobCard.jsx'
+import EmployerMark from '../jobs/EmployerMark.jsx'
 import Icon from '../ui/Icon.jsx'
+import { TEXT_LINK } from '../ui/buttonLinkStyles.js'
 import VerificationBadge from '../ui/VerificationBadge.jsx'
 import AccommodationGroupIcon from './AccommodationGroupIcon.jsx'
 
@@ -16,23 +20,29 @@ function byGroup(accommodations) {
   return groups
 }
 
-function Detail({ label, children }) {
+const CARD = 'rounded-lg border border-border bg-surface p-5 sm:p-6'
+
+function Detail({ icon, label, children }) {
   return (
-    <>
-      <dt className="font-bold">{label}</dt>
-      <dd>{children || <span className="text-muted">Not added yet</span>}</dd>
-    </>
+    <div>
+      <dt className="flex items-center gap-2 font-bold">
+        <Icon name={icon} className="size-5 text-accent" />
+        {label}
+      </dt>
+      <dd className="pl-7">{children || <span className="text-muted">Not added yet</span>}</dd>
+    </div>
   )
 }
 
 /**
  * A posting as job seekers will see it (plan PHASE_2 §4.10), used by the Preview, the admin
- * Review and Phase 3's public job page. Accommodations come first, before the description.
- * The page around it supplies the title (h1) and the status. `markRetired` labels retired
- * accommodation types for admins (decision 31); job seekers still see them as provided.
- * With `employerHref` (the public job page), the employer's name links to their page. The
- * public shape has no verification_status, only is_verified. `fit` (a job seeker's
- * NeedsFit) goes above the accommodations panel.
+ * Review and the public job page. Laid out like Indeed's and LinkedIn's job pages
+ * (UI_FEEDBACK_PLAN §3.4): the employer block, then Accommodations provided (always first, they
+ * are the point of OpenDoor), Job details, About the job and, on the public page, About the
+ * company. The page around it supplies the title (h1) and the status. `markRetired` labels retired
+ * accommodation types for admins (decision 31). With `employerHref` (the public job page), the
+ * employer's name links to their page and the trust score shows beside it. `fit` (the job seeker's
+ * NeedsFit, Apply and the trust score card) is a side column, first on phones.
  */
 export default function JobDetails({ posting, showVerificationStatus = false, markRetired = false, employerHref, fit }) {
   const { employer } = posting
@@ -40,36 +50,48 @@ export default function JobDetails({ posting, showVerificationStatus = false, ma
   const groups = byGroup(posting.accommodations ?? [])
   const ids = {
     accommodations: `posting-${posting.id}-accommodations`,
-    glance: `posting-${posting.id}-glance`,
+    details: `posting-${posting.id}-details`,
     about: `posting-${posting.id}-about`,
+    company: `posting-${posting.id}-company`,
   }
+  const facts = [posting.location, optionLabel(WORK_SETUPS, posting.work_setup), optionLabel(EMPLOYMENT_TYPES, posting.employment_type)].filter(Boolean)
+  const aboutCompany = employerHref && (employer.description || employer.industry || employer.address)
 
   return (
     <div>
-      <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
-        {employer.logo_url && (
-          <img src={employer.logo_url} alt="" className="size-12 rounded-md border border-border bg-surface object-contain" />
-        )}
-        <p className="text-lg font-bold">
-          {employerHref ? (
-            <Link to={employerHref} className="inline-flex min-h-11 items-center text-primary underline underline-offset-4 hover:no-underline">
-              {employer.name}
-            </Link>
-          ) : (
-            employer.name
+      <div className={`mt-4 flex flex-wrap items-start gap-4 ${CARD}`}>
+        <EmployerMark employer={employer} size="lg" />
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <p className="text-lg font-bold">
+              {employerHref ? (
+                <Link to={employerHref} className="inline-flex min-h-11 items-center text-primary underline underline-offset-4 hover:no-underline">
+                  {employer.name}
+                </Link>
+              ) : (
+                employer.name
+              )}
+            </p>
+            {company && (showVerificationStatus || employer.is_verified) && (
+              <VerificationBadge status={employer.verification_status ?? (employer.is_verified ? 'verified' : 'not_submitted')} />
+            )}
+            {!company && <p className="text-muted">Individual employer</p>}
+          </div>
+          {posting.department && <p>Department: {posting.department.name}</p>}
+          {facts.length > 0 && (
+            <p className="mt-1 text-muted">
+              <DotList items={facts} />
+            </p>
           )}
-        </p>
-        {company && (showVerificationStatus || employer.is_verified) && (
-          <VerificationBadge status={employer.verification_status ?? (employer.is_verified ? 'verified' : 'not_submitted')} />
-        )}
-        {!company && <p className="text-muted">Individual employer</p>}
+          {employerHref && <TrustScoreChip employer={employer} className="mt-3" />}
+        </div>
       </div>
-      {posting.department && <p className="mt-1">Department: {posting.department.name}</p>}
 
-      <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_22rem]">
-        <div className="space-y-10 lg:col-start-2 lg:row-start-1">
-          {fit}
-          <section aria-labelledby={ids.accommodations} className="border-l-4 border-accent pl-5">
+      <div className={`mt-6 grid gap-6 ${fit ? 'lg:grid-cols-[minmax(0,1fr)_22rem]' : ''}`}>
+        {fit && <div className="space-y-6 lg:col-start-2 lg:row-start-1">{fit}</div>}
+
+        <div className="min-w-0 space-y-6 lg:col-start-1 lg:row-start-1">
+          <section aria-labelledby={ids.accommodations} className={`${CARD} border-l-4 border-l-accent`}>
             <h2 id={ids.accommodations} className="text-2xl font-bold">
               Accommodations provided
             </h2>
@@ -102,31 +124,54 @@ export default function JobDetails({ posting, showVerificationStatus = false, ma
             )}
           </section>
 
-          <section aria-labelledby={ids.glance}>
-            <h2 id={ids.glance} className="text-2xl font-bold">
-              At a glance
+          <section aria-labelledby={ids.details} className={CARD}>
+            <h2 id={ids.details} className="text-2xl font-bold">
+              Job details
             </h2>
-            <dl className="mt-3 grid grid-cols-[max-content_minmax(0,1fr)] gap-x-4 gap-y-2">
-              <Detail label="Work setup">{optionLabel(WORK_SETUPS, posting.work_setup)}</Detail>
-              <Detail label="Employment type">{optionLabel(EMPLOYMENT_TYPES, posting.employment_type)}</Detail>
-              <Detail label="Location">{posting.location}</Detail>
-              <Detail label="Interview">{optionLabel(INTERVIEW_FORMATS, posting.interview_format)}</Detail>
-              <Detail label="Apply by">{formatDay(posting.closes_on)}</Detail>
-              <Detail label="Category">{posting.category?.name}</Detail>
+            <dl className="mt-4 grid gap-4 sm:grid-cols-2">
+              <Detail icon="building" label="Work setup">{optionLabel(WORK_SETUPS, posting.work_setup)}</Detail>
+              <Detail icon="clock" label="Employment type">{optionLabel(EMPLOYMENT_TYPES, posting.employment_type)}</Detail>
+              <Detail icon="map-pin" label="Location">{posting.location}</Detail>
+              <Detail icon="chat" label="Interview">{optionLabel(INTERVIEW_FORMATS, posting.interview_format)}</Detail>
+              <Detail icon="calendar" label="Apply by">{formatDay(posting.closes_on)}</Detail>
+              <Detail icon="briefcase" label="Category">{posting.category?.name}</Detail>
             </dl>
           </section>
-        </div>
 
-        <section aria-labelledby={ids.about} className="lg:col-start-1 lg:row-start-1">
-          <h2 id={ids.about} className="text-2xl font-bold">
-            About the job
-          </h2>
-          {posting.description ? (
-            <p className="mt-3 max-w-prose whitespace-pre-line">{posting.description}</p>
-          ) : (
-            <p className="mt-3 text-muted">Not added yet</p>
+          <section aria-labelledby={ids.about} className={CARD}>
+            <h2 id={ids.about} className="text-2xl font-bold">
+              About the job
+            </h2>
+            {posting.description ? (
+              <p className="mt-3 max-w-prose whitespace-pre-line">{posting.description}</p>
+            ) : (
+              <p className="mt-3 text-muted">Not added yet</p>
+            )}
+          </section>
+
+          {aboutCompany && (
+            <section aria-labelledby={ids.company} className={CARD}>
+              <h2 id={ids.company} className="text-2xl font-bold">
+                About the company
+              </h2>
+              <div className="mt-4 flex items-center gap-3">
+                <EmployerMark employer={employer} />
+                <div>
+                  <p className="font-bold">{employer.name}</p>
+                  {(employer.industry || employer.address) && (
+                    <p className="text-sm text-muted">
+                      <DotList items={[employer.industry, employer.address].filter(Boolean)} />
+                    </p>
+                  )}
+                </div>
+              </div>
+              {employer.description && <p className="mt-4 max-w-prose whitespace-pre-line">{employer.description}</p>}
+              <Link to={employerHref} className={`mt-3 ${TEXT_LINK}`}>
+                See this employer&apos;s trust score and open jobs
+              </Link>
+            </section>
           )}
-        </section>
+        </div>
       </div>
     </div>
   )

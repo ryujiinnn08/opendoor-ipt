@@ -9,6 +9,7 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog.jsx'
 import CopyLinkBox from '../../components/ui/CopyLinkBox.jsx'
 import LoadingMessage from '../../components/ui/LoadingMessage.jsx'
 import Notice from '../../components/ui/Notice.jsx'
+import BackLink from '../../components/ui/BackLink.jsx'
 import PageHeading from '../../components/ui/PageHeading.jsx'
 import ReasonDialog from '../../components/ui/ReasonDialog.jsx'
 import StatusBadge from '../../components/ui/StatusBadge.jsx'
@@ -102,6 +103,7 @@ function UserAccount({ id }) {
   const header = (action) => (
     <div className="flex flex-wrap items-start justify-between gap-x-8 gap-y-4">
       <div className="max-w-prose">
+        <BackLink to="/admin/users">Back to users</BackLink>
         <PageHeading>{user?.name ?? 'Account'}</PageHeading>
         {user && (
           <p className="mt-2 text-lg">
@@ -243,11 +245,6 @@ function UserAccount({ id }) {
         </div>
       </div>
 
-      <p className="mt-12">
-        <Link to="/admin/users" className={TEXT_LINK}>
-          Back to users
-        </Link>
-      </p>
 
       <ReasonDialog
         open={Boolean(acting?.open && acting.action === 'suspend')}

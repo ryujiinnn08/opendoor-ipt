@@ -20,7 +20,7 @@ export default function PageTabs({ label, items, className = 'mt-6' }) {
               <Link
                 to={item.to}
                 aria-current={current ? 'page' : undefined}
-                className={`inline-flex min-h-11 items-center rounded-full border-2 px-5 font-display font-semibold ${current ? 'border-primary bg-primary text-on-primary' : 'border-input bg-surface text-text hover:bg-primary-soft'}`}
+                className={`inline-flex min-h-11 items-center rounded-md border-2 px-5 font-display font-semibold ${current ? 'border-primary bg-primary text-on-primary' : 'border-input bg-surface text-text hover:bg-primary-soft'}`}
               >
                 {item.label}
               </Link>

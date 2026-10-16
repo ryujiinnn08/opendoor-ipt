@@ -80,15 +80,10 @@ export default function FeedbackPage() {
   const error = loadError === NOT_FOUND ? { message: NOT_FOUND, retry: false } : loadError
   // Once sent, the heading names what's on the page, not an action that's no longer possible.
   const title = !form ? RATE_ACTION : form.state === 'sent' ? `Your ratings for ${form.employer.name}` : `How did ${form.employer.name} do?`
-  const backLink = (
-    <Link to={`/candidate/applications/${id}`} className={`mt-2 ${TEXT_LINK}`}>
-      Back to your application
-    </Link>
-  )
 
   return (
     <>
-      <PageHeader title={title} intro={form ? `${form.job.title}, hired ${formatDay(form.hired_at)}` : undefined} />
+      <PageHeader back={{ to: `/candidate/applications/${id}`, label: 'Back to your application' }} title={title} intro={form ? `${form.job.title}, hired ${formatDay(form.hired_at)}` : undefined} />
 
       {error && (
         <Notice tone={error.retry ? 'error' : 'info'} className="mt-6">
@@ -120,14 +115,12 @@ export default function FeedbackPage() {
       {form?.state === 'not_yet' && (
         <Notice className="mt-6">
           <p>{opensOnText(form.opens_on)}</p>
-          {backLink}
         </Notice>
       )}
 
       {form?.state === 'nothing_to_rate' && (
         <Notice className="mt-6">
           <p>{NOTHING_TO_RATE}</p>
-          {backLink}
         </Notice>
       )}
 
@@ -148,7 +141,6 @@ export default function FeedbackPage() {
             </div>
           )}
           <FeedbackSummary sent={form.sent} title="What you sent" />
-          <p>{backLink}</p>
         </div>
       )}
     </>

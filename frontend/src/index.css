@@ -8,6 +8,7 @@
   --font-display: 'Lexend', 'Atkinson Hyperlegible', ui-sans-serif, system-ui, sans-serif;
   --color-bg: var(--od-surface-page);
   --color-surface: var(--od-surface-page);
+  --color-canvas: var(--od-surface-canvas);
   --color-subtle: var(--od-surface-subtle);
   --color-selected: var(--od-surface-current);
   --color-text: var(--od-text-default);
@@ -37,7 +38,8 @@
 
 /* Type scale from the Figma text styles, in rem so the text-size setting scales everything.
    Hints (sm, 16 px) are the smallest reading size; xs (15 px) is only for badges and the
-   utility bar, both bold. Radii: 12 px fields and small boxes, 20 px cards and dialogs. */
+   utility bar, both bold. The formal pass (UI_FEEDBACK_PLAN §3.1) made headings smaller and
+   corners squarer: 8 px fields, buttons and cards, 12 px dialogs and large panels. */
 @theme {
   --text-xs: 0.9375rem;
   --text-xs--line-height: 1.25rem;
@@ -49,12 +51,12 @@
   --text-lg--line-height: 1.75rem;
   --text-xl: 1.3125rem;
   --text-xl--line-height: 1.75rem;
-  --text-2xl: 1.375rem;
-  --text-2xl--line-height: 1.875rem;
-  --text-title: 1.75rem;
-  --text-title--line-height: 2.25rem;
-  --text-title-lg: 2.125rem;
-  --text-title-lg--line-height: 2.625rem;
+  --text-2xl: 1.25rem;
+  --text-2xl--line-height: 1.75rem;
+  --text-title: 1.5rem;
+  --text-title--line-height: 2rem;
+  --text-title-lg: 1.75rem;
+  --text-title-lg--line-height: 2.25rem;
   --text-stat: 2.375rem;
   --text-stat--line-height: 2.75rem;
   --text-score: 3.5rem;
@@ -62,8 +64,8 @@
   --text-display: 3.75rem;
   --text-display--line-height: 4.25rem;
 
-  --radius-md: 0.75rem;
-  --radius-lg: 1.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
 
   /* Motion (UI_REVAMP_PLAN §4.4): one soft ease for everything, short enough never to slow
      anyone down. Reduce motion (the system setting or Account → Display) turns it all off. */
@@ -187,7 +189,7 @@
   }
 
   body {
-    @apply bg-bg text-base text-text font-sans antialiased;
+    @apply bg-canvas text-base text-text font-sans antialiased;
   }
 
   /* Lexend for headings: designed for reading speed (00 Design foundations). */

@@ -17,7 +17,7 @@ class JobSearch
      * least one need, and sort `match` puts full matches first, then by needs met, then newest.
      * Without needs, `match` is ignored and sort `match` means newest.
      *
-     * @param  array{q: ?string, category: ?int, accommodations: list<int>, employer: ?int, sort: string, per_page: int, match: bool}  $filters
+     * @param  array{q: ?string, category: ?int, accommodations: list<int>, work_setup?: list<string>, employment_type?: list<string>, employer: ?int, sort: string, per_page: int, match: bool}  $filters
      */
     public function paginate(array $filters, ?CandidateNeeds $needs = null, ?int $excludeApplicantId = null): LengthAwarePaginator
     {
@@ -25,6 +25,8 @@ class JobSearch
             ->with(PublicJobPostingResource::RELATIONS)
             ->search($filters['q'])
             ->when($filters['category'], fn ($query, int $category) => $query->where('category_id', $category))
+            ->when($filters['work_setup'] ?? [], fn ($query, array $setups) => $query->whereIn('work_setup', $setups))
+            ->when($filters['employment_type'] ?? [], fn ($query, array $types) => $query->whereIn('employment_type', $types))
             ->when($filters['employer'], fn ($query, int $employer) => $query->where('employer_id', $employer))
             ->providingAll($filters['accommodations']);
 

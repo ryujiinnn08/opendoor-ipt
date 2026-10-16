@@ -30,7 +30,7 @@ const themes = {
   'high contrast': { ...standard, ...variablesOf(":root[data-contrast='high']") },
 }
 
-const BACKGROUNDS = ['surface-page', 'surface-subtle', 'surface-tint']
+const BACKGROUNDS = ['surface-page', 'surface-canvas', 'surface-subtle', 'surface-tint']
 
 // Text that must reach 4.5:1 (WCAG 1.4.3) on the backgrounds it sits on.
 const TEXT_PAIRS = [
@@ -53,6 +53,8 @@ const TEXT_PAIRS = [
 const BORDER_PAIRS = [
   ['border-input', 'surface-page'],
   ['border-input', 'surface-subtle'],
+  ['border-input', 'surface-canvas'],
+  ['brand-primary', 'surface-canvas'],
   ['border-focus', 'surface-page'],
   ['brand-primary', 'surface-page'],
   ['status-danger', 'surface-page'],

@@ -8,18 +8,21 @@ import BrandLink from './BrandLink.jsx'
 import { isCurrent } from './portalMenus.js'
 
 const NAV_ITEM =
-  'inline-flex min-h-11 items-center gap-2 whitespace-nowrap rounded-full border-2 px-3.5 text-lg transition-[background-color,border-color,color] duration-300 ease-soft'
-const NAV_IDLE = 'border-transparent text-text hover:bg-primary-soft'
-const NAV_CURRENT = 'border-primary bg-selected font-bold text-accent'
+  'inline-flex min-h-11 items-center gap-2 whitespace-nowrap px-3 text-base transition-[box-shadow,color] duration-300 ease-soft'
+// The current page is underlined in violet (LinkedIn's top bar), not a tinted pill.
+const NAV_IDLE = 'text-muted hover:text-text hover:shadow-[inset_0_-3px_0_var(--od-border-subtle)]'
+const NAV_CURRENT = 'font-bold text-text shadow-[inset_0_-3px_0_var(--od-brand-primary)]'
 const GAP = 24
 
 /**
- * The header on every page (05 Shared, "A calm top menu"): the role's links left of the centred
- * logo, the person's own links right of it. It becomes the logo and one Menu button when the
- * Compact menu setting is on, or when the links don't fit on one line (phones, large text).
+ * The header on every page (UI_FEEDBACK_PLAN §3.1–3.2): the logo on the left, the role's links
+ * after it, and the person's own on the right (Notifications and one account menu). It becomes
+ * the logo and one Menu button when the Compact menu setting is on, or when the links don't fit
+ * on one line (phones, large text).
  *
- * Entries are links { to, label, icon, end?, match?, count?, avatar?, cta? } or buttons
- * { onClick, label, icon, loading?, loadingText? }.
+ * Entries are links { to, label, icon, end?, match?, count?, cta? }, buttons
+ * { onClick, label, icon, loading?, loadingText? }, or the account menu
+ * { menu: true, label, avatar, name, email, items, logout }.
  */
 export default function SiteHeader({ homeTo = '/', left, right }) {
   const { settings } = useDisplaySettings()
@@ -36,8 +39,7 @@ export default function SiteHeader({ homeTo = '/', left, right }) {
     const row = rowRef.current
     const copy = measureRef.current
     function check() {
-      const [leftPart, logo, rightPart] = copy.children
-      const needed = 2 * Math.max(leftPart.offsetWidth, rightPart.offsetWidth) + logo.offsetWidth + 2 * GAP
+      const needed = [...copy.children].reduce((sum, part) => sum + part.offsetWidth, 0) + 2 * GAP
       setTooNarrow(row.clientWidth > 0 && needed > row.clientWidth)
     }
     check()
@@ -54,19 +56,21 @@ export default function SiteHeader({ homeTo = '/', left, right }) {
   }, [canMeasure])
 
   const compact = settings.menu === 'compact' || tooNarrow
+  // In the compact Menu the account menu's links are part of the one list, so nothing takes two clicks.
+  const flat = [...left, ...right.flatMap((entry) => (entry.menu ? [...entry.items, entry.logout] : [entry]))]
 
   return (
     <header className="relative z-20 border-b border-border bg-surface print:hidden">
-      <div ref={rowRef} className="mx-auto max-w-6xl px-4 py-3 sm:px-6">
+      <div ref={rowRef} className="mx-auto max-w-6xl px-4 py-2 sm:px-6">
         {compact ? (
-          <CompactRow key="compact" homeTo={homeTo} entries={[...left, ...right]} pathname={pathname} />
+          <CompactRow key="compact" homeTo={homeTo} entries={flat} pathname={pathname} />
         ) : (
-          <div key="full" className="grid animate-fade-in grid-cols-[1fr_auto_1fr] items-center gap-6">
-            <nav aria-label="Main" className="justify-self-start">
+          <div key="full" className="flex animate-fade-in items-center gap-6">
+            <BrandLink to={homeTo} />
+            <nav aria-label="Main">
               <EntryList entries={left} pathname={pathname} />
             </nav>
-            <BrandLink to={homeTo} />
-            <nav aria-label="Account" className="justify-self-end">
+            <nav aria-label="Account" className="ml-auto">
               <EntryList entries={right} pathname={pathname} />
             </nav>
           </div>
@@ -76,11 +80,11 @@ export default function SiteHeader({ homeTo = '/', left, right }) {
       {canMeasure && (
         <div aria-hidden="true" className="pointer-events-none invisible absolute top-0 left-0 h-0 overflow-hidden">
           <div ref={measureRef} className="flex w-max items-center">
-            <EntryList entries={left} pathname={pathname} measuring />
-            <span className="inline-flex items-center gap-2.5 font-display text-[1.625rem] font-semibold">
-              <span className="size-9" />
+            <span className="inline-flex items-center gap-2 font-display text-[1.375rem] font-semibold">
+              <span className="h-9 w-7" />
               OpenDoor
             </span>
+            <EntryList entries={left} pathname={pathname} measuring />
             <EntryList entries={right} pathname={pathname} measuring />
           </div>
         </div>
@@ -104,6 +108,11 @@ function EntryList({ entries, pathname, measuring = false }) {
 /** One entry of the full header. While `measuring`, a plain copy with nothing to focus. */
 function Entry({ entry, current, measuring }) {
   const content = <EntryContent entry={entry} />
+
+  if (entry.menu) {
+    if (measuring) return <span className={`${NAV_ITEM} ${NAV_IDLE}`}>{content}<Icon name="chevron-down" className="size-4" /></span>
+    return <AccountMenu entry={entry} />
+  }
 
   if (entry.onClick || entry.cta) {
     const look = `${buttonClasses('secondary', 'sm')} ml-2 whitespace-nowrap`
@@ -131,8 +140,7 @@ function Entry({ entry, current, measuring }) {
 function EntryContent({ entry }) {
   return (
     <>
-      {entry.onClick && <Icon name={entry.icon} className="size-4" />}
-      {entry.avatar && <Avatar initials={entry.avatar} />}
+      {entry.avatar ? <Avatar initials={entry.avatar} /> : entry.icon && <Icon name={entry.icon} className={entry.onClick ? 'size-4' : 'size-5'} />}
       {/* One span, so the space before the count survives inside the flex link. Screen readers
           hear "Notifications (2 unread)"; the red pill shows the number. */}
       <span>
@@ -159,6 +167,92 @@ function Avatar({ initials }) {
     <span aria-hidden="true" className="inline-grid size-8 shrink-0 place-items-center rounded-full bg-primary-soft text-xs font-bold text-accent">
       {initials}
     </span>
+  )
+}
+
+/**
+ * The account menu (UI_FEEDBACK_PLAN §3.2): the initials open, in one click, a panel with the
+ * person's name and email, their own pages, and Log out. A disclosure (button + list of links),
+ * not an ARIA menu, so links work as links. Escape and a click outside close it; Escape puts
+ * focus back on the button. A new page closes it.
+ */
+function AccountMenu({ entry }) {
+  const { pathname } = useLocation()
+  const [openOn, setOpenOn] = useState(null)
+  const open = openOn === pathname
+  const panelId = useId()
+  const buttonRef = useRef(null)
+  const wrapperRef = useRef(null)
+  const ITEM = 'flex min-h-11 w-full items-center gap-3 rounded-md px-3 text-left transition-colors duration-200 ease-soft'
+
+  useEffect(() => {
+    if (!open) return
+    function onPointerDown(event) {
+      if (!wrapperRef.current?.contains(event.target)) setOpenOn(null)
+    }
+    document.addEventListener('mousedown', onPointerDown)
+    return () => document.removeEventListener('mousedown', onPointerDown)
+  }, [open])
+
+  function onKeyDown(event) {
+    if (event.key === 'Escape' && open) {
+      setOpenOn(null)
+      buttonRef.current?.focus()
+    }
+  }
+
+  const current = entry.items.some((item) => isCurrent(item, pathname))
+
+  return (
+    <div ref={wrapperRef} onKeyDown={onKeyDown} className="relative">
+      <button
+        ref={buttonRef}
+        type="button"
+        aria-expanded={open}
+        aria-controls={panelId}
+        onClick={() => setOpenOn(open ? null : pathname)}
+        className={`${NAV_ITEM} ${current ? NAV_CURRENT : NAV_IDLE}`}
+      >
+        <Avatar initials={entry.avatar} />
+        <span>{entry.label}</span>
+        <Icon name="chevron-down" className={`size-4 transition-transform duration-200 ease-soft ${open ? 'rotate-180' : ''}`} />
+      </button>
+      <div
+        id={panelId}
+        data-open={open}
+        inert={!open}
+        aria-hidden={!open}
+        className="od-pop absolute right-0 z-30 mt-2 w-[min(20rem,calc(100vw-2rem))] rounded-lg border border-border bg-surface p-2 shadow-[0_12px_28px_rgba(36,27,58,0.16)]"
+      >
+        <div className="flex items-center gap-3 border-b border-border px-3 pt-2 pb-3">
+          <Avatar initials={entry.avatar} />
+          <div className="min-w-0">
+            <p className="font-bold">{entry.name}</p>
+            {entry.email && <p className="text-sm break-all text-muted">{entry.email}</p>}
+          </div>
+        </div>
+        <ul className="mt-2 grid gap-0.5">
+          {entry.items.map((item) => {
+            const here = isCurrent(item, pathname)
+            return (
+              <li key={item.label}>
+                <Link
+                  to={item.to}
+                  aria-current={here ? 'page' : undefined}
+                  className={`${ITEM} ${here ? 'bg-selected font-bold text-accent' : 'text-text hover:bg-primary-soft'}`}
+                >
+                  <Icon name={item.icon} className="size-5 text-accent" />
+                  {item.label}
+                </Link>
+              </li>
+            )
+          })}
+          <li className="mt-1 border-t border-border pt-1">
+            <LogOutButton entry={entry.logout} className={`${ITEM} font-bold text-primary hover:bg-primary-soft`} />
+          </li>
+        </ul>
+      </div>
+    </div>
   )
 }
 

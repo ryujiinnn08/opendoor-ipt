@@ -1,7 +1,7 @@
 import { employerKind } from '../../auth/employerAccess.js'
 
-// The header's links (UI_REVAMP_PLAN Q4): `left` of the logo are the role's pages, `right` are
-// the person's own. `end: false` keeps an item current on its sub-pages (e.g., a posting's edit
+// The header's links (UI_REVAMP_PLAN Q4, UI_FEEDBACK_PLAN §3.2): `left` are the role's pages,
+// after the logo; the person's own pages are in the account menu (accountMenuFor). `end: false` keeps an item current on its sub-pages (e.g., a posting's edit
 // page); `match` lists other address prefixes that belong to it (e.g., Profile's three tabs).
 const JOB_POSTINGS = { to: '/employer/job-postings', label: 'Job postings', icon: 'briefcase', end: false, match: ['/employer/applications'] }
 const TRUST_SCORE = { to: '/employer/trust-score', label: 'Trust score', icon: 'shield-check' }
@@ -32,7 +32,6 @@ const PORTALS = {
       { to: '/candidate/jobs', label: 'Find jobs', icon: 'search', end: false, match: ['/candidate/employers'] },
       { to: '/candidate/applications', label: 'Applications', icon: 'file-text', end: false },
     ],
-    right: [{ to: '/candidate/needs', label: 'Profile', icon: 'user', match: ['/candidate/profile'] }],
   },
   admin: {
     left: [
@@ -40,20 +39,28 @@ const PORTALS = {
       { to: '/admin/employers', label: 'Employers', icon: 'building' },
       { to: '/admin/job-postings', label: 'Postings', icon: 'clipboard-check', end: false },
       { to: '/admin/users', label: 'Users', icon: 'people', end: false },
-    ],
-    right: [
       { to: '/admin/feedback', label: 'Feedback', icon: 'chat' },
       { to: '/admin/categories', label: 'Data', icon: 'panel', match: ['/admin/accommodations', '/admin/settings'] },
     ],
   },
 }
 
-export const ACCOUNT_ITEM = { to: '/account/display', label: 'Account', icon: 'user', match: ['/account'] }
+export const PROFILE_ITEM = { to: '/candidate/needs', label: 'Profile', icon: 'user', match: ['/candidate/profile'] }
 
-/** { left, right } menu items for the logged-in user's portal. */
+/** { left } menu items for the logged-in user's portal: the role's pages. */
 export function portalFor(user) {
-  if (user.role === 'employer') return { left: EMPLOYER_MENUS[employerKind(user)], right: [] }
+  if (user.role === 'employer') return { left: EMPLOYER_MENUS[employerKind(user)] }
   return PORTALS[user.role]
+}
+
+/** The account menu under the person's initials (Indeed's "Account", LinkedIn's "Me"). */
+export function accountMenuFor(user) {
+  return [
+    ...(user.role === 'candidate' ? [PROFILE_ITEM] : []),
+    { to: '/account/display', label: 'Display settings', icon: 'monitor' },
+    { to: '/account/password', label: 'Change password', icon: 'lock' },
+    { to: '/contact', label: 'Help and contact', icon: 'circle-help' },
+  ]
 }
 
 /** Whether `item` is the page at `pathname` (or one of its sub-pages or tabs). */

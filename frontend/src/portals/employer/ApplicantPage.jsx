@@ -77,7 +77,7 @@ export default function ApplicantPage() {
   return (
     <>
       <div ref={headingArea}>
-        <PageHeader title={applicant?.applicant.name ?? 'Applicant'} />
+        <PageHeader back={job ? { to: `/employer/job-postings/${job.id}/applicants`, label: 'Back to applicants' } : { to: '/employer/job-postings', label: 'Back to job postings' }} title={applicant?.applicant.name ?? 'Applicant'} />
       </div>
 
       {loadError && (

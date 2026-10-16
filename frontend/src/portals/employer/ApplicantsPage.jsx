@@ -85,7 +85,7 @@ export default function ApplicantsPage() {
 
   return (
     <>
-      <PageHeader title={title} />
+      <PageHeader back={{ to: '/employer/job-postings', label: 'Back to job postings' }} title={title} />
 
       {loadError && (
         <Notice tone={loadError === NOT_FOUND ? 'info' : 'error'} className="mt-6">
@@ -149,11 +149,6 @@ export default function ApplicantsPage() {
         </section>
       )}
 
-      <p className="mt-12">
-        <Link to="/employer/job-postings" className={TEXT_LINK}>
-          Back to job postings
-        </Link>
-      </p>
     </>
   )
 }

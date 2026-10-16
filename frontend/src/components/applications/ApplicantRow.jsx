@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
+import { backState } from '../../lib/backState.js'
 import { formatDate } from '../../lib/format.js'
 import { employerMatchText, missingText } from '../../lib/matchText.js'
 import Icon from '../ui/Icon.jsx'
@@ -10,6 +11,7 @@ import ApplicationStatusBadge from './ApplicationStatusBadge.jsx'
  * and whether they asked for an interview accommodation. No photos (plan PHASE_4 §7).
  */
 export default function ApplicantRow({ applicant }) {
+  const location = useLocation()
   const { match } = applicant
   const missing = match ? missingText(match.missing) : null
 
@@ -20,6 +22,7 @@ export default function ApplicantRow({ applicant }) {
           <h3 className="text-xl font-bold">
             <Link
               to={`/employer/applications/${applicant.id}`}
+              state={backState(location)}
               className="inline-flex min-h-11 items-center text-primary underline underline-offset-4 hover:no-underline"
             >
               {applicant.applicant.name}
