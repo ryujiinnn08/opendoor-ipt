@@ -26,6 +26,13 @@ class UserResource extends JsonResource
             'must_change_password' => (bool) $this->must_change_password,
             // Job seekers and employers confirm their email before applying or posting.
             'email_verified' => $this->hasVerifiedEmail(),
+            // Job seekers only: the profile photo's version for the account menu, null without one
+            // (UI_FEEDBACK_WAVE_B_PLAN B1). The photo itself is fetched from its private route.
+            'photo_version' => $this->when($this->role === Role::Candidate, function () {
+                $path = $this->candidateProfile?->photo_path;
+
+                return $path ? substr(md5($path), 0, 8) : null;
+            }),
             // Employers only: null until they set up a company or individual profile.
             'membership' => $this->when($this->role === Role::Employer, function () {
                 $membership = $this->membership()->with(['employer', 'department'])->first();

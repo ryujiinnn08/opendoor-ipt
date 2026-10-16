@@ -139,6 +139,8 @@ describe('ProfilePage', () => {
     await user.upload(input, new File(['x'], 'me.png', { type: 'image/png' }))
     expect(uploadPhoto).toHaveBeenCalled()
     expect(announce).toHaveBeenCalledWith('Photo saved.')
+    // The account menu reloads the user, so it shows the new photo too.
+    expect(seeker.refresh).toHaveBeenCalled()
     expect(await within(photoSection).findByRole('button', { name: 'Remove photo' })).toBeInTheDocument()
 
     expect(screen.getByRole('checkbox', { name: 'Show my photo to employers I apply to' })).not.toBeChecked()

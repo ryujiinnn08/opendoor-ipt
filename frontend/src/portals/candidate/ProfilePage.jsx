@@ -280,8 +280,14 @@ export default function ProfilePage() {
             <PhotoField
               name={values.name || profile.name}
               profile={profile}
-              onUpload={async (file) => setProfile(await uploadPhoto(file))}
-              onRemove={async () => setProfile(await removePhoto())}
+              onUpload={async (file) => {
+                setProfile(await uploadPhoto(file))
+                refresh?.() // the account menu shows the new photo
+              }}
+              onRemove={async () => {
+                setProfile(await removePhoto())
+                refresh?.()
+              }}
             />
           </Section>
 

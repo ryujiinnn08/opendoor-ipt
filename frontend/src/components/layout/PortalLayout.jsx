@@ -5,6 +5,8 @@ import { useAuth } from '../../auth/authContext.js'
 import { dashboardFor } from '../../auth/redirects.js'
 import { useAnnounce } from '../ui/announcerContext.js'
 import EmailVerificationBanner from '../verification/EmailVerificationBanner.jsx'
+import { getPhotoFile } from '../../api/candidate.js'
+import usePrivateImage from '../../hooks/usePrivateImage.js'
 import { initialsOf } from '../../lib/initials.js'
 import { accountMenuFor, portalFor } from './portalMenus.js'
 import SiteFooter from './SiteFooter.jsx'
@@ -21,6 +23,8 @@ export default function PortalLayout() {
   const [loggingOut, setLoggingOut] = useState(false)
   const location = useLocation()
   const portal = portalFor(user)
+  // A job seeker's photo in the account menu; a new version (after a change) loads the new photo.
+  const photo = usePrivateImage(getPhotoFile, role === 'candidate' ? user.photo_version : null)
   // Job seekers and employers get notifications; admins have their queues (plan PHASE_6 §4.4).
   const notified = role === 'candidate' || role === 'employer'
   const [unread, setUnread] = useState(0)
@@ -59,6 +63,7 @@ export default function PortalLayout() {
       menu: true,
       label: 'Account',
       avatar: initialsOf(user.name),
+      avatarSrc: photo,
       name: user.name,
       email: user.email,
       items: accountMenuFor(user),

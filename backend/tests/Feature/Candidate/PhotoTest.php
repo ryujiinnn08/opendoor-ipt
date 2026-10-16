@@ -35,7 +35,12 @@ class PhotoTest extends TestCase
         $this->postJson('/api/candidate/profile/photo', ['photo' => UploadedFile::fake()->image('new.png', 300, 300)])->assertOk();
         Storage::disk('local')->assertMissing($first);
 
+        // The account menu learns of it from the logged-in user.
+        $version = $this->getJson('/api/candidate/profile')->json('data.photo_version');
+        $this->getJson('/api/me')->assertJsonPath('data.photo_version', $version);
+
         $this->deleteJson('/api/candidate/profile/photo')->assertOk()->assertJsonPath('data.has_photo', false);
+        $this->getJson('/api/me')->assertJsonPath('data.photo_version', null);
         $this->getJson('/api/candidate/profile/photo')->assertNotFound();
     }
 

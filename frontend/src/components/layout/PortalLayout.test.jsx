@@ -1,6 +1,8 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
+
+vi.mock('../../api/candidate.js', () => ({ getPhotoFile: vi.fn(async () => new Blob(['x'], { type: 'image/png' })) }))
 import ProtectedRoute from '../../auth/ProtectedRoute.jsx'
 import { renderRoutes } from '../../test/renderWithProviders.jsx'
 import PortalLayout from './PortalLayout.jsx'
@@ -91,5 +93,21 @@ describe('PortalLayout', () => {
     await user.keyboard('{Escape}')
     expect(menu).toHaveAttribute('aria-expanded', 'false')
     expect(menu).toHaveFocus()
+  })
+
+  it('shows a job seeker’s photo on the account menu instead of initials', async () => {
+    URL.createObjectURL = vi.fn(() => 'blob:photo')
+    URL.revokeObjectURL = vi.fn()
+    const candidateRoutes = [
+      { element: <PortalLayout />, children: [{ path: '/candidate/dashboard', element: <h1>Dashboard</h1> }] },
+    ]
+    renderRoutes(candidateRoutes, {
+      path: '/candidate/dashboard',
+      auth: { status: 'authenticated', role: 'candidate', user: { name: 'Maria Santos', role: 'candidate', photo_version: 'abc' } },
+    })
+
+    const menu = screen.getByRole('button', { name: 'Account' })
+    await vi.waitFor(() => expect(menu.querySelector('img')).toHaveAttribute('src', 'blob:photo'))
+    expect(menu.querySelector('img')).toHaveAttribute('alt', '')
   })
 })
