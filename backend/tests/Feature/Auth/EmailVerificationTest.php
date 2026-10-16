@@ -88,6 +88,19 @@ class EmailVerificationTest extends TestCase
         $this->assertContains('The link works for 24 hours. After that, log in to OpenDoor and ask for a new link.', $mail->outroLines);
     }
 
+    public function test_the_email_is_shown_in_opendoors_look_with_a_working_link(): void
+    {
+        $user = User::factory()->unverified()->create();
+        $mail = (new VerifyEmailAddress)->toMail($user);
+        $html = (string) $mail->render();
+
+        $this->assertStringContainsString('Confirm your email</h1>', $html);
+        $this->assertStringContainsString('href="'.e($mail->actionUrl).'"', $html);
+        $this->assertStringContainsString('>Confirm my email</a>', $html);
+        $this->assertStringContainsString('The link works for 24 hours.', $html);
+        $this->assertStringContainsString('/email-logo.png', $html);
+    }
+
     public function test_registering_works_even_when_the_email_cannot_be_sent(): void
     {
         Event::listen(NotificationSending::class, fn () => throw new RuntimeException('Mail service is down.'));

@@ -37,7 +37,9 @@ class VerifyEmailAddress extends VerifyEmail
             ->action('Confirm my email', $url)
             ->line("The link works for {$hours} hours. After that, log in to OpenDoor and ask for a new link.")
             ->line('If you did not create an OpenDoor account, you can ignore this email.')
-            ->salutation('The OpenDoor team');
+            ->salutation('The OpenDoor team')
+            // Shown in OpenDoor's look; the lines above stay as the message's content for tests and logs.
+            ->view(['html' => 'mail.verify-email-html', 'text' => 'mail.verify-email'], ['hours' => $hours]);
     }
 
     private static function lifetimeMinutes(): int
