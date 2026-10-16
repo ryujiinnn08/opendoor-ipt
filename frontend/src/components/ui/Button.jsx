@@ -55,7 +55,7 @@ export default function Button({
 /** The orange circle with an arrow from the design (decoration only). */
 export function ArrowPill() {
   return (
-    <span aria-hidden="true" className="od-decoration -mr-2 inline-grid size-7 shrink-0 place-items-center rounded-full bg-orange text-text">
+    <span aria-hidden="true" className="od-decoration -mr-2 inline-grid size-7 shrink-0 place-items-center rounded-full bg-orange text-text transition-transform duration-300 ease-soft group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
       <Icon name="arrow-up-right" className="size-4" />
     </span>
   )

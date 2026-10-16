@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../../auth/authContext.js'
 import { dashboardFor } from '../../auth/redirects.js'
 import EmailVerificationBanner from '../verification/EmailVerificationBanner.jsx'
@@ -10,6 +10,7 @@ import UtilityBar from './UtilityBar.jsx'
 /** The frame for public pages: Home and Find jobs, then Log in and Create account. */
 export default function PublicLayout() {
   const { status, role } = useAuth()
+  const { pathname } = useLocation()
 
   const right =
     status === 'authenticated'
@@ -26,7 +27,9 @@ export default function PublicLayout() {
 
       <main id="main" tabIndex={-1} className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 outline-none sm:px-6">
         <EmailVerificationBanner />
-        <Outlet />
+        <div key={pathname} className="animate-page-in">
+          <Outlet />
+        </div>
       </main>
 
       <SiteFooter />

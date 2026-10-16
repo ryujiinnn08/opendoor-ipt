@@ -65,16 +65,79 @@
   --radius-md: 0.75rem;
   --radius-lg: 1.25rem;
 
-  --animate-reveal: od-reveal 160ms ease-out;
+  /* Motion (UI_REVAMP_PLAN §4.4): one soft ease for everything, short enough never to slow
+     anyone down. Reduce motion (the system setting or Account → Display) turns it all off. */
+  --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-soft-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  --animate-reveal: od-reveal 220ms var(--ease-soft) backwards;
+  --animate-page-in: od-page-in 420ms var(--ease-soft) backwards;
+  --animate-fade-in: od-fade-in 240ms var(--ease-soft) backwards;
+  --animate-overlay-in: od-fade-in 240ms var(--ease-soft) both;
+  --animate-overlay-out: od-fade-out 180ms var(--ease-soft-in-out) both;
+  --animate-dialog-in: od-dialog-in 320ms var(--ease-soft) both;
+  --animate-dialog-out: od-dialog-out 180ms var(--ease-soft-in-out) both;
 
   @keyframes od-reveal {
     from {
       opacity: 0;
-      transform: translateY(-4px);
+      transform: translateY(-6px);
     }
     to {
       opacity: 1;
       transform: none;
+    }
+  }
+
+  @keyframes od-page-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes od-fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes od-fade-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  /* Dialogs keep their centring (the `translate` property); only `transform` moves here. */
+  @keyframes od-dialog-in {
+    from {
+      opacity: 0;
+      transform: translateY(16px) scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes od-dialog-out {
+    from {
+      opacity: 1;
+      transform: none;
+    }
+    to {
+      opacity: 0;
+      transform: translateY(8px) scale(0.98);
     }
   }
 }
@@ -120,6 +183,7 @@
     *::after {
       animation-duration: 0.01ms !important;
       transition-duration: 0.01ms !important;
+      transition-delay: 0s !important;
       scroll-behavior: auto !important;
     }
   }
@@ -129,15 +193,117 @@
   :root[data-motion='reduce'] *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
     scroll-behavior: auto !important;
   }
 }
 
 @layer components {
+  /* Switching High contrast or Quiet mode fades the colours instead of flashing them. The class
+     is on <html> only for the moment of the switch (DisplaySettingsProvider), so ordinary hovers
+     keep their own timing. */
+  @media (prefers-reduced-motion: no-preference) {
+    :root.od-theme-transition:not([data-motion='reduce']),
+    :root.od-theme-transition:not([data-motion='reduce']) *,
+    :root.od-theme-transition:not([data-motion='reduce']) *::before,
+    :root.od-theme-transition:not([data-motion='reduce']) *::after {
+      transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, box-shadow !important;
+      transition-duration: 450ms !important;
+      transition-timing-function: var(--ease-soft-in-out) !important;
+      transition-delay: 0s !important;
+    }
+  }
+
   /* Sparkles, the orange arrow pill and other decoration: hidden from screen readers where
      they are used (aria-hidden), and gone in Quiet mode. */
   :root[data-quiet] .od-decoration {
     display: none;
+  }
+
+  /* The text size slider: a tinted track filled up to the thumb (--fill), and a 28 px thumb. */
+  .od-range {
+    height: 2.75rem;
+    border-radius: 9999px;
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
+  }
+  .od-range::-webkit-slider-runnable-track {
+    height: 0.5rem;
+    border-radius: 9999px;
+    background: linear-gradient(to right, var(--od-brand-primary) var(--fill), var(--od-surface-tint) var(--fill));
+  }
+  .od-range::-moz-range-track {
+    height: 0.5rem;
+    border-radius: 9999px;
+    background: var(--od-surface-tint);
+  }
+  .od-range::-moz-range-progress {
+    height: 0.5rem;
+    border-radius: 9999px;
+    background: var(--od-brand-primary);
+  }
+  .od-range::-webkit-slider-thumb {
+    appearance: none;
+    margin-top: -0.625rem;
+    width: 1.75rem;
+    height: 1.75rem;
+    border: 3px solid var(--od-surface-page);
+    border-radius: 9999px;
+    background: var(--od-brand-primary);
+    box-shadow: 0 0 0 2px var(--od-brand-primary), 0 4px 10px rgb(36 27 58 / 0.25);
+    transition: transform 200ms var(--ease-soft);
+  }
+  .od-range::-moz-range-thumb {
+    width: 1.375rem;
+    height: 1.375rem;
+    border: 3px solid var(--od-surface-page);
+    border-radius: 9999px;
+    background: var(--od-brand-primary);
+    box-shadow: 0 0 0 2px var(--od-brand-primary), 0 4px 10px rgb(36 27 58 / 0.25);
+    transition: transform 200ms var(--ease-soft);
+  }
+  .od-range:active::-webkit-slider-thumb {
+    transform: scale(1.12);
+  }
+  .od-range:active::-moz-range-thumb {
+    transform: scale(1.12);
+  }
+  @media (forced-colors: active) {
+    .od-range {
+      appearance: auto;
+    }
+  }
+
+  /* Popovers and the compact menu: fade and settle in from just above, then leave quickly.
+     Closed panels are `inert` and hidden, so nothing inside them can be reached. */
+  .od-pop {
+    transform-origin: top right;
+    transition:
+      opacity 220ms var(--ease-soft),
+      transform 260ms var(--ease-soft),
+      visibility 0s linear 0s;
+  }
+  .od-pop[data-open='false'] {
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+    transition:
+      opacity 160ms var(--ease-soft-in-out),
+      transform 160ms var(--ease-soft-in-out),
+      visibility 0s linear 160ms;
+  }
+
+  /* Items of the compact menu arrive one after another (--i is the item's place). */
+  .od-pop .od-stagger {
+    transition:
+      opacity 260ms var(--ease-soft) calc(var(--i, 0) * 28ms + 40ms),
+      transform 320ms var(--ease-soft) calc(var(--i, 0) * 28ms + 40ms);
+  }
+  .od-pop[data-open='false'] .od-stagger {
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: none;
   }
 
   /* Quiet mode keeps the icon tiles but drops their colours (05 Shared, "Quiet mode"). */

@@ -172,6 +172,24 @@ Most of the design is a new look for pages we already have. Some frames show fea
 - `SiteFooter.jsx`: Privacy, Accessibility statement, Contact us, on every page (it is already on every page).
 - Landmarks stay: skip link first, then the header (banner), `main` with `id="main"`, footer.
 
+
+### 4.4 Motion and the text size slider (your change, 2026-10-16)
+
+You asked for a smoother, more polished feel. Motion stays short and soft, and **Reduce motion turns all of it off** (the system setting or Account → Display; transitions also lose their delays).
+
+| Where | What moves | Timing |
+|---|---|---|
+| Every new page | The page content rises 12 px and fades in (keyed on the address, so filters and searches don't replay it) | 420 ms, soft ease-out |
+| High contrast, Quiet mode | Colours cross-fade instead of flashing; a class on `<html>` only for the moment of the switch | 450 ms |
+| Text size, compact Menu | The panel fades and settles from just above; closing is quicker; menu items arrive one after another; the Menu bars turn into a cross | 220–320 ms open, 160 ms close, 28 ms per item |
+| Full ↔ compact header | The header fades into its new form | 240 ms |
+| Dialogs | The backdrop fades; the dialog rises and scales up slightly, and leaves faster | 320 ms in, 180 ms out |
+| Buttons, links, nav pills | Colours ease; buttons press in slightly; the orange arrow nudges toward where it points | 200–300 ms |
+| Job cards | The border warms to lilac with a soft shadow on hover | 300 ms |
+| Alerts and the error summary | Settle in from just above when they appear | 220 ms |
+
+**Text size is now a slider** (replacing three clicks of one button): 100 % to 200 % in 5 % steps, the page resizing live as it moves, with **Smaller** and **Larger** buttons for people who find dragging hard, and Standard (100 %), Large (125 %) and Extra large (150 %) as quick picks. It opens from **Text size** in the utility bar and sits at the top of Account → Display. The setting is stored as a number; sizes saved under the old names still load. 200 % is the WCAG 1.4.4 resize target.
+
 ---
 
 ## 5. Page by page

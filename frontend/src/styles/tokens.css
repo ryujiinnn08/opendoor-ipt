@@ -3,7 +3,8 @@
  * brand/primary → --od-brand-primary). Plan: UI_REVAMP_PLAN §4.1.
  * Text pairs meet 4.5:1 and borders 3:1 in both themes; tokens.test.js checks them.
  * The display settings are attributes on <html>:
- *   data-contrast="high"   data-text="large" | "xlarge"   data-motion="reduce"   data-quiet
+ *   data-contrast="high"   data-motion="reduce"   data-quiet   data-menu="compact"
+ * and the text size as an inline --od-font-size (100 % to 200 %).
  */
 :root {
   --od-text-default: #241b3a;
@@ -38,7 +39,7 @@
   --od-status-info: #47306f;
   --od-status-info-bg: #f5f1fc;
 
-  /* Text size: Standard 100 %, Large 125 %, Extra large 150 %. Every size is in rem. */
+  /* Text size: 100 % to 200 %, set inline by the display settings. Every size is in rem. */
   --od-font-size: 100%;
 }
 
@@ -61,14 +62,6 @@
   --od-status-warning-bg: #ffffff;
   --od-status-info: #2a1850;
   --od-status-info-bg: #ffffff;
-}
-
-:root[data-text='large'] {
-  --od-font-size: 125%;
-}
-
-:root[data-text='xlarge'] {
-  --od-font-size: 150%;
 }
 
 /* Printing (My résumé): black on white in every theme, since browsers leave out backgrounds. */

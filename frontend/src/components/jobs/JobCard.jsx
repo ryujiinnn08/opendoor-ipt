@@ -37,7 +37,7 @@ export default function JobCard({ job, to, showEmployer = true }) {
   const footer = [showEmployer ? listFact(employer) : null, job.closes_on ? `Apply by ${formatDay(job.closes_on)}` : null].filter(Boolean)
 
   return (
-    <li className="flex gap-4 rounded-lg border-2 border-border bg-surface p-5 sm:p-6">
+    <li className="flex gap-4 rounded-lg border-2 border-border bg-surface p-5 transition-[border-color,box-shadow] duration-300 ease-soft hover:border-lilac hover:shadow-[0_10px_28px_rgba(36,27,58,0.08)] sm:p-6">
       <IconTile icon="briefcase" tone={toneFor(job.id)} />
 
       <div className="min-w-0 flex-1">

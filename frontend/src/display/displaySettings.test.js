@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { applySettings, DEFAULTS, nextTextSize, readSettings, saveSettings } from './displaySettings.js'
+import { applySettings, cleanTextSize, DEFAULTS, readSettings, saveSettings, textSizeLabel } from './displaySettings.js'
 
 describe('display settings', () => {
   beforeEach(() => window.localStorage.clear())
@@ -17,15 +17,24 @@ describe('display settings', () => {
   })
 
   it('saves and reads back', () => {
-    const settings = { text: 'xlarge', contrast: 'high', motion: 'reduce', quiet: true, menu: 'compact' }
+    const settings = { text: 135, contrast: 'high', motion: 'reduce', quiet: true, menu: 'compact' }
     saveSettings(settings)
     expect(readSettings()).toEqual(settings)
   })
 
-  it('sets the attributes on <html> and removes them for the defaults', () => {
+  it('keeps text sizes between 100% and 200% in 5% steps, and reads the old named sizes', () => {
+    expect(cleanTextSize(50)).toBe(100)
+    expect(cleanTextSize(260)).toBe(200)
+    expect(cleanTextSize(127)).toBe(125)
+    expect(cleanTextSize('large')).toBe(125)
+    expect(cleanTextSize('xlarge')).toBe(150)
+    expect(cleanTextSize('huge')).toBeNull()
+  })
+
+  it('sets the text size and the attributes on <html>, and removes them for the defaults', () => {
     const root = document.createElement('html')
-    applySettings({ text: 'large', contrast: 'high', motion: 'reduce', quiet: true, menu: 'compact' }, root)
-    expect(root.getAttribute('data-text')).toBe('large')
+    applySettings({ text: 140, contrast: 'high', motion: 'reduce', quiet: true, menu: 'compact' }, root)
+    expect(root.style.getPropertyValue('--od-font-size')).toBe('140%')
     expect(root.getAttribute('data-contrast')).toBe('high')
     expect(root.getAttribute('data-motion')).toBe('reduce')
     expect(root.hasAttribute('data-quiet')).toBe(true)
@@ -35,9 +44,8 @@ describe('display settings', () => {
     expect(root.attributes).toHaveLength(0)
   })
 
-  it('goes round the text sizes', () => {
-    expect(nextTextSize('standard').value).toBe('large')
-    expect(nextTextSize('large').value).toBe('xlarge')
-    expect(nextTextSize('xlarge').value).toBe('standard')
+  it('names the design’s sizes', () => {
+    expect(textSizeLabel(125)).toBe('125%, Large')
+    expect(textSizeLabel(135)).toBe('135%')
   })
 })

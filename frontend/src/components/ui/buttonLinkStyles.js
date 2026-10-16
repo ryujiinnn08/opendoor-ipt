@@ -2,7 +2,7 @@
 // SM 44 px tall, so every target is at least 44 px. Button.jsx and links that look like buttons
 // share these classes; a link stays a link when the action goes to another page.
 export const BUTTON_BASE =
-  'inline-flex items-center justify-center gap-2 rounded-full border-2 font-display font-semibold no-underline transition-colors'
+  'group inline-flex items-center justify-center gap-2 rounded-full border-2 font-display font-semibold no-underline transition-[color,background-color,border-color,box-shadow,scale] duration-200 ease-soft active:scale-[0.97]'
 
 export const BUTTON_SIZES = {
   md: 'min-h-13 px-6 py-2.5 text-lg',
@@ -26,4 +26,4 @@ export const SECONDARY_LINK = buttonClasses('secondary')
 
 // A standalone text link (e.g., "Back to job postings"), at least 44 px tall to tap.
 export const TEXT_LINK =
-  'inline-flex min-h-11 items-center gap-1.5 font-bold text-primary underline underline-offset-4 hover:text-primary-hover hover:no-underline'
+  'inline-flex min-h-11 items-center gap-1.5 font-bold text-primary underline underline-offset-4 transition-colors duration-200 ease-soft hover:text-primary-hover hover:no-underline'

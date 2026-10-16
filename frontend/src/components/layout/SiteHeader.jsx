@@ -7,7 +7,8 @@ import Icon from '../ui/Icon.jsx'
 import BrandLink from './BrandLink.jsx'
 import { isCurrent } from './portalMenus.js'
 
-const NAV_ITEM = 'inline-flex min-h-11 items-center gap-2 whitespace-nowrap rounded-full border-2 px-3.5 text-lg'
+const NAV_ITEM =
+  'inline-flex min-h-11 items-center gap-2 whitespace-nowrap rounded-full border-2 px-3.5 text-lg transition-[background-color,border-color,color] duration-300 ease-soft'
 const NAV_IDLE = 'border-transparent text-text hover:bg-primary-soft'
 const NAV_CURRENT = 'border-primary bg-selected font-bold text-accent'
 const GAP = 24
@@ -43,18 +44,24 @@ export default function SiteHeader({ homeTo = '/', left, right }) {
     const observer = new ResizeObserver(check)
     observer.observe(row)
     observer.observe(copy)
-    return () => observer.disconnect()
+    // Resize observers wait for the next frame, which a page in a background tab never paints;
+    // the window's own resize event keeps the header right when the tab comes back.
+    window.addEventListener('resize', check)
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', check)
+    }
   }, [canMeasure])
 
   const compact = settings.menu === 'compact' || tooNarrow
 
   return (
-    <header className="relative border-b border-border bg-surface print:hidden">
+    <header className="relative z-20 border-b border-border bg-surface print:hidden">
       <div ref={rowRef} className="mx-auto max-w-6xl px-4 py-3 sm:px-6">
         {compact ? (
-          <CompactRow homeTo={homeTo} entries={[...left, ...right]} pathname={pathname} />
+          <CompactRow key="compact" homeTo={homeTo} entries={[...left, ...right]} pathname={pathname} />
         ) : (
-          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-6">
+          <div key="full" className="grid animate-fade-in grid-cols-[1fr_auto_1fr] items-center gap-6">
             <nav aria-label="Main" className="justify-self-start">
               <EntryList entries={left} pathname={pathname} />
             </nav>
@@ -188,7 +195,7 @@ function CompactRow({ homeTo, entries, pathname }) {
   const panelId = useId()
   const buttonRef = useRef(null)
   const wrapperRef = useRef(null)
-  const ITEM = 'flex min-h-11 w-full items-center gap-3 rounded-md px-3 text-left'
+  const ITEM = 'flex min-h-11 w-full items-center gap-3 rounded-md px-3 text-left transition-colors duration-200 ease-soft'
 
   useEffect(() => {
     if (!open) return
@@ -207,7 +214,7 @@ function CompactRow({ homeTo, entries, pathname }) {
   }
 
   return (
-    <div className="flex items-center justify-between gap-4">
+    <div className="flex animate-fade-in items-center justify-between gap-4">
       <BrandLink to={homeTo} />
       <nav aria-label="Main" ref={wrapperRef} onKeyDown={onKeyDown} className="relative">
         <button
@@ -218,15 +225,26 @@ function CompactRow({ homeTo, entries, pathname }) {
           onClick={() => setOpen(!open)}
           className={buttonClasses('secondary', 'sm')}
         >
-          <Icon name={open ? 'cross' : 'menu'} className="size-5" />
+          <span aria-hidden="true" className="relative size-5">
+            <Icon
+              name="menu"
+              className={`absolute inset-0 size-5 transition-[opacity,rotate] duration-300 ease-soft ${open ? 'rotate-90 opacity-0' : 'opacity-100'}`}
+            />
+            <Icon
+              name="cross"
+              className={`absolute inset-0 size-5 transition-[opacity,rotate] duration-300 ease-soft ${open ? 'opacity-100' : '-rotate-90 opacity-0'}`}
+            />
+          </span>
           Menu
         </button>
         <ul
           id={panelId}
-          hidden={!open}
-          className="absolute right-0 z-30 mt-2 grid w-[min(30rem,calc(100vw-2rem))] gap-1 rounded-lg border-2 border-accent bg-surface p-3 shadow-[0_16px_32px_rgba(36,27,58,0.2)] sm:grid-cols-2"
+          data-open={open}
+          inert={!open}
+          aria-hidden={!open}
+          className="od-pop absolute right-0 z-30 mt-2 grid w-[min(30rem,calc(100vw-2rem))] gap-1 rounded-lg border-2 border-accent bg-surface p-3 shadow-[0_16px_32px_rgba(36,27,58,0.2)] sm:grid-cols-2"
         >
-          {entries.map((entry) => {
+          {entries.map((entry, index) => {
             const current = Boolean(entry.to) && isCurrent(entry, pathname)
             const item = (
               <>
@@ -235,7 +253,7 @@ function CompactRow({ homeTo, entries, pathname }) {
               </>
             )
             return (
-              <li key={entry.label}>
+              <li key={entry.label} className="od-stagger" style={{ '--i': index }}>
                 {entry.onClick ? (
                   <LogOutButton entry={entry} className={`${ITEM} font-bold text-primary hover:bg-primary-soft`} />
                 ) : (

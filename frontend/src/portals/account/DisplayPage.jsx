@@ -8,10 +8,9 @@ import PageTabs from '../../components/ui/PageTabs.jsx'
 import { ACCOUNT_TABS } from '../../lib/sectionTabs.js'
 import { RADIO } from '../../components/ui/fieldStyles.js'
 import { useDisplaySettings } from '../../display/displayContext.js'
-import { TEXT_SIZES } from '../../display/displaySettings.js'
+import TextSizeSlider from '../../components/ui/TextSizeSlider.jsx'
 
 const GROUPS = [
-  { name: 'text', legend: 'Text size', options: TEXT_SIZES },
   {
     name: 'contrast',
     legend: 'Colours',
@@ -31,6 +30,7 @@ const GROUPS = [
   {
     name: 'quiet',
     legend: 'Decoration',
+    hint: 'Quiet hides the sparkles and orange arrows, and makes the coloured icon squares plain.',
     options: [
       { value: false, label: 'Show sparkles and colours' },
       { value: true, label: 'Quiet: plain and calm' },
@@ -75,10 +75,26 @@ export default function DisplayPage() {
         </h2>
         <p className="text-sm text-muted">Changes apply right away and are saved on this device.</p>
 
-        <div className="mt-4 grid gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-5 max-w-md">
+          <TextSizeSlider
+            id="display-text"
+            value={settings.text}
+            onChange={(text) => {
+              update({ text })
+              setSaved(true)
+            }}
+          />
+        </div>
+
+        <div className="mt-8 grid gap-x-8 gap-y-6 sm:grid-cols-2">
           {GROUPS.map((group) => (
             <fieldset key={group.name}>
               <legend className="text-lg font-semibold">{group.legend}</legend>
+              {group.hint && (
+                <p id={`display-${group.name}-hint`} className="mt-1 text-sm text-muted">
+                  {group.hint}
+                </p>
+              )}
               <div className="mt-2 space-y-1">
                 {group.options.map((option) => {
                   const id = `display-${group.name}-${option.value}`
@@ -90,6 +106,7 @@ export default function DisplayPage() {
                         name={`display-${group.name}`}
                         checked={settings[group.name] === option.value}
                         onChange={() => choose(group.name, option.value)}
+                        aria-describedby={group.hint ? `display-${group.name}-hint` : undefined}
                         className={RADIO}
                       />
                       <label htmlFor={id} className="font-bold">
@@ -104,7 +121,7 @@ export default function DisplayPage() {
         </div>
 
         {saved && (
-          <Notice tone="success" className="mt-6">
+          <Notice tone="success" className="mt-6 animate-reveal">
             <p className="font-bold text-success">Display settings applied and saved on this device.</p>
           </Notice>
         )}
