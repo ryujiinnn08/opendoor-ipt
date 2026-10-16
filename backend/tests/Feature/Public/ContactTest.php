@@ -54,6 +54,19 @@ class ContactTest extends TestCase
         $mail->assertSeeInText('I need help with <b>my</b> account.');
     }
 
+    public function test_the_styled_version_escapes_the_message_and_keeps_its_line_breaks(): void
+    {
+        config(['opendoor.frontend_url' => 'https://opendoor.example']);
+        $mail = new ContactMessage('Maria Santos', 'maria@example.com', "Line one <script>x</script>\nLine two");
+
+        $mail->assertSeeInHtml('New message from Maria Santos');
+        $mail->assertSeeInHtml('&lt;script&gt;x&lt;/script&gt;<br />', false);
+        $mail->assertDontSeeInHtml('<script>', false);
+        $mail->assertSeeInHtml('href="mailto:maria@example.com?subject=Re%3A%20Your%20message%20to%20OpenDoor"', false);
+        $mail->assertSeeInHtml('src="https://opendoor.example/email-logo.png"', false);
+        $mail->assertSeeInHtml('(Philippine time)');
+    }
+
     public function test_a_name_cannot_put_line_breaks_in_the_subject(): void
     {
         $mail = new ContactMessage("Maria\r\nBcc: spam@example.com", 'maria@example.com', 'Hello team, please help.');

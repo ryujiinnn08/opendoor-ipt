@@ -33,6 +33,17 @@ class ContactMessage extends Mailable
 
     public function content(): Content
     {
-        return new Content(text: 'mail.contact');
+        $site = rtrim((string) config('opendoor.frontend_url'), '/');
+
+        return new Content(
+            html: 'mail.contact-html',
+            text: 'mail.contact',
+            with: [
+                'siteUrl' => $site,
+                'logoUrl' => $site.'/email-logo.png',
+                // The team works in Philippine time.
+                'sentAt' => now('Asia/Manila')->format('F j, Y, g:i A').' (Philippine time)',
+            ],
+        );
     }
 }
