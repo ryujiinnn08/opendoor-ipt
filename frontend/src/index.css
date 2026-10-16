@@ -77,6 +77,11 @@
   --animate-overlay-out: od-fade-out 180ms var(--ease-soft-in-out) both;
   --animate-dialog-in: od-dialog-in 320ms var(--ease-soft) both;
   --animate-dialog-out: od-dialog-out 180ms var(--ease-soft-in-out) both;
+  /* The home page's entrance: the words slide in from the left one after another, then the
+     mascot slides in from the right and settles with a small overshoot. */
+  --animate-hero-text: od-slide-from-left 760ms var(--ease-soft) backwards;
+  --animate-hero-mascot: od-slide-from-right 1100ms cubic-bezier(0.34, 1.35, 0.64, 1) backwards;
+  --animate-twinkle: od-twinkle 3.2s ease-in-out infinite;
 
   @keyframes od-reveal {
     from {
@@ -97,6 +102,40 @@
     to {
       opacity: 1;
       transform: none;
+    }
+  }
+
+  @keyframes od-slide-from-left {
+    from {
+      opacity: 0;
+      transform: translateX(-40px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes od-slide-from-right {
+    from {
+      opacity: 0;
+      transform: translateX(120px) rotate(4deg);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes od-twinkle {
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1) rotate(0deg);
+    }
+    50% {
+      opacity: 0.55;
+      transform: scale(0.78) rotate(18deg);
     }
   }
 
@@ -182,6 +221,8 @@
     *::before,
     *::after {
       animation-duration: 0.01ms !important;
+      animation-delay: 0s !important;
+      animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
       transition-delay: 0s !important;
       scroll-behavior: auto !important;
@@ -192,6 +233,8 @@
   :root[data-motion='reduce'] *::before,
   :root[data-motion='reduce'] *::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     transition-delay: 0s !important;
     scroll-behavior: auto !important;
@@ -304,6 +347,11 @@
     opacity: 0;
     transform: translateY(-4px);
     transition: none;
+  }
+
+  /* The orange highlight behind words in a heading is decoration too. */
+  :root[data-quiet] .od-highlight {
+    background-color: transparent;
   }
 
   /* Quiet mode keeps the icon tiles but drops their colours (05 Shared, "Quiet mode"). */

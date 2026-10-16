@@ -4,7 +4,7 @@ import { useEffect } from 'react'
  * The page's <h1>. Focus moves here after navigation (see RootLayout), and it sets the
  * browser tab title so screen-reader users hear which page they are on.
  */
-export default function PageHeading({ children, title, className = '' }) {
+export default function PageHeading({ children, title, className = '', size = 'text-title sm:text-title-lg' }) {
   const documentTitle = title ?? (typeof children === 'string' ? children : null)
 
   useEffect(() => {
@@ -12,7 +12,7 @@ export default function PageHeading({ children, title, className = '' }) {
   }, [documentTitle])
 
   return (
-    <h1 tabIndex={-1} className={`text-title font-bold sm:text-title-lg ${className}`}>
+    <h1 tabIndex={-1} className={`${size} font-bold ${className}`}>
       {children}
     </h1>
   )
