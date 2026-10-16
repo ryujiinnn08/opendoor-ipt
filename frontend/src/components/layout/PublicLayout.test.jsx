@@ -27,10 +27,4 @@ describe('PublicLayout', () => {
       'page',
     )
   })
-
-  it('credits Icons8 in the footer, as its free licence requires', () => {
-    renderRoutes(routes, { path: '/' })
-
-    expect(within(screen.getByRole('contentinfo')).getByRole('link', { name: 'Icons by Icons8' })).toHaveAttribute('href', 'https://icons8.com')
-  })
 })

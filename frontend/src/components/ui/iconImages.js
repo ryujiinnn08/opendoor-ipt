@@ -1,43 +1,95 @@
-// Icons from Icons8 (https://icons8.com), style "Fluency Systems Regular", used under the free
-// licence, which asks for the "Icons by Icons8" link in the footer. The PNGs are used as masks
-// over the text colour, so an icon takes the colour of the text around it (purple links, amber
-// accommodations, the high-contrast theme). Each icon is decorative: the text next to it
-// carries the meaning. To add one, download it in the same style from icons8.com into
-// src/assets/icons/ and add it below.
-import alert from '../../assets/icons/box-important.png'
-import calendar from '../../assets/icons/calendar.png'
-import chat from '../../assets/icons/chat.png'
-import check from '../../assets/icons/checkmark.png'
-import circle from '../../assets/icons/circle.png'
-import clock from '../../assets/icons/clock.png'
-import people from '../../assets/icons/conference-call.png'
-import door from '../../assets/icons/door-opened.png'
-import pencil from '../../assets/icons/edit.png'
-import chevronDown from '../../assets/icons/expand-arrow.png'
-import info from '../../assets/icons/info.png'
-import lock from '../../assets/icons/lock.png'
-import minus from '../../assets/icons/minus.png'
-import monitor from '../../assets/icons/monitor.png'
-import cross from '../../assets/icons/multiply.png'
-import refresh from '../../assets/icons/refresh.png'
+// Lucide icons (https://lucide.dev, ISC licence), the set the Figma design uses: 24 px, 2 px
+// stroke, drawn in the current text colour. Each icon is decorative: the text next to it
+// carries the meaning. Import each one by name so only the icons used are bundled; to add
+// one, import it from lucide-react and give it a name below.
+import {
+  Accessibility,
+  ArrowUpRight,
+  Bell,
+  Bookmark,
+  Briefcase,
+  Building2,
+  Calendar,
+  Check,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Circle,
+  ClipboardCheck,
+  Clock,
+  Contrast,
+  DoorOpen,
+  Eye,
+  EyeOff,
+  FileText,
+  Flag,
+  House,
+  Info,
+  Leaf,
+  Lock,
+  LogOut,
+  Menu,
+  MessageSquare,
+  Minus,
+  Monitor,
+  PanelTop,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Search,
+  ShieldCheck,
+  Sparkle,
+  TriangleAlert,
+  Type,
+  User,
+  Users,
+  Volume2,
+  X,
+} from 'lucide-react'
 
-export const IMAGES = {
-  alert,
-  calendar,
-  chat,
-  check,
-  'chevron-down': chevronDown,
-  circle,
-  clock,
-  cross,
-  door,
-  info,
-  lock,
-  minus,
-  monitor,
-  pencil,
-  people,
-  refresh,
+export const ICONS = {
+  accessibility: Accessibility,
+  alert: TriangleAlert,
+  'arrow-up-right': ArrowUpRight,
+  bell: Bell,
+  bookmark: Bookmark,
+  briefcase: Briefcase,
+  building: Building2,
+  calendar: Calendar,
+  chat: MessageSquare,
+  check: Check,
+  'chevron-down': ChevronDown,
+  'chevron-left': ChevronLeft,
+  'chevron-right': ChevronRight,
+  circle: Circle,
+  'clipboard-check': ClipboardCheck,
+  clock: Clock,
+  contrast: Contrast,
+  cross: X,
+  door: DoorOpen,
+  eye: Eye,
+  'eye-off': EyeOff,
+  'file-text': FileText,
+  flag: Flag,
+  home: House,
+  info: Info,
+  leaf: Leaf,
+  lock: Lock,
+  'log-out': LogOut,
+  menu: Menu,
+  minus: Minus,
+  monitor: Monitor,
+  panel: PanelTop,
+  pencil: Pencil,
+  people: Users,
+  plus: Plus,
+  refresh: RefreshCw,
+  search: Search,
+  'shield-check': ShieldCheck,
+  sparkle: Sparkle,
+  type: Type,
+  user: User,
+  volume: Volume2,
 }
 
-export const ICON_NAMES = Object.keys(IMAGES)
+export const ICON_NAMES = Object.keys(ICONS)

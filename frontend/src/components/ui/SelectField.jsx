@@ -1,5 +1,6 @@
 import { FieldError } from './FormField.jsx'
-import { describedBy, inputClasses } from './fieldStyles.js'
+import Icon from './Icon.jsx'
+import { describedBy, HINT, inputClasses } from './fieldStyles.js'
 
 /**
  * options: [{ value, label, disabled? }]
@@ -14,26 +15,38 @@ export default function SelectField({ id, label, hint, error, options, placehold
         {label}
       </label>
       {hint && (
-        <p id={hintId} className="mt-1 text-muted">
+        <p id={hintId} className={HINT}>
           {hint}
         </p>
       )}
       {error && <FieldError id={errorId}>{error}</FieldError>}
-      <select
-        id={id}
-        name={id}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={describedBy(hintId, errorId)}
-        className={`mt-2 ${inputClasses(Boolean(error), 'max-w-md')}`}
-        {...selectProps}
-      >
-        {placeholder && <option value="">{placeholder}</option>}
-        {options.map((option) => (
-          <option key={option.value} value={option.value} disabled={option.disabled}>
-            {option.label}
-          </option>
-        ))}
-      </select>
+      <SelectBox>
+        <select
+          id={id}
+          name={id}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={describedBy(hintId, errorId)}
+          className={inputClasses(Boolean(error), 'cursor-pointer appearance-none pr-12 forced-colors:appearance-auto')}
+          {...selectProps}
+        >
+          {placeholder && <option value="">{placeholder}</option>}
+          {options.map((option) => (
+            <option key={option.value} value={option.value} disabled={option.disabled}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </SelectBox>
+    </div>
+  )
+}
+
+/** Wraps a <select> to draw the design's chevron over it (the browser's arrow is hidden). */
+export function SelectBox({ className = 'mt-2 max-w-md', children }) {
+  return (
+    <div className={`relative ${className}`}>
+      {children}
+      <Icon name="chevron-down" className="pointer-events-none absolute top-1/2 right-4 size-5 -translate-y-1/2 forced-colors:hidden" />
     </div>
   )
 }

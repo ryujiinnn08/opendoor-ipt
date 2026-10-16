@@ -3,7 +3,7 @@
  */
 export default function EmptyState({ action, children }) {
   return (
-    <div className="border-y border-border py-8">
+    <div className="rounded-lg border-2 border-border bg-surface p-6">
       <p className="max-w-prose text-lg">{children}</p>
       {action && <div className="mt-4">{action}</div>}
     </div>

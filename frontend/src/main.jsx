@@ -1,3 +1,10 @@
+// Fonts served from the site itself (no visitor addresses sent to Google, PHASE_7 Q19): Lexend
+// for headings, buttons and numbers; Atkinson Hyperlegible for everything else.
+import '@fontsource/atkinson-hyperlegible/latin-400.css'
+import '@fontsource/atkinson-hyperlegible/latin-400-italic.css'
+import '@fontsource/atkinson-hyperlegible/latin-700.css'
+import '@fontsource/lexend/latin-600.css'
+import '@fontsource/lexend/latin-700.css'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router-dom'

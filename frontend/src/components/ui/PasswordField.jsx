@@ -3,7 +3,8 @@ import { checkPassword } from '../../lib/passwordRules.js'
 import { useAnnounce } from './announcerContext.js'
 import Icon from './Icon.jsx'
 import { FieldError } from './FormField.jsx'
-import { describedBy, inputClasses } from './fieldStyles.js'
+import { buttonClasses } from './buttonLinkStyles.js'
+import { describedBy, HINT, inputClasses } from './fieldStyles.js'
 
 /**
  * Password input with a "Show password" toggle and, optionally, a live checklist of the
@@ -32,7 +33,7 @@ export default function PasswordField({ id, label, hint, error, value, onChange,
         {label}
       </label>
       {hint && (
-        <p id={hintId} className="mt-1 text-muted">
+        <p id={hintId} className={HINT}>
           {hint}
         </p>
       )}
@@ -55,7 +56,7 @@ export default function PasswordField({ id, label, hint, error, value, onChange,
           aria-controls={id}
           aria-pressed={visible}
           aria-label={`${visible ? 'Hide' : 'Show'} password`}
-          className="min-h-11 shrink-0 rounded-md border-2 border-primary bg-surface px-3 font-bold text-primary"
+          className={`${buttonClasses('secondary', 'sm')} min-h-13 shrink-0`}
         >
           {visible ? 'Hide' : 'Show'}
         </button>

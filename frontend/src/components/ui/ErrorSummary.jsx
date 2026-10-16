@@ -21,9 +21,9 @@ export default function ErrorSummary({ errors, focusKey }) {
       ref={ref}
       tabIndex={-1}
       aria-labelledby="error-summary-title"
-      className="mb-8 rounded-md border-4 border-danger bg-surface p-4"
+      className="mb-8 rounded-2xl border-2 border-danger bg-danger-soft p-4"
     >
-      <h2 id="error-summary-title" className="text-xl font-bold">
+      <h2 id="error-summary-title" className="text-xl font-bold text-danger">
         There is a problem
       </h2>
       <ul className="mt-2 list-none space-y-1">
@@ -36,7 +36,7 @@ export default function ErrorSummary({ errors, focusKey }) {
                   event.preventDefault()
                   document.getElementById(error.id)?.focus()
                 }}
-                className="font-bold text-danger underline underline-offset-4"
+                className="font-bold text-primary underline underline-offset-4 hover:no-underline"
               >
                 {error.message}
               </a>

@@ -1,32 +1,70 @@
 @import 'tailwindcss';
 @import './styles/tokens.css';
 
+/* Tailwind names for the design tokens (UI_REVAMP_PLAN §4.1). The old names are kept so the
+   pages' classes keep working; only their colours changed. */
 @theme inline {
   --font-sans: 'Atkinson Hyperlegible', ui-sans-serif, system-ui, sans-serif;
-  --color-bg: var(--od-bg);
-  --color-surface: var(--od-surface);
-  --color-text: var(--od-text);
+  --font-display: 'Lexend', 'Atkinson Hyperlegible', ui-sans-serif, system-ui, sans-serif;
+  --color-bg: var(--od-surface-page);
+  --color-surface: var(--od-surface-page);
+  --color-subtle: var(--od-surface-subtle);
+  --color-current: var(--od-surface-current);
+  --color-text: var(--od-text-default);
   --color-muted: var(--od-text-muted);
-  --color-border: var(--od-border);
-  --color-primary: var(--od-primary);
-  --color-primary-hover: var(--od-primary-hover);
-  --color-primary-soft: var(--od-primary-soft);
-  --color-success-soft: var(--od-success-soft);
-  --color-danger-soft: var(--od-danger-soft);
-  --color-neutral-soft: var(--od-neutral-soft);
-  --color-on-primary: var(--od-on-primary);
-  --color-accent: var(--od-accent);
-  --color-success: var(--od-success);
-  --color-danger: var(--od-danger);
+  --color-accent: var(--od-text-accent);
+  --color-border: var(--od-border-subtle);
+  --color-input: var(--od-border-input);
+  --color-focus: var(--od-border-focus);
+  --color-primary: var(--od-brand-primary);
+  --color-primary-hover: var(--od-brand-primary-dark);
+  --color-primary-soft: var(--od-surface-tint);
+  --color-on-primary: var(--od-text-on-primary);
+  --color-neutral-soft: var(--od-surface-tint);
+  --color-success: var(--od-status-success);
+  --color-success-soft: var(--od-status-success-bg);
+  --color-danger: var(--od-status-danger);
+  --color-danger-soft: var(--od-status-danger-bg);
+  --color-warning: var(--od-status-warning);
+  --color-warning-soft: var(--od-status-warning-bg);
+  --color-info: var(--od-status-info);
+  --color-info-soft: var(--od-status-info-bg);
+  --color-orange: var(--od-accent-orange);
+  --color-pink: var(--od-accent-pink);
+  --color-sky: var(--od-accent-sky);
+  --color-lilac: var(--od-accent-lilac);
 }
 
-/* Type scale and the one motion (plan PHASE_2 §4.10). Sizes are in rem, so the large-text
-   setting scales them; the reduced-motion rule below turns the animation off. */
+/* Type scale from the Figma text styles, in rem so the text-size setting scales everything.
+   Hints (sm, 16 px) are the smallest reading size; xs (15 px) is only for badges and the
+   utility bar, both bold. Radii: 12 px fields and small boxes, 20 px cards and dialogs. */
 @theme {
-  --text-title: 2rem;
-  --text-title--line-height: 1.15;
-  --text-title-lg: 2.5rem;
-  --text-title-lg--line-height: 1.1;
+  --text-xs: 0.9375rem;
+  --text-xs--line-height: 1.25rem;
+  --text-sm: 1rem;
+  --text-sm--line-height: 1.375rem;
+  --text-base: 1.125rem;
+  --text-base--line-height: 1.625rem;
+  --text-lg: 1.25rem;
+  --text-lg--line-height: 1.75rem;
+  --text-xl: 1.3125rem;
+  --text-xl--line-height: 1.75rem;
+  --text-2xl: 1.375rem;
+  --text-2xl--line-height: 1.875rem;
+  --text-title: 1.75rem;
+  --text-title--line-height: 2.25rem;
+  --text-title-lg: 2.125rem;
+  --text-title-lg--line-height: 2.625rem;
+  --text-stat: 2.375rem;
+  --text-stat--line-height: 2.75rem;
+  --text-score: 3.5rem;
+  --text-score--line-height: 4rem;
+  --text-display: 3.75rem;
+  --text-display--line-height: 4.25rem;
+
+  --radius-md: 0.75rem;
+  --radius-lg: 1.25rem;
+
   --animate-reveal: od-reveal 160ms ease-out;
 
   @keyframes od-reveal {
@@ -47,13 +85,21 @@
   }
 
   body {
-    @apply bg-bg text-text font-sans leading-relaxed antialiased;
+    @apply bg-bg text-base text-text font-sans antialiased;
   }
 
-  /* Thick, high-visibility focus ring on everything focusable (WCAG 2.4.7). */
+  /* Lexend for headings: designed for reading speed (00 Design foundations). */
+  :where(h1, h2, h3, h4, legend) {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+
+  /* A dark ring with a white gap on everything focusable (WCAG 2.4.7, 00 Design foundations):
+     the white shadow fills the offset, so the gap shows on tinted and violet backgrounds too. */
   :focus-visible {
-    outline: 3px solid var(--od-focus);
-    outline-offset: 3px;
+    outline: 3px solid var(--od-border-focus);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px var(--od-surface-page);
   }
 
   /* Long words and links people type (URLs, emails) wrap instead of making the page scroll
@@ -65,6 +111,7 @@
   /* Headings receive focus on route change; no ring needed for that. */
   h1:focus {
     outline: none;
+    box-shadow: none;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -75,5 +122,26 @@
       transition-duration: 0.01ms !important;
       scroll-behavior: auto !important;
     }
+  }
+
+  :root[data-motion='reduce'] *,
+  :root[data-motion='reduce'] *::before,
+  :root[data-motion='reduce'] *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@layer components {
+  /* Sparkles, the orange arrow pill and other decoration: hidden from screen readers where
+     they are used (aria-hidden), and gone in Quiet mode. */
+  :root[data-quiet] .od-decoration {
+    display: none;
+  }
+
+  /* Quiet mode keeps the icon tiles but drops their colours (05 Shared, "Quiet mode"). */
+  :root[data-quiet] .od-tile {
+    background-color: var(--od-surface-tint);
   }
 }

@@ -4,8 +4,8 @@ import ApplicationStatusBadge from './ApplicationStatusBadge.jsx'
 
 describe('ApplicationStatusBadge', () => {
   it.each([
-    ['pending', 'Pending', 'clock', 'text-primary'],
-    ['reviewed', 'Reviewed', 'door', 'text-primary'],
+    ['pending', 'Pending', 'clock', 'text-accent'],
+    ['reviewed', 'Reviewed', 'door', 'text-accent'],
     ['hired', 'Hired', 'check', 'text-success'],
     ['rejected', 'Rejected', 'minus', 'text-muted'],
     ['withdrawn', 'Withdrawn', 'minus', 'text-muted'],

@@ -1,16 +1,19 @@
-const VARIANTS = {
-  primary: 'bg-primary text-on-primary hover:bg-primary-hover border-2 border-primary hover:border-primary-hover',
-  secondary: 'bg-surface text-primary border-2 border-primary hover:bg-bg',
-  danger: 'bg-danger text-white border-2 border-danger hover:opacity-90',
-  link: 'text-primary underline underline-offset-4 hover:no-underline px-1',
-}
+import { buttonClasses, TEXT_LINK } from './buttonLinkStyles.js'
+import Icon from './Icon.jsx'
 
 /**
- * While `loading`, the button keeps focus and its label changes (e.g., "Saving…"), so
- * the state is never conveyed by a silently disabled button.
+ * The design's pill button: variant primary, secondary, danger, danger-outline or link; size md
+ * or sm; an optional `icon` before the label. `arrow` adds the orange arrow pill (decoration:
+ * hidden from screen readers and in Quiet mode), for the one main call to action on a page.
+ *
+ * While `loading`, the button keeps focus and its label changes (e.g., "Saving…"), so the state
+ * is never conveyed by a silently disabled button.
  */
 export default function Button({
   variant = 'primary',
+  size = 'md',
+  icon,
+  arrow = false,
   type = 'button',
   loading = false,
   loadingText = 'Please wait…',
@@ -19,7 +22,7 @@ export default function Button({
   onClick,
   ...props
 }) {
-  const sizing = variant === 'link' ? 'min-h-11' : 'min-h-11 px-5 py-2'
+  const look = variant === 'link' ? `${TEXT_LINK} px-1` : buttonClasses(variant, size)
 
   return (
     <button
@@ -33,10 +36,27 @@ export default function Button({
         }
         onClick?.(event)
       }}
-      className={`inline-flex items-center justify-center gap-2 rounded-md font-bold ${sizing} ${VARIANTS[variant]} ${loading ? 'cursor-progress opacity-80' : ''} ${className}`}
+      className={`${look} ${loading ? 'cursor-progress opacity-80' : ''} ${className}`}
       {...props}
     >
-      {loading ? loadingText : children}
+      {loading ? (
+        loadingText
+      ) : (
+        <>
+          {icon && <Icon name={icon} className={size === 'sm' ? 'size-4' : 'size-5'} />}
+          {children}
+          {arrow && <ArrowPill />}
+        </>
+      )}
     </button>
+  )
+}
+
+/** The orange circle with an arrow from the design (decoration only). */
+export function ArrowPill() {
+  return (
+    <span aria-hidden="true" className="od-decoration -mr-2 inline-grid size-7 shrink-0 place-items-center rounded-full bg-orange text-text">
+      <Icon name="arrow-up-right" className="size-4" />
+    </span>
   )
 }

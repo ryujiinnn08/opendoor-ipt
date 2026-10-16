@@ -1,4 +1,5 @@
 import { FieldError } from './FormField.jsx'
+import { RADIO } from './fieldStyles.js'
 
 /**
  * Large radio buttons with a title and a description, inside a fieldset with a legend.
@@ -19,7 +20,7 @@ export default function RadioCardGroup({ name, legend, options, value, onChange,
             <label
               key={option.value}
               htmlFor={id}
-              className={`flex cursor-pointer gap-3 rounded-lg border-2 bg-surface p-4 ${selected ? 'border-primary bg-primary-soft ring-2 ring-primary' : 'border-muted'}`}
+              className={`flex cursor-pointer gap-3 rounded-md border-2 p-4 ${selected ? 'border-primary bg-primary-soft' : 'border-input bg-surface hover:bg-subtle'}`}
             >
               {/* The title is the radio's name and the text its description, so screen readers
                   read "A company or organization, radio button" followed by the hint. */}
@@ -32,14 +33,14 @@ export default function RadioCardGroup({ name, legend, options, value, onChange,
                 onChange={onChange}
                 aria-labelledby={`${id}-title`}
                 aria-describedby={option.text ? `${id}-text` : undefined}
-                className="mt-1 size-6 shrink-0 accent-primary"
+                className={`mt-0.5 ${RADIO}`}
               />
               <span>
                 <span id={`${id}-title`} className="block font-bold">
                   {option.title}
                 </span>
                 {option.text && (
-                  <span id={`${id}-text`} className="block text-muted">
+                  <span id={`${id}-text`} className="block text-sm text-muted">
                     {option.text}
                   </span>
                 )}

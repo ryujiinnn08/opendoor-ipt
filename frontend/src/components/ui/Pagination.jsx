@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom'
 import { pageItems } from '../../lib/pageItems.js'
 
-const ITEM = 'inline-flex min-h-11 min-w-11 items-center justify-center px-2 font-bold'
-const LINK = `${ITEM} text-primary underline underline-offset-4 hover:no-underline`
+const ITEM = 'inline-flex min-h-11 min-w-11 items-center justify-center rounded-full px-3 font-bold'
+const LINK = `${ITEM} text-primary underline underline-offset-4 hover:bg-primary-soft hover:no-underline`
 
 /**
  * Previous, page numbers and Next as links, so every page has its own address. The current
@@ -28,7 +28,7 @@ export default function Pagination({ page, lastPage, hrefForPage, label = 'Pages
                 …
               </span>
             ) : item === page ? (
-              <span aria-current="page" className={`${ITEM} rounded-md bg-primary text-on-primary`}>
+              <span aria-current="page" className={`${ITEM} bg-primary text-on-primary`}>
                 <span className="sr-only">Page </span>
                 {item}
               </span>

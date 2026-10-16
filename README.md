@@ -120,7 +120,7 @@ The header logo is a placeholder at `frontend/public/opendoor-logo.svg` (also us
 
 ## Icons
 
-All icons come from [Icons8](https://icons8.com) in one style, **Fluency Systems Regular**, saved as 96 px PNGs in `frontend/src/assets/icons/` and listed in `frontend/src/components/ui/iconImages.js`. They are drawn in the colour of the text around them, so the same file works for purple links, amber accommodations and the high-contrast theme. We use the free Icons8 licence, which requires the "Icons by Icons8" link in the footer; keep it. To add an icon, download it from icons8.com in the same style (PNG, 96 px), save it in that folder and add it to `iconImages.js`.
+All icons come from [Lucide](https://lucide.dev) (ISC licence), the set the Figma design uses: 24 px line icons with a 2 px stroke, imported one by one from `lucide-react` in `frontend/src/components/ui/iconImages.js`. They are drawn in the colour of the text around them, so the same icon works for links, badges and the high-contrast theme. To add one, import it there and give it a name; use it with `<Icon name="…" />`.
 
 ## Database notes (XAMPP / MariaDB)
 

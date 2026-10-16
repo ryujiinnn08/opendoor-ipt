@@ -17,12 +17,6 @@ export default function SiteFooter() {
                 Accessibility
               </Link>
             </li>
-            <li>
-              {/* Required by the Icons8 free licence for the app's icons. */}
-              <a href="https://icons8.com" className="inline-flex min-h-11 items-center underline underline-offset-4 hover:no-underline">
-                Icons by Icons8
-              </a>
-            </li>
           </ul>
         </nav>
       </div>

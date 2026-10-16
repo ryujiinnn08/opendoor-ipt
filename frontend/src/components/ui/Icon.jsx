@@ -1,30 +1,13 @@
-import { IMAGES } from './iconImages.js'
+import { ICONS } from './iconImages.js'
 
 /**
- * An Icons8 icon (see iconImages.js) drawn in the current text colour. Decorative: the text
- * next to it carries the meaning. Unknown names show a plain circle.
+ * A Lucide icon (see iconImages.js) drawn in the current text colour, so it follows links,
+ * badges and the high-contrast theme. Decorative: the text next to it carries the meaning.
+ * Unknown names show a plain circle.
  */
 export default function Icon({ name, className = 'size-4' }) {
-  const known = name in IMAGES ? name : 'circle'
-  const image = `url("${IMAGES[known]}")`
+  const known = name in ICONS ? name : 'circle'
+  const Svg = ICONS[known]
 
-  return (
-    <span
-      aria-hidden="true"
-      data-icon={known}
-      className={`inline-block shrink-0 bg-current ${className}`}
-      // In Windows high-contrast mode backgrounds are replaced; keep the icon in the text colour.
-      style={{
-        maskImage: image,
-        maskSize: 'contain',
-        maskRepeat: 'no-repeat',
-        maskPosition: 'center',
-        WebkitMaskImage: image,
-        WebkitMaskSize: 'contain',
-        WebkitMaskRepeat: 'no-repeat',
-        WebkitMaskPosition: 'center',
-        forcedColorAdjust: 'none',
-      }}
-    />
-  )
+  return <Svg aria-hidden="true" focusable="false" data-icon={known} strokeWidth={2} className={`inline-block shrink-0 ${className}`} />
 }

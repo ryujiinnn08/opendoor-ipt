@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import { axe } from 'vitest-axe'
@@ -26,22 +26,22 @@ describe('JobCard', () => {
     expect(screen.getByRole('heading', { name: 'Junior Web Developer' })).toBeInTheDocument()
     expect(screen.getByText('Acme Corp.')).toBeInTheDocument()
     expect(screen.getByText('Verified company')).toBeInTheDocument()
-    expect(screen.getByText('Work setup: Remote')).toBeInTheDocument()
-    expect(screen.getByText('Employment type: Full-time')).toBeInTheDocument()
-    expect(screen.getByText('Location: Anywhere in the Philippines')).toBeInTheDocument()
-    expect(screen.getByText('Apply by: November 30, 2026')).toBeInTheDocument()
-    expect(
-      screen.getByText(wholeText('P', 'Provides Remote work, Flexible hours, Screen reader software provided and 1 more')),
-    ).toBeInTheDocument()
+    expect(screen.getByText(wholeText('P', 'Full-time · , Remote · , Anywhere in the Philippines'))).toBeInTheDocument()
+    expect(screen.getByText(/Apply by November 30, 2026/)).toBeInTheDocument()
+    expect(within(screen.getByRole('list', { name: 'Accommodations offered' })).getAllByRole('listitem').map((item) => item.textContent)).toEqual([
+      'Remote work',
+      'Flexible hours',
+      'Screen reader software provided',
+      '+1 moreand 1 more',
+    ])
     expect(await axe(container)).toHaveNoViolations()
   })
 
-  it('lets long accommodation names wrap and gives each fact its own line on phones', () => {
+  it('hides the middle dots from screen readers, who hear commas instead', () => {
     const { container } = renderCard()
 
-    // Only the icon and the first word are kept together.
-    expect([...container.querySelectorAll('.whitespace-nowrap')].map((element) => element.textContent)).toEqual(['Remote', 'Flexible', 'Screen'])
-    expect(screen.getByText('Work setup: Remote').parentElement).toHaveClass('flex-col', 'sm:flex-row')
+    expect([...container.querySelectorAll('[aria-hidden="true"]')].filter((element) => element.textContent === ' · ')).not.toHaveLength(0)
+    expect([...container.querySelectorAll('.sr-only')].map((element) => element.textContent)).toContain(', ')
   })
 
   it('says when the employer is an individual', () => {
@@ -56,7 +56,7 @@ describe('JobCard', () => {
 
     expect(screen.queryByText('Acme Corp.')).not.toBeInTheDocument()
     expect(screen.queryByText('Verified company')).not.toBeInTheDocument()
-    expect(screen.getByText('Work setup: Remote')).toBeInTheDocument()
+    expect(screen.getByText('Remote')).toBeInTheDocument()
   })
 
   it('shows how the job meets the job seeker’s needs', () => {

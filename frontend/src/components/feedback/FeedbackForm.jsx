@@ -8,6 +8,7 @@ import Button from '../ui/Button.jsx'
 import ConfirmDialog from '../ui/ConfirmDialog.jsx'
 import ErrorSummary from '../ui/ErrorSummary.jsx'
 import FormField, { FieldError } from '../ui/FormField.jsx'
+import { RADIO } from '../ui/fieldStyles.js'
 
 /**
  * One accommodation as it was promised (amber rule, the employer's note) with the four answers
@@ -46,7 +47,7 @@ function RatingRow({ item, value, onChange, error }) {
                   onChange={() => onChange(item.id, choice.value)}
                   aria-invalid={error ? true : undefined}
                   aria-describedby={errorId ?? undefined}
-                  className="size-6 shrink-0 accent-primary"
+                  className={RADIO}
                 />
                 <span>{choice.label}</span>
               </label>

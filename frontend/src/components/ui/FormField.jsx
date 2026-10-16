@@ -1,4 +1,5 @@
-import { describedBy, inputClasses } from './fieldStyles.js'
+import Icon from './Icon.jsx'
+import { describedBy, HINT, inputClasses } from './fieldStyles.js'
 
 /**
  * A labelled input with optional hint and error. The error is linked to the input with
@@ -28,7 +29,7 @@ export default function FormField({
         {optional && <span className="font-normal text-muted"> (optional)</span>}
       </label>
       {hint && (
-        <p id={hintId} className="mt-1 text-muted">
+        <p id={hintId} className={HINT}>
           {hint}
         </p>
       )}
@@ -47,8 +48,11 @@ export default function FormField({
 
 export function FieldError({ id, children }) {
   return (
-    <p id={id} className="mt-1 font-bold text-danger">
-      <span className="sr-only">Error:</span> {children}
+    <p id={id} className="mt-1 flex items-start gap-1.5 font-bold text-danger">
+      <Icon name="alert" className="mt-1 size-4" />
+      <span>
+        <span className="sr-only">Error:</span> {children}
+      </span>
     </p>
   )
 }

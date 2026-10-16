@@ -1,3 +1,4 @@
+import { Checkbox } from '../ui/CheckboxField.jsx'
 import FormField, { FieldError } from '../ui/FormField.jsx'
 import { describedBy } from '../ui/fieldStyles.js'
 import AccommodationGroupIcon from './AccommodationGroupIcon.jsx'
@@ -68,14 +69,14 @@ export default function AccommodationPicker({
                 return (
                   <li key={item.id}>
                     <div className="flex items-start gap-3">
-                      <input
-                        id={checkboxId}
-                        type="checkbox"
-                        checked={Boolean(selected)}
-                        onChange={(event) => toggle(item.id, event.target.checked)}
-                        aria-describedby={descriptionId ?? undefined}
-                        className="mt-1 size-6 shrink-0 accent-primary"
-                      />
+                      <span className="mt-0.5">
+                        <Checkbox
+                          id={checkboxId}
+                          checked={Boolean(selected)}
+                          onChange={(event) => toggle(item.id, event.target.checked)}
+                          aria-describedby={descriptionId ?? undefined}
+                        />
+                      </span>
                       <div>
                         {/* The ::before stretches the click area over the checkbox and to 44 px tall, without moving anything. */}
                         <label

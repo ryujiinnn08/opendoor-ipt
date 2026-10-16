@@ -26,7 +26,7 @@ export default function FilterTabs({ label, items, current, param = 'status', re
               <Link
                 to={hrefFor(item.value)}
                 aria-current={active ? 'true' : undefined}
-                className={`inline-flex min-h-11 items-center rounded-full border-2 px-4 font-bold ${active ? 'border-primary bg-primary text-on-primary' : 'border-muted bg-surface text-text hover:border-primary'}`}
+                className={`inline-flex min-h-11 items-center rounded-full border-2 px-4 font-display font-semibold ${active ? 'border-primary bg-primary text-on-primary' : 'border-input bg-surface text-text hover:bg-primary-soft'}`}
               >
                 {item.label}
               </Link>

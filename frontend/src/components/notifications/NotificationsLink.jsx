@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom'
 /**
  * "Notifications (3)" in the header (plan PHASE_6 Q8): a word people can say and screen readers
  * read, not an icon-only bell or a pop-up. No number at 0. The bell before the word is
- * decorative, drawn to match the Icons8 line icons.
+ * decorative.
  */
 export default function NotificationsLink({ count }) {
   return (

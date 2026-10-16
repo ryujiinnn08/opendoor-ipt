@@ -1,30 +1,21 @@
 import { matchCountText, missingText } from '../../lib/matchText.js'
-import Icon from '../ui/Icon.jsx'
+import StatusBadge from '../ui/StatusBadge.jsx'
 
 /**
- * How a job meets the job seeker's needs (plan PHASE_3 §7, the one bold element): the count in
- * bold ink with an amber check, then what's missing in muted text with an open circle. Plain
- * text, read in order after the job's title; never red, never a percentage.
+ * How a job meets the job seeker's needs (plan PHASE_3 §7; the Figma "Match and trust" badge):
+ * green with a check when it meets them all, violet with an open circle otherwise, then what's
+ * missing in muted text. Never red, never a percentage.
  */
 export default function MatchBadge({ match }) {
   const missing = missingText(match.missing)
-  // Amber is for needs a job meets, so "Meets none" gets the muted circle instead.
-  const meetsSome = match.needs_met > 0
+  const meetsAll = match.needs_met === match.needs_total
 
   return (
-    <div className="mt-2">
-      <p className="flex items-start gap-2 font-bold">
-        <span className={`mt-0.5 ${meetsSome ? 'text-accent' : 'text-muted'}`}>
-          <Icon name={meetsSome ? 'check' : 'circle'} className="size-5" />
-        </span>
+    <div className="mt-3">
+      <StatusBadge tone={meetsAll ? 'success' : 'info'} icon={meetsAll ? 'check' : 'circle'}>
         {matchCountText(match)}
-      </p>
-      {missing && (
-        <p className="mt-1 flex items-start gap-2 text-muted">
-          <Icon name="circle" className="mt-0.5 size-5" />
-          {missing}
-        </p>
-      )}
+      </StatusBadge>
+      {missing && <p className="mt-1 text-sm text-muted">{missing}</p>}
     </div>
   )
 }

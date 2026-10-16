@@ -9,7 +9,7 @@ export default function PageHeader({ title, documentTitle, intro, actions }) {
     <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
       <div className="max-w-prose">
         <PageHeading title={documentTitle}>{title}</PageHeading>
-        {intro && <p className="mt-4">{intro}</p>}
+        {intro && <p className="mt-2 text-muted">{intro}</p>}
       </div>
       {actions && <div className="flex flex-wrap gap-3">{actions}</div>}
     </div>

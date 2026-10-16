@@ -33,15 +33,15 @@ export default function Modal({ open, onOpenChange, title, description, children
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-black/60" />
+        <Dialog.Overlay className="fixed inset-0 z-40 bg-[#3b2466]/70" />
         <Dialog.Content
           onOpenAutoFocus={handleOpenAutoFocus}
           onCloseAutoFocus={handleCloseAutoFocus}
           // Without a description, tell Radix not to expect one.
           {...(description ? {} : { 'aria-describedby': undefined })}
-          className="fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border-2 border-border bg-surface p-6 text-text"
+          className="fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg bg-surface p-6 text-text shadow-[0_24px_48px_rgba(36,27,58,0.35)] sm:p-7"
         >
-          <Dialog.Title className="text-2xl font-bold">{title}</Dialog.Title>
+          <Dialog.Title className="text-2xl font-semibold">{title}</Dialog.Title>
           {description && <Dialog.Description className="mt-2">{description}</Dialog.Description>}
           <div className="mt-6">{children}</div>
         </Dialog.Content>
