@@ -1,3 +1,4 @@
+import TeamContact from '../../components/ui/TeamContact.jsx'
 import InfoPage from './InfoPage.jsx'
 
 const SECTIONS = [
@@ -26,7 +27,7 @@ const SECTIONS = [
     items: [
       'Employers see your profile and accommodation needs only after you apply to one of their job postings.',
       'Employers never see who gave feedback. They see combined results only, and only after at least three people have responded.',
-      'OpenDoor administrators can see account details to verify employers and handle reports.',
+      'OpenDoor administrators can see account details to verify employers.',
       'We do not sell your information.',
     ],
   },
@@ -44,7 +45,8 @@ export default function PrivacyPage() {
       title="Privacy notice"
       intro="This notice explains what information OpenDoor collects, why, and who can see it."
       sections={SECTIONS}
-      draft
-    />
+    >
+      <TeamContact />
+    </InfoPage>
   )
 }

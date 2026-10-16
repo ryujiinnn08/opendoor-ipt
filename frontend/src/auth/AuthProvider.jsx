@@ -35,6 +35,12 @@ export default function AuthProvider({ children }) {
       .catch(() => applyUser(null))
   }, [applyUser, refresh])
 
+  useEffect(() => {
+    if (status !== 'authenticated' || user?.email_verified !== false) return
+    window.addEventListener('focus', refresh)
+    return () => window.removeEventListener('focus', refresh)
+  }, [status, user?.email_verified, refresh])
+
   const login = useCallback(
     async (values) => {
       const loggedIn = await authApi.login(values)

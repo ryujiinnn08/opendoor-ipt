@@ -2,23 +2,13 @@ import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { RequireEmployerProfile, RequireNoEmployerProfile } from './auth/EmployerRoutes.jsx'
 import GuestRoute from './auth/GuestRoute.jsx'
 import ProtectedRoute from './auth/ProtectedRoute.jsx'
+import PageLoading from './components/layout/PageLoading.jsx'
 import PortalLayout from './components/layout/PortalLayout.jsx'
 import PublicLayout from './components/layout/PublicLayout.jsx'
 import RootLayout from './components/layout/RootLayout.jsx'
 import ChangePasswordPage from './portals/account/ChangePasswordPage.jsx'
 import DisplayPage from './portals/account/DisplayPage.jsx'
 import NotificationsPage from './portals/account/NotificationsPage.jsx'
-import AccommodationsPage from './portals/admin/AccommodationsPage.jsx'
-import AddAdminPage from './portals/admin/AddAdminPage.jsx'
-import AdminDashboard from './portals/admin/AdminDashboard.jsx'
-import FeedbackModerationPage from './portals/admin/FeedbackModerationPage.jsx'
-import CategoriesPage from './portals/admin/CategoriesPage.jsx'
-import EmployerVerificationPage from './portals/admin/EmployerVerificationPage.jsx'
-import PostingApprovalsPage from './portals/admin/PostingApprovalsPage.jsx'
-import PostingReviewPage from './portals/admin/PostingReviewPage.jsx'
-import SettingsPage from './portals/admin/SettingsPage.jsx'
-import UserPage from './portals/admin/UserPage.jsx'
-import UsersPage from './portals/admin/UsersPage.jsx'
 import ApplicationPage from './portals/candidate/ApplicationPage.jsx'
 import FeedbackPage from './portals/candidate/FeedbackPage.jsx'
 import ApplyPage from './portals/candidate/ApplyPage.jsx'
@@ -28,18 +18,8 @@ import MyApplicationsPage from './portals/candidate/MyApplicationsPage.jsx'
 import NeedsPage from './portals/candidate/NeedsPage.jsx'
 import ProfilePage from './portals/candidate/ProfilePage.jsx'
 import ResumePage from './portals/candidate/ResumePage.jsx'
-import ApplicantPage from './portals/employer/ApplicantPage.jsx'
-import ApplicantsPage from './portals/employer/ApplicantsPage.jsx'
-import CompanyPage from './portals/employer/CompanyPage.jsx'
-import EmployerDashboard from './portals/employer/EmployerDashboard.jsx'
-import IndividualProfilePage from './portals/employer/IndividualProfilePage.jsx'
-import JobPostingFormPage from './portals/employer/JobPostingFormPage.jsx'
-import JobPostingPreviewPage from './portals/employer/JobPostingPreviewPage.jsx'
-import JobPostingsPage from './portals/employer/JobPostingsPage.jsx'
-import SetupPage from './portals/employer/SetupPage.jsx'
-import TeamPage from './portals/employer/TeamPage.jsx'
-import TrustScorePage from './portals/employer/TrustScorePage.jsx'
 import AccessibilityPage from './portals/public/AccessibilityPage.jsx'
+import ContactPage from './portals/public/ContactPage.jsx'
 import BrowseJobsPage from './portals/public/BrowseJobsPage.jsx'
 import EmployerPage from './portals/public/EmployerPage.jsx'
 import HomePage from './portals/public/HomePage.jsx'
@@ -63,6 +43,8 @@ function portal(role, pages) {
 export const routes = [
   {
     element: <RootLayout />,
+    // Opening or refreshing an on-demand (admin or employer) page: shown until its code arrives.
+    hydrateFallbackElement: <PageLoading />,
     children: [
       {
         element: <PublicLayout />,
@@ -70,6 +52,7 @@ export const routes = [
           { path: '/', element: <HomePage /> },
           { path: '/privacy', element: <PrivacyPage /> },
           { path: '/accessibility', element: <AccessibilityPage /> },
+          { path: '/contact', element: <ContactPage /> },
           { path: '/join/:code', element: <JoinPage /> },
           { path: '/jobs', element: <BrowseJobsPage /> },
           { path: '/jobs/:id', element: <JobPage /> },
@@ -98,44 +81,44 @@ export const routes = [
         { path: '/candidate/applications/:id/feedback', element: <FeedbackPage /> },
       ]),
       portal('employer', [
-        { element: <RequireNoEmployerProfile />, children: [{ path: '/employer/setup', element: <SetupPage /> }] },
+        { element: <RequireNoEmployerProfile />, children: [{ path: '/employer/setup', lazy: async () => ({ Component: (await import('./portals/employer/SetupPage.jsx')).default }) }] },
         {
           element: <RequireEmployerProfile kinds={['owner', 'hr', 'individual']} />,
           children: [
-            { path: '/employer/dashboard', element: <EmployerDashboard /> },
-            { path: '/employer/job-postings', element: <JobPostingsPage /> },
-            { path: '/employer/job-postings/new', element: <JobPostingFormPage /> },
-            { path: '/employer/job-postings/:id', element: <JobPostingPreviewPage /> },
-            { path: '/employer/job-postings/:id/edit', element: <JobPostingFormPage /> },
-            { path: '/employer/job-postings/:id/applicants', element: <ApplicantsPage /> },
-            { path: '/employer/applications/:id', element: <ApplicantPage /> },
-            { path: '/employer/trust-score', element: <TrustScorePage /> },
+            { path: '/employer/dashboard', lazy: async () => ({ Component: (await import('./portals/employer/EmployerDashboard.jsx')).default }) },
+            { path: '/employer/job-postings', lazy: async () => ({ Component: (await import('./portals/employer/JobPostingsPage.jsx')).default }) },
+            { path: '/employer/job-postings/new', lazy: async () => ({ Component: (await import('./portals/employer/JobPostingFormPage.jsx')).default }) },
+            { path: '/employer/job-postings/:id', lazy: async () => ({ Component: (await import('./portals/employer/JobPostingPreviewPage.jsx')).default }) },
+            { path: '/employer/job-postings/:id/edit', lazy: async () => ({ Component: (await import('./portals/employer/JobPostingFormPage.jsx')).default }) },
+            { path: '/employer/job-postings/:id/applicants', lazy: async () => ({ Component: (await import('./portals/employer/ApplicantsPage.jsx')).default }) },
+            { path: '/employer/applications/:id', lazy: async () => ({ Component: (await import('./portals/employer/ApplicantPage.jsx')).default }) },
+            { path: '/employer/trust-score', lazy: async () => ({ Component: (await import('./portals/employer/TrustScorePage.jsx')).default }) },
           ],
         },
         {
           element: <RequireEmployerProfile kinds={['owner']} />,
           children: [
-            { path: '/employer/company', element: <CompanyPage /> },
-            { path: '/employer/team', element: <TeamPage /> },
+            { path: '/employer/company', lazy: async () => ({ Component: (await import('./portals/employer/CompanyPage.jsx')).default }) },
+            { path: '/employer/team', lazy: async () => ({ Component: (await import('./portals/employer/TeamPage.jsx')).default }) },
           ],
         },
         {
           element: <RequireEmployerProfile kinds={['individual']} />,
-          children: [{ path: '/employer/profile', element: <IndividualProfilePage /> }],
+          children: [{ path: '/employer/profile', lazy: async () => ({ Component: (await import('./portals/employer/IndividualProfilePage.jsx')).default }) }],
         },
       ]),
       portal('admin', [
-        { path: '/admin/dashboard', element: <AdminDashboard /> },
-        { path: '/admin/categories', element: <CategoriesPage /> },
-        { path: '/admin/accommodations', element: <AccommodationsPage /> },
-        { path: '/admin/employers', element: <EmployerVerificationPage /> },
-        { path: '/admin/job-postings', element: <PostingApprovalsPage /> },
-        { path: '/admin/job-postings/:id', element: <PostingReviewPage /> },
-        { path: '/admin/settings', element: <SettingsPage /> },
-        { path: '/admin/feedback', element: <FeedbackModerationPage /> },
-        { path: '/admin/users', element: <UsersPage /> },
-        { path: '/admin/users/new', element: <AddAdminPage /> },
-        { path: '/admin/users/:id', element: <UserPage /> },
+        { path: '/admin/dashboard', lazy: async () => ({ Component: (await import('./portals/admin/AdminDashboard.jsx')).default }) },
+        { path: '/admin/categories', lazy: async () => ({ Component: (await import('./portals/admin/CategoriesPage.jsx')).default }) },
+        { path: '/admin/accommodations', lazy: async () => ({ Component: (await import('./portals/admin/AccommodationsPage.jsx')).default }) },
+        { path: '/admin/employers', lazy: async () => ({ Component: (await import('./portals/admin/EmployerVerificationPage.jsx')).default }) },
+        { path: '/admin/job-postings', lazy: async () => ({ Component: (await import('./portals/admin/PostingApprovalsPage.jsx')).default }) },
+        { path: '/admin/job-postings/:id', lazy: async () => ({ Component: (await import('./portals/admin/PostingReviewPage.jsx')).default }) },
+        { path: '/admin/settings', lazy: async () => ({ Component: (await import('./portals/admin/SettingsPage.jsx')).default }) },
+        { path: '/admin/feedback', lazy: async () => ({ Component: (await import('./portals/admin/FeedbackModerationPage.jsx')).default }) },
+        { path: '/admin/users', lazy: async () => ({ Component: (await import('./portals/admin/UsersPage.jsx')).default }) },
+        { path: '/admin/users/new', lazy: async () => ({ Component: (await import('./portals/admin/AddAdminPage.jsx')).default }) },
+        { path: '/admin/users/:id', lazy: async () => ({ Component: (await import('./portals/admin/UserPage.jsx')).default }) },
       ]),
       // Every portal (Phase 6A): the header shows the user's own portal.
       {

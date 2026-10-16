@@ -75,6 +75,26 @@ class DashboardTest extends TestCase
         $this->assertNotContains('Nothing', array_column($top, 'title'));
     }
 
+    public function test_matches_exclude_all_previously_applied_jobs_before_limiting_results(): void
+    {
+        $need = Accommodation::factory()->create();
+        $seeker = User::factory()->create();
+        $seeker->needs()->attach($need);
+        $available = JobPosting::factory()->open()->count(3)->create();
+        foreach ($available as $job) {
+            $job->accommodations()->attach($need);
+        }
+        foreach (['pending', 'reviewed', 'rejected', 'withdrawn', 'hired'] as $status) {
+            $job = JobPosting::factory()->open()->create();
+            $job->accommodations()->attach($need);
+            Application::factory()->create(['user_id' => $seeker->id, 'job_posting_id' => $job->id, 'status' => $status]);
+        }
+        Application::factory()->create(['job_posting_id' => $available[0]->id]);
+
+        $top = $this->actingAs($seeker, 'web')->getJson('/api/candidate/dashboard')->assertOk()->json('data.top_matches');
+        $this->assertEqualsCanonicalizing($available->pluck('id')->all(), array_column($top, 'id'));
+    }
+
     public function test_only_job_seekers_have_a_dashboard(): void
     {
         $this->actingAs(User::factory()->employer()->create(), 'web')->getJson('/api/candidate/dashboard')->assertForbidden();

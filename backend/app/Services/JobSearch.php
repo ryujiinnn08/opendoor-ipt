@@ -19,7 +19,7 @@ class JobSearch
      *
      * @param  array{q: ?string, category: ?int, accommodations: list<int>, employer: ?int, sort: string, per_page: int, match: bool}  $filters
      */
-    public function paginate(array $filters, ?CandidateNeeds $needs = null): LengthAwarePaginator
+    public function paginate(array $filters, ?CandidateNeeds $needs = null, ?int $excludeApplicantId = null): LengthAwarePaginator
     {
         $query = JobPosting::publiclyVisible()
             ->with(PublicJobPostingResource::RELATIONS)
@@ -27,6 +27,10 @@ class JobSearch
             ->when($filters['category'], fn ($query, int $category) => $query->where('category_id', $category))
             ->when($filters['employer'], fn ($query, int $employer) => $query->where('employer_id', $employer))
             ->providingAll($filters['accommodations']);
+
+        if ($excludeApplicantId !== null) {
+            $query->whereDoesntHave('applications', fn ($applications) => $applications->where('user_id', $excludeApplicantId));
+        }
 
         if ($needs) {
             $meetsANeed = fn ($query) => $query->whereIn('accommodations.id', $needs->ids());

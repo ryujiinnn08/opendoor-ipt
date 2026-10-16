@@ -66,6 +66,9 @@ describe('ApplyPage', () => {
     expect(screen.getByRole('button', { name: 'Send the link again' })).toBeInTheDocument()
     expect(announce).toHaveBeenCalledWith('Please confirm your email address before you apply.')
     expect(screen.getByLabelText(/Cover note/)).toHaveValue('I have three years of bookkeeping.')
+    applyForJob.mockResolvedValueOnce(applicationFixture())
+    await userEvent.click(screen.getByRole('button', { name: 'Send application' }))
+    expect(applyForJob).toHaveBeenLastCalledWith('2', { cover_note: 'I have three years of bookkeeping.', interview_request: 'Captions, please.' })
   })
 
   it('says so when the job seeker already applied', async () => {

@@ -255,7 +255,7 @@ function UserAccount({ id }) {
         title={`Suspend ${user.name}?`}
         description={`They can't log in until you reactivate the account, and they're logged out now. ${keptText(user)}`}
         label="Why (only administrators see this)"
-        hint="It stays in the account's history, e.g., Posted fake jobs, reported by 3 job seekers."
+        hint="It stays in the account's history, e.g., Posted jobs with false company details."
         confirmLabel={`Suspend ${user.name}`}
         confirmVariant="primary"
         minLength={5}

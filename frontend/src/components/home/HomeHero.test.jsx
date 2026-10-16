@@ -11,7 +11,7 @@ describe('HomeHero', () => {
     const { container } = renderRoutes(routes, { path: '/' })
 
     expect(screen.getByRole('heading', { level: 1, name: 'Find work that fits how you work' })).toBeInTheDocument()
-    expect(document.title).toBe('Find jobs that meet your accommodation needs | OpenDoor')
+    expect(document.title).toBe('Find work that fits how you work | OpenDoor')
     expect(screen.getByRole('link', { name: 'Register as a job seeker' })).toHaveAttribute('href', '/register?type=candidate')
     expect(screen.getByRole('link', { name: 'Register as an employer' })).toHaveAttribute('href', '/register?type=employer')
     expect(screen.getByRole('link', { name: 'Log in' })).toHaveAttribute('href', '/login')

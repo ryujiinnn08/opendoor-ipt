@@ -9,14 +9,14 @@ const LINK = `${ITEM} text-primary underline underline-offset-4 hover:bg-primary
  * page is marked for screen readers; each target is at least 44 px. Nothing for one page.
  */
 export default function Pagination({ page, lastPage, hrefForPage, label = 'Pages' }) {
-  if (!lastPage || lastPage <= 1) return null
+  if (!lastPage || (lastPage <= 1 && page <= lastPage)) return null
 
   return (
     <nav aria-label={label} className="mt-8">
       <ul className="flex flex-wrap items-center gap-x-2 gap-y-1">
         {page > 1 && (
           <li>
-            <Link to={hrefForPage(page - 1)} className={LINK}>
+            <Link to={hrefForPage(Math.min(page - 1, lastPage))} className={LINK}>
               Previous
             </Link>
           </li>

@@ -1,3 +1,4 @@
+import TeamContact from '../../components/ui/TeamContact.jsx'
 import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { fieldErrorsFrom, generalErrorFrom } from '../../api/client.js'
@@ -98,6 +99,8 @@ export default function LoginPage() {
             Log in
           </Button>
         </form>
+
+        <TeamContact />
 
         <p className="mt-8">
           New to OpenDoor?{' '}

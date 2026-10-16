@@ -176,8 +176,8 @@ export default function ApplyPage() {
               onChange={change('interview_request')}
               error={errors.interview_request}
             />
-            {/* After a refusal, sending again can only fail the same way; the text stays to copy. */}
-            {!refusal && (
+            {/* Email can be confirmed in another tab; retry without losing the draft. */}
+            {(!refusal || refusal.kind === 'unverified') && (
               <Button type="submit" loading={sending} loadingText="Sending…">
                 Send application
               </Button>

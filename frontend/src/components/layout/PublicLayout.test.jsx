@@ -1,8 +1,10 @@
 import { screen, within } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { axe } from 'vitest-axe'
 import { renderRoutes } from '../../test/renderWithProviders.jsx'
 import PublicLayout from './PublicLayout.jsx'
+
+vi.mock('../../api/notifications.js', () => ({ getUnreadCount: vi.fn().mockResolvedValue(2) }))
 
 const routes = [
   {
@@ -37,7 +39,11 @@ describe('PublicLayout', () => {
     unmount()
 
     renderRoutes(routes, { path: '/', auth: { status: 'authenticated', role: 'candidate', user: { name: 'Maria', role: 'candidate' } } })
-    expect(screen.getByRole('link', { name: 'Go to my dashboard' })).toHaveAttribute('href', '/candidate/dashboard')
+    expect(screen.getByRole('link', { name: 'Dashboard' })).toHaveAttribute('href', '/candidate/dashboard')
+    expect(screen.getByRole('link', { name: 'Find jobs' })).toHaveAttribute('href', '/candidate/jobs')
+    expect(screen.getByRole('link', { name: 'Account' })).toHaveAttribute('href', '/account/display')
+    expect(screen.getByRole('button', { name: 'Log out' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Notifications/ })).toBeInTheDocument()
   })
 
   it('has the skip link, the display settings and the footer on every page', async () => {

@@ -18,6 +18,11 @@ describe('Pagination', () => {
     expect(within(nav).queryByRole('link', { name: 'Previous' })).not.toBeInTheDocument()
   })
 
+  it.each([1, 3])('returns to the last available page (%s) from an out-of-range page', (lastPage) => {
+    render(<Pagination page={5} lastPage={lastPage} hrefForPage={hrefForPage} />, { wrapper: MemoryRouter })
+    expect(screen.getByRole('link', { name: 'Previous' })).toHaveAttribute('href', `/jobs?page=${lastPage}`)
+  })
+
   it('renders nothing for a single page', () => {
     const { container } = render(<Pagination page={1} lastPage={1} hrefForPage={hrefForPage} />, { wrapper: MemoryRouter })
     expect(container).toBeEmptyDOMElement()

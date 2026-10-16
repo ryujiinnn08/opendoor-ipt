@@ -50,6 +50,9 @@ Route::get('/employers/{employer}/logo', [Public\EmployerLogoController::class, 
 Route::get('/invites/{code}', [Public\InviteController::class, 'show'])->middleware('throttle:30,1');
 Route::post('/invites/{code}/accept', [Public\InviteController::class, 'accept'])->middleware('throttle:10,1');
 
+// "Contact us" form: emails the team. Its own rate-limit counter, tight because it sends email.
+Route::post('/contact', [Public\ContactController::class, 'store'])->middleware('throttle:5,1,contact');
+
 // Authentication (M1). Login is additionally rate-limited per email inside LoginRequest.
 Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,1');
 Route::post('/login', [AuthController::class, 'login']);

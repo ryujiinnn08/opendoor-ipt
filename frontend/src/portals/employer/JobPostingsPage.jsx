@@ -16,7 +16,7 @@ import SelectField from '../../components/ui/SelectField.jsx'
 import { PRIMARY_LINK } from '../../components/ui/buttonLinkStyles.js'
 import { useAnnounce } from '../../components/ui/announcerContext.js'
 import { formatDay } from '../../lib/format.js'
-import { POSTING_FILTERS } from '../../lib/postingOptions.js'
+import { closingDateRange, inClosingDateRange, POSTING_FILTERS } from '../../lib/postingOptions.js'
 import PostingListItem from './postings/PostingListItem.jsx'
 
 const EMPTY = {
@@ -271,7 +271,8 @@ export default function JobPostingsPage() {
         {...dialogProps}
         open={Boolean(pending?.open && pending.action === 'reopen')}
         title={`Reopen "${title}"`}
-        description="Choose a new closing date. Reopening doesn't need a new approval."
+        description="Check the closing date before reopening. Reopening doesn't need a new approval."
+        initialDate={inClosingDateRange(pending?.posting?.closes_on ?? '', closingDateRange()) ? pending.posting.closes_on : ''}
         dateError={pending?.dateError}
         confirmLabel="Reopen posting"
         onConfirm={confirmPending}

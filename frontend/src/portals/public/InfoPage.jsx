@@ -5,7 +5,7 @@ import PageHeading from '../../components/ui/PageHeading.jsx'
  * Layout for text pages such as the privacy notice and accessibility statement.
  * sections: [{ heading, paragraphs?: string[], items?: string[] }]
  */
-export default function InfoPage({ title, intro, sections, draft = false }) {
+export default function InfoPage({ title, intro, sections, draft = false, children }) {
   return (
     <article className="max-w-prose">
       <PageHeading>{title}</PageHeading>
@@ -32,6 +32,7 @@ export default function InfoPage({ title, intro, sections, draft = false }) {
           )}
         </section>
       ))}
+      {children}
     </article>
   )
 }

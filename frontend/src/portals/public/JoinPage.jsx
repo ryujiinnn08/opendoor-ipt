@@ -1,3 +1,4 @@
+import { sentence } from '../../lib/notificationText.js'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { generalErrorFrom } from '../../api/client.js'
@@ -119,7 +120,7 @@ function useJoin(code, invite) {
   return async (values) => {
     await acceptInvite(code, values)
     await refresh()
-    announce(`Welcome to ${invite.company}. You're now an HR officer in ${invite.department}.`)
+    announce(`${sentence(`Welcome to ${invite.company}`)} ${sentence(`You're now an HR officer in ${invite.department}`)}`)
     navigate('/employer/dashboard', { replace: true })
   }
 }

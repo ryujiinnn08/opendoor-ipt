@@ -29,6 +29,14 @@ const individual = auth({ role: 'owner', employer: { id: 2, type: 'individual', 
 describe('JobPostingsPage', () => {
   beforeEach(() => vi.clearAllMocks())
 
+  it.each(['valid', 'expired', 'missing'])('prefills only a valid existing closing date when reopening (%s)', async (kind) => {
+    const closes_on = kind === 'valid' ? closingDateRange().min : kind === 'expired' ? '2020-01-01' : null
+    getJobPostings.mockResolvedValue([{ ...fixture, status: 'closed', closes_on, actions: ['reopen'] }])
+    renderRoutes(routes, { path: '/employer/job-postings', auth: individual })
+    await userEvent.click(await screen.findByRole('button', { name: 'Reopen Junior Web Developer' }))
+    expect(screen.getByLabelText('New closing date')).toHaveValue(kind === 'valid' ? closes_on : '')
+  })
+
   it('shows only the actions the server allows', async () => {
     getJobPostings.mockResolvedValue([
       { ...fixture, id: 1, title: 'Data encoder', status: 'draft', actions: ['edit', 'delete'] },

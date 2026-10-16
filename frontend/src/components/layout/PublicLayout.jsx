@@ -1,6 +1,6 @@
 import { Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../../auth/authContext.js'
-import { dashboardFor } from '../../auth/redirects.js'
+import PortalLayout from './PortalLayout.jsx'
 import EmailVerificationBanner from '../verification/EmailVerificationBanner.jsx'
 import { GUEST_MENU } from './portalMenus.js'
 import SiteFooter from './SiteFooter.jsx'
@@ -9,16 +9,15 @@ import UtilityBar from './UtilityBar.jsx'
 
 /** The frame for public pages: Home and Find jobs, then Log in and Create account. */
 export default function PublicLayout() {
-  const { status, role } = useAuth()
+  const { status } = useAuth()
   const { pathname } = useLocation()
 
-  const right =
-    status === 'authenticated'
-      ? [{ to: dashboardFor(role), label: 'Go to my dashboard', icon: 'home', cta: true }]
-      : [
-          { to: '/login', label: 'Log in', icon: 'user' },
-          { to: '/register', label: 'Create account', icon: 'plus', cta: true },
-        ]
+  if (status === 'authenticated') return <PortalLayout />
+
+  const right = [
+    { to: '/login', label: 'Log in', icon: 'user' },
+    { to: '/register', label: 'Create account', icon: 'plus', cta: true },
+  ]
 
   return (
     <div className="flex min-h-screen flex-col">

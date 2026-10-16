@@ -30,10 +30,10 @@ export default function HomeHero() {
   const loggedIn = status === 'authenticated'
 
   return (
-    <section aria-labelledby="home-title" className="grid items-center gap-x-10 gap-y-6 md:grid-cols-[1.2fr_1fr]">
+    <section aria-labelledby="home-title" className="grid overflow-x-clip items-center gap-x-10 gap-y-6 md:grid-cols-[1.2fr_1fr]">
       <div className="max-w-2xl">
         <PageHeading
-          title="Find jobs that meet your accommodation needs"
+          title="Find work that fits how you work"
           size="text-[clamp(2.25rem,1.2rem+3.4vw,3.75rem)] leading-[1.12]"
           className="tracking-tight"
         >
@@ -60,7 +60,7 @@ export default function HomeHero() {
                 Go to my dashboard
                 <ArrowPill />
               </Link>
-              <Link to="/jobs" className={SECONDARY_LINK}>
+              <Link to={role === 'candidate' ? '/candidate/jobs' : '/jobs'} className={SECONDARY_LINK}>
                 Find jobs
               </Link>
             </>

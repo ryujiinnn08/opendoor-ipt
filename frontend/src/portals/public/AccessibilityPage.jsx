@@ -1,3 +1,4 @@
+import TeamContact from '../../components/ui/TeamContact.jsx'
 import InfoPage from './InfoPage.jsx'
 
 const SECTIONS = [
@@ -13,6 +14,7 @@ const SECTIONS = [
       'Every function works with a keyboard alone, with a visible focus outline and a "Skip to main content" link.',
       'Every form field has a visible label, and errors are explained in plain language and read out by screen readers.',
       'Text has strong contrast, and status is shown with text or icons, not color alone.',
+      'Use Display settings to adjust Text size, turn on High contrast, simplify decoration with Quiet mode, or turn on Reduce motion.',
       'Pages work when zoomed to 200% and on small phone screens.',
       'You are not logged out while filling in a form.',
     ],
@@ -31,7 +33,8 @@ export default function AccessibilityPage() {
       title="Accessibility statement"
       intro="OpenDoor is built for persons with disabilities, so accessibility is a requirement, not an extra."
       sections={SECTIONS}
-      draft
-    />
+    >
+      <TeamContact />
+    </InfoPage>
   )
 }

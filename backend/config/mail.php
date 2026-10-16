@@ -115,4 +115,16 @@ return [
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | "Contact us" Inbox
+    |--------------------------------------------------------------------------
+    |
+    | The team inbox that receives messages from the public "Contact us" form.
+    | It must be a real mailbox: Resend only sends email, it does not receive it.
+    |
+    */
+
+    'contact_to' => env('CONTACT_TO_EMAIL'),
+
 ];

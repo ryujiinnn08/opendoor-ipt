@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom'
+import { TEAM_EMAIL } from '../../lib/contact.js'
 
 const LINK = 'inline-flex min-h-11 items-center px-2 text-sm text-muted underline-offset-4 hover:text-text hover:underline'
 
-/** The footer on every page: the privacy notice and the accessibility statement. */
+/** The footer on every page: the privacy notice, the accessibility statement and the contact form. */
 export default function SiteFooter() {
   return (
     <footer className="border-t border-border bg-surface">
@@ -17,6 +18,14 @@ export default function SiteFooter() {
             <Link to="/accessibility" className={LINK}>
               Accessibility statement
             </Link>
+          </li>
+          <li>
+            <Link to="/contact" className={LINK}>
+              Contact us
+            </Link>
+          </li>
+          <li>
+            <a href={`mailto:${TEAM_EMAIL}`} className={LINK}>{TEAM_EMAIL}</a>
           </li>
         </ul>
       </nav>

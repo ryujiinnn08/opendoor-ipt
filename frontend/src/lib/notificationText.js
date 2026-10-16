@@ -2,7 +2,7 @@
 // recorded. `role` is the reader's: a status change reads differently for each side.
 
 /** Ends with one full stop, even after a name like "OpenDoor Demo Corp." */
-const sentence = (text) => (text.endsWith('.') ? text : `${text}.`)
+export const sentence = (text) => (text.endsWith('.') ? text : `${text}.`)
 
 const FOR_JOB_SEEKER = {
   reviewed: ({ employer_name, job_title }) => sentence(`${employer_name} opened your application for ${job_title}`),

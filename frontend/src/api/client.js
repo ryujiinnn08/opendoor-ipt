@@ -76,6 +76,7 @@ export function isEmailUnverified(error) {
 export function generalErrorFrom(error) {
   if (!error?.response) return 'We could not reach OpenDoor. Check your internet connection and try again.'
   const { status, data } = error.response
+  if (status === 429) return 'Too many tries. Please wait a minute and try again.'
   if (data?.errors) return null
   if (status >= 500) return 'Something went wrong on our side. Please try again in a moment.'
   return data?.message || 'Something went wrong. Please try again.'
