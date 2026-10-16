@@ -169,7 +169,7 @@ export default function EmployerPage({ basePath = '/jobs' }) {
             )}
             {results ? (
               <>
-                <h2 id="employer-jobs-heading" ref={jobsHeading} tabIndex={-1} className="text-[1.625rem] font-bold outline-none focus-visible:outline-2">
+                <h2 id="employer-jobs-heading" ref={jobsHeading} tabIndex={-1} className="text-title font-bold outline-none focus-visible:outline-2">
                   {results.meta.total > 0 ? `Open jobs (${results.meta.total})` : 'No open jobs right now.'}
                 </h2>
                 {results.jobs.length > 0 && (

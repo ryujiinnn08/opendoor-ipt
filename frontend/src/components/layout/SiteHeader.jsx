@@ -80,7 +80,7 @@ export default function SiteHeader({ homeTo = '/', left, right }) {
       {canMeasure && (
         <div aria-hidden="true" className="pointer-events-none invisible absolute top-0 left-0 h-0 overflow-hidden">
           <div ref={measureRef} className="flex w-max items-center">
-            <span className="inline-flex items-center gap-2 font-display text-[1.375rem] font-semibold">
+            <span className="inline-flex items-center gap-2 font-display text-[1.25rem] font-semibold">
               <span className="h-9 w-7" />
               OpenDoor
             </span>

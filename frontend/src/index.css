@@ -36,31 +36,32 @@
   --color-lilac: var(--od-accent-lilac);
 }
 
-/* Type scale from the Figma text styles, in rem so the text-size setting scales everything.
-   Hints (sm, 16 px) are the smallest reading size; xs (15 px) is only for badges and the
-   utility bar, both bold. The formal pass (UI_FEEDBACK_PLAN §3.1) made headings smaller and
-   corners squarer: 8 px fields, buttons and cards, 12 px dialogs and large panels. */
+/* Type scale, in rem so the text-size setting scales everything. UI_FEEDBACK_PLAN §8 (trial,
+   2026-10-16) made it denser, like LinkedIn and Indeed: body 16 px, hints and meta 14 px, badges
+   and the utility bar 13 px bold, H2 18 px, H1 24 px; the Home hero keeps its display size.
+   Anyone who needs larger text uses Text size (up to 200 %). Radii: 8 px fields, buttons and
+   cards, 12 px dialogs and large panels. */
 @theme {
-  --text-xs: 0.9375rem;
-  --text-xs--line-height: 1.25rem;
-  --text-sm: 1rem;
-  --text-sm--line-height: 1.375rem;
-  --text-base: 1.125rem;
-  --text-base--line-height: 1.625rem;
-  --text-lg: 1.25rem;
-  --text-lg--line-height: 1.75rem;
-  --text-xl: 1.3125rem;
-  --text-xl--line-height: 1.75rem;
-  --text-2xl: 1.25rem;
-  --text-2xl--line-height: 1.75rem;
-  --text-title: 1.5rem;
-  --text-title--line-height: 2rem;
-  --text-title-lg: 1.75rem;
-  --text-title-lg--line-height: 2.25rem;
-  --text-stat: 2.375rem;
-  --text-stat--line-height: 2.75rem;
-  --text-score: 3.5rem;
-  --text-score--line-height: 4rem;
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.125rem;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.625rem;
+  --text-xl: 1.125rem;
+  --text-xl--line-height: 1.625rem;
+  --text-2xl: 1.125rem;
+  --text-2xl--line-height: 1.5rem;
+  --text-title: 1.25rem;
+  --text-title--line-height: 1.75rem;
+  --text-title-lg: 1.5rem;
+  --text-title-lg--line-height: 2rem;
+  --text-stat: 1.75rem;
+  --text-stat--line-height: 2.25rem;
+  --text-score: 2.5rem;
+  --text-score--line-height: 3rem;
   --text-display: 3.75rem;
   --text-display--line-height: 4.25rem;
 
@@ -365,23 +366,30 @@
     :root:not([data-bar='pinned']) .od-utility {
       height: 1.5rem;
     }
+    /* The bar is never shorter than the line, and the hint sits over it instead of above the row,
+       so opening and closing only cross-fade the two: nothing disappears and comes back. */
     :root:not([data-bar='pinned']) .od-utility-bar {
       position: absolute;
       inset-inline: 0;
       top: 0;
+      min-height: 1.5rem;
       box-shadow: 0 8px 20px rgb(36 27 58 / 0);
       transition: box-shadow 200ms var(--ease-soft) 350ms;
     }
     :root:not([data-bar='pinned']) .od-utility-hint {
+      position: absolute;
+      inset-inline: 0;
+      top: 0;
       display: flex;
       height: 1.5rem;
       align-items: center;
       justify-content: center;
       gap: 0.25rem;
-      font-size: 0.9375rem;
+      font-size: 0.8125rem;
       font-weight: 700;
       color: var(--od-text-muted);
-      transition: opacity 150ms var(--ease-soft) 350ms;
+      pointer-events: none;
+      transition: opacity 160ms var(--ease-soft) 350ms;
     }
     :root:not([data-bar='pinned']) .od-utility-row {
       max-height: 0;
@@ -396,7 +404,8 @@
       transition-delay: 0s;
     }
     :root:not([data-bar='pinned']) .od-utility:is(:hover, :focus-within) .od-utility-hint {
-      display: none;
+      opacity: 0;
+      transition-delay: 0s;
     }
     :root:not([data-bar='pinned']) .od-utility:is(:hover, :focus-within) .od-utility-row {
       max-height: 12rem;

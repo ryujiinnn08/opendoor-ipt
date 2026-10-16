@@ -5,9 +5,9 @@ import { TEXT_MAX, TEXT_MIN, TEXT_PRESETS, TEXT_STEP, textSizeLabel } from '../.
 const STEP_BUTTON =
   'grid size-11 shrink-0 place-items-center rounded-full border-2 border-input bg-surface font-display font-semibold text-accent transition-[background-color,scale] duration-200 ease-soft hover:bg-primary-soft active:scale-95 disabled:cursor-not-allowed disabled:opacity-40'
 
-// The preview's size in pixels for the base 18 px body text, so it shows the chosen size without
+// The preview's size in pixels for the base 16 px body text, so it shows the chosen size without
 // resizing the page (and the slider) while the thumb is still being dragged.
-const BODY_PX = 18
+const BODY_PX = 16
 
 /**
  * Choose the text size on a slider from 100 % to 200 %, with Smaller and Larger buttons for

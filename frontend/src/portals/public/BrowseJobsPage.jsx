@@ -309,7 +309,7 @@ export default function BrowseJobsPage({ basePath = '/jobs', title = 'Browse job
                 id="job-results-heading"
                 ref={resultsHeading}
                 tabIndex={-1}
-                className="text-[1.625rem] font-bold outline-none focus-visible:outline-2"
+                className="text-title font-bold outline-none focus-visible:outline-2"
               >
                 {jobCountText(results.meta.total)}
               </h2>

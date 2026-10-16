@@ -226,3 +226,41 @@ Not yet checked: 200 % zoom, 200 % text, high contrast and keyboard-only on the 
 ### Added on request: the display settings bar folds away (2026-10-16)
 
 On screens with a mouse, the bar with Text size, High contrast, Quiet mode and Compact menu folds into a thin line ("Text size, contrast and more") until pointed at, like a hidden taskbar, and opens over the header so the page doesn't jump. It also opens whenever anything in it has keyboard focus, so the skip link and every button stay reachable by Tab and by screen readers. **Keep open** (in the bar, or Account → Display → Display settings bar) pins it; phones and tablets always show it. The setting is saved in the browser with the other display settings (`bar: auto | pinned`, `data-bar` on `<html>`).
+
+---
+
+## 8. Look trials: keeping OpenDoor's design while borrowing from LinkedIn and Indeed (2026-10-16)
+
+**Rule (your words):** "more similar to LinkedIn or Indeed but we need to keep the design principle of our website." We borrow layouts and patterns, not the look. Accessibility first, violet with the orange, pink and sky accents, Lexend and Atkinson, the friendly wording, the Home hero and the mascot all stay.
+
+### 8.1 Trial (applied): smaller text
+
+You asked to try smaller fonts so the site reads less like an iPad app. Only the type scale in `frontend/src/index.css` (`@theme`) and four fixed sizes changed:
+
+| Token | Used for | Before | Now |
+|---|---|---|---|
+| `text-xs` | Badges, utility bar | 15 px | 13 px (bold) |
+| `text-sm` | Hints, card meta, small buttons | 16 px | 14 px |
+| `text-base` | Body text, buttons, fields | 18 px | 16 px |
+| `text-lg` / `text-xl` | Lead text, group titles | 20 / 21 px | 18 / 18 px |
+| `text-2xl` | H2 | 20 px | 18 px |
+| `text-title` / `text-title-lg` | H1 (phone / wider) | 24 / 28 px | 20 / 24 px |
+| `text-stat` / `text-score` | Dashboard numbers, trust score | 38 / 56 px | 28 / 40 px |
+| `text-display` | Home hero | 60 px | 60 px (unchanged, the hero keeps its look) |
+| Fixed | Logo name; "13 jobs" and the employer's jobs heading | 22 px; 26 px | 20 px; `text-title` |
+
+The Text size slider's preview now starts at 16 px. **Accessibility note:** 16 px body text is what Indeed uses and is common on the web, but it is below the design's 18 px reading size. Anyone who needs more uses Text size (125 %, 150 %, up to 200 %), which scales everything. The October 18 audit should check the 13 px badges and 14 px hints for contrast and readability.
+
+**To undo:** put back the "Before" column in the `@theme` block of `index.css`, `text-[1.375rem]` in `BrandLink.jsx` and `SiteHeader.jsx`, `text-[1.625rem]` on the two result headings (`BrowseJobsPage.jsx`, `EmployerPage.jsx`), and `BODY_PX = 18` in `TextSizeSlider.jsx`. A middle step is body 17 px (`text-base: 1.0625rem`) and hints 15 px (`text-sm: 0.9375rem`).
+
+### 8.2 Recommendation (not applied): bring back OpenDoor's shapes and colours
+
+If the site still feels too plain after the font trial, Wave A moved away from OpenDoor's style in three places that are worth restoring. Layout patterns such as the logo on the left, the two panes, the chips and the account menu stay either way.
+
+| # | Change back | Where | How |
+|---|---|---|---|
+| R1 | **Pill buttons** | `components/ui/buttonLinkStyles.js` (`BUTTON_BASE`), `FilterTabs.jsx`, `PageTabs.jsx`, `Pagination.jsx` | `rounded-md` → `rounded-full` (keep the smaller 48 px height) |
+| R2 | **Accent-coloured initials tiles** on job cards and job pages (a real logo still wins) | `components/jobs/EmployerMark.jsx` | Give the initials square the `od-tile` class and a background from `lib/tileTone.js` (`toneFor(employer.id)`: orange, pink, sky or lilac). Text stays `text-text` (already in the contrast test). Quiet mode already turns `.od-tile` plain |
+| R3 | **Tinted pill for the current page** in the header | `components/layout/SiteHeader.jsx` (`NAV_ITEM`, `NAV_CURRENT`, `NAV_IDLE`) | Back to `rounded-full border-2`, current `border-primary bg-selected font-bold text-accent`, idle `border-transparent text-text hover:bg-primary-soft` |
+
+Keep regardless: the grey canvas with white cards, the logo on the left, and every Wave A pattern (Back links, chips, two panes, account menu, About the company, the sticky Apply bar, the folding display bar).
