@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import ProtectedRoute from '../../auth/ProtectedRoute.jsx'
@@ -23,10 +23,17 @@ describe('PortalLayout', () => {
       auth: { status: 'authenticated', role: 'admin', user: { name: 'OpenDoor Admin', role: 'admin' } },
     })
 
-    const nav = screen.getByRole('navigation', { name: 'Admin portal' })
-    expect(nav).toHaveTextContent('Categories')
-    expect(nav).toHaveTextContent('Accommodation types')
-    expect(screen.getByText('OpenDoor Admin')).toBeInTheDocument()
+    const main = screen.getByRole('navigation', { name: 'Main' })
+    expect(within(main).getByRole('link', { name: 'Dashboard' })).toHaveAttribute('aria-current', 'page')
+    expect(main).toHaveTextContent('Employers')
+    expect(main).toHaveTextContent('Postings')
+    const account = screen.getByRole('navigation', { name: 'Account' })
+    expect(within(account).getByRole('link', { name: 'Data' })).toHaveAttribute('href', '/admin/categories')
+    // The initials are decoration; the link is named by its word.
+    expect(within(account).getByRole('link', { name: 'Account' })).toHaveAttribute('href', '/account/display')
+    expect(within(account).getByText('OA')).toHaveAttribute('aria-hidden', 'true')
+    // Administrators have their queues instead of notifications (PHASE_6 §4.4).
+    expect(within(account).queryByRole('link', { name: /Notifications/ })).not.toBeInTheDocument()
   })
 
   it('goes to the home page (not the login page) after logging out', async () => {

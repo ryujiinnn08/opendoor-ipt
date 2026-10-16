@@ -1,58 +1,64 @@
 import { employerKind } from '../../auth/employerAccess.js'
 
-// Menu items per portal. Pages from later phases are added here as they are built.
-// `end: false` keeps an item marked on its sub-pages (e.g., a posting's edit page).
-const JOB_POSTINGS = { to: '/employer/job-postings', label: 'Job postings', end: false }
-const TRUST_SCORE = { to: '/employer/trust-score', label: 'Trust score' }
+// The header's links (UI_REVAMP_PLAN Q4): `left` of the logo are the role's pages, `right` are
+// the person's own. `end: false` keeps an item current on its sub-pages (e.g., a posting's edit
+// page); `match` lists other address prefixes that belong to it (e.g., Profile's three tabs).
+const JOB_POSTINGS = { to: '/employer/job-postings', label: 'Job postings', icon: 'briefcase', end: false, match: ['/employer/applications'] }
+const TRUST_SCORE = { to: '/employer/trust-score', label: 'Trust score', icon: 'shield-check' }
+const DASHBOARD = (role) => ({ to: `/${role}/dashboard`, label: 'Dashboard', icon: 'home' })
 
 const EMPLOYER_MENUS = {
-  none: [{ to: '/employer/setup', label: 'Set up your profile' }],
+  none: [{ to: '/employer/setup', label: 'Set up your profile', icon: 'building' }],
   owner: [
-    { to: '/employer/dashboard', label: 'Dashboard' },
-    { to: '/employer/company', label: 'Company profile' },
-    { to: '/employer/team', label: 'Team' },
+    DASHBOARD('employer'),
     JOB_POSTINGS,
+    { to: '/employer/company', label: 'Company', icon: 'building' },
+    { to: '/employer/team', label: 'Team', icon: 'people' },
     TRUST_SCORE,
   ],
-  hr: [{ to: '/employer/dashboard', label: 'Dashboard' }, JOB_POSTINGS, TRUST_SCORE],
-  individual: [
-    { to: '/employer/dashboard', label: 'Dashboard' },
-    { to: '/employer/profile', label: 'My profile' },
-    JOB_POSTINGS,
-    TRUST_SCORE,
-  ],
+  hr: [DASHBOARD('employer'), JOB_POSTINGS, TRUST_SCORE],
+  individual: [DASHBOARD('employer'), JOB_POSTINGS, { to: '/employer/profile', label: 'My profile', icon: 'user' }, TRUST_SCORE],
 }
+
+export const GUEST_MENU = [
+  { to: '/', label: 'Home', icon: 'home' },
+  { to: '/jobs', label: 'Find jobs', icon: 'search', end: false, match: ['/employers'] },
+]
 
 const PORTALS = {
   candidate: {
-    name: 'Candidate portal',
-    menu: [
-      { to: '/candidate/dashboard', label: 'Dashboard' },
-      { to: '/candidate/jobs', label: 'Find jobs', end: false },
-      { to: '/candidate/applications', label: 'My applications', end: false },
-      { to: '/candidate/needs', label: 'My needs' },
-      { to: '/candidate/profile', label: 'My profile', end: false },
+    left: [
+      DASHBOARD('candidate'),
+      { to: '/candidate/jobs', label: 'Find jobs', icon: 'search', end: false, match: ['/candidate/employers'] },
+      { to: '/candidate/applications', label: 'Applications', icon: 'file-text', end: false },
     ],
+    right: [{ to: '/candidate/needs', label: 'Profile', icon: 'user', match: ['/candidate/profile'] }],
   },
   admin: {
-    name: 'Admin portal',
-    menu: [
-      { to: '/admin/dashboard', label: 'Dashboard' },
-      { to: '/admin/users', label: 'Users', end: false },
-      { to: '/admin/categories', label: 'Categories' },
-      { to: '/admin/accommodations', label: 'Accommodation types' },
-      { to: '/admin/employers', label: 'Employer verification' },
-      { to: '/admin/job-postings', label: 'Posting approvals', end: false },
-      { to: '/admin/feedback', label: 'Feedback' },
-      { to: '/admin/settings', label: 'Settings' },
+    left: [
+      DASHBOARD('admin'),
+      { to: '/admin/employers', label: 'Employers', icon: 'building' },
+      { to: '/admin/job-postings', label: 'Postings', icon: 'clipboard-check', end: false },
+      { to: '/admin/users', label: 'Users', icon: 'people', end: false },
+    ],
+    right: [
+      { to: '/admin/feedback', label: 'Feedback', icon: 'chat' },
+      { to: '/admin/categories', label: 'Data', icon: 'panel', match: ['/admin/accommodations', '/admin/settings'] },
     ],
   },
 }
 
-/** { name, menu } for the logged-in user's portal. */
+export const ACCOUNT_ITEM = { to: '/account/display', label: 'Account', icon: 'user', match: ['/account'] }
+
+/** { left, right } menu items for the logged-in user's portal. */
 export function portalFor(user) {
-  if (user.role === 'employer') {
-    return { name: 'Employer portal', menu: EMPLOYER_MENUS[employerKind(user)] }
-  }
+  if (user.role === 'employer') return { left: EMPLOYER_MENUS[employerKind(user)], right: [] }
   return PORTALS[user.role]
+}
+
+/** Whether `item` is the page at `pathname` (or one of its sub-pages or tabs). */
+export function isCurrent(item, pathname) {
+  if (pathname === item.to) return true
+  if (item.end === false && pathname.startsWith(`${item.to}/`)) return true
+  return (item.match ?? []).some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
 }

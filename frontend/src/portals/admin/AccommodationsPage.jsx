@@ -9,6 +9,8 @@ import Notice from '../../components/ui/Notice.jsx'
 import PageHeading from '../../components/ui/PageHeading.jsx'
 import StatusBadge from '../../components/ui/StatusBadge.jsx'
 import AccommodationFormDialog from './AccommodationFormDialog.jsx'
+import PageTabs from '../../components/ui/PageTabs.jsx'
+import { DATA_TABS } from '../../lib/sectionTabs.js'
 
 /** Group a list (already sorted by the API) while keeping the group order. */
 function groupByName(items) {
@@ -97,6 +99,7 @@ export default function AccommodationsPage() {
   return (
     <>
       <PageHeading>Accommodation types</PageHeading>
+      <PageTabs label="Data" items={DATA_TABS} className="mt-4" />
       <p className="mt-4 max-w-prose">
         The shared list used in candidate profiles, job postings, search filters and feedback. Types that are no longer
         needed are retired instead of deleted, so existing job postings and feedback stay correct.

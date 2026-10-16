@@ -9,7 +9,7 @@
   --color-bg: var(--od-surface-page);
   --color-surface: var(--od-surface-page);
   --color-subtle: var(--od-surface-subtle);
-  --color-current: var(--od-surface-current);
+  --color-selected: var(--od-surface-current);
   --color-text: var(--od-text-default);
   --color-muted: var(--od-text-muted);
   --color-accent: var(--od-text-accent);

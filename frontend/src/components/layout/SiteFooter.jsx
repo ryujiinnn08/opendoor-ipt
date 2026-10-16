@@ -1,25 +1,25 @@
 import { Link } from 'react-router-dom'
 
+const LINK = 'inline-flex min-h-11 items-center px-2 text-sm text-muted underline-offset-4 hover:text-text hover:underline'
+
+/** The footer on every page: the privacy notice and the accessibility statement. */
 export default function SiteFooter() {
   return (
     <footer className="border-t border-border bg-surface">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-6 text-muted">
-        <p>OpenDoor: jobs matched to your accommodation needs.</p>
-        <nav aria-label="Footer">
-          <ul className="flex flex-wrap gap-4">
-            <li>
-              <Link to="/privacy" className="inline-flex min-h-11 items-center underline underline-offset-4 hover:no-underline">
-                Privacy notice
-              </Link>
-            </li>
-            <li>
-              <Link to="/accessibility" className="inline-flex min-h-11 items-center underline underline-offset-4 hover:no-underline">
-                Accessibility
-              </Link>
-            </li>
-          </ul>
-        </nav>
-      </div>
+      <nav aria-label="Footer" className="mx-auto max-w-6xl px-4 py-4 sm:px-6">
+        <ul className="flex flex-wrap items-center justify-center gap-x-4">
+          <li>
+            <Link to="/privacy" className={LINK}>
+              Privacy
+            </Link>
+          </li>
+          <li>
+            <Link to="/accessibility" className={LINK}>
+              Accessibility statement
+            </Link>
+          </li>
+        </ul>
+      </nav>
     </footer>
   )
 }

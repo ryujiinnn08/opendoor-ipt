@@ -8,6 +8,8 @@ import LoadingMessage from '../../components/ui/LoadingMessage.jsx'
 import Notice from '../../components/ui/Notice.jsx'
 import PageHeader from '../../components/ui/PageHeader.jsx'
 import { SECONDARY_LINK } from '../../components/ui/buttonLinkStyles.js'
+import PageTabs from '../../components/ui/PageTabs.jsx'
+import { PROFILE_TABS } from '../../lib/sectionTabs.js'
 
 /**
  * My résumé (plan PHASE_3 §6.3): the profile as a résumé, printable or saved as a PDF from the
@@ -34,6 +36,7 @@ export default function ResumePage() {
         title={profile?.name ?? 'My résumé'}
         documentTitle="My résumé"
         intro={<span className="print:hidden">This is how your résumé looks to employers.</span>}
+        tabs={<PageTabs label="Profile" items={PROFILE_TABS} className="mt-6 print:hidden" />}
         actions={
           profile && (
             <div className="flex flex-wrap gap-3 print:hidden">

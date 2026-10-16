@@ -6,6 +6,7 @@ import PortalLayout from './components/layout/PortalLayout.jsx'
 import PublicLayout from './components/layout/PublicLayout.jsx'
 import RootLayout from './components/layout/RootLayout.jsx'
 import ChangePasswordPage from './portals/account/ChangePasswordPage.jsx'
+import DisplayPage from './portals/account/DisplayPage.jsx'
 import NotificationsPage from './portals/account/NotificationsPage.jsx'
 import AccommodationsPage from './portals/admin/AccommodationsPage.jsx'
 import AddAdminPage from './portals/admin/AddAdminPage.jsx'
@@ -139,7 +140,16 @@ export const routes = [
       // Every portal (Phase 6A): the header shows the user's own portal.
       {
         element: <ProtectedRoute roles={['candidate', 'employer', 'admin']} />,
-        children: [{ element: <PortalLayout />, children: [{ path: '/account/password', element: <ChangePasswordPage /> }] }],
+        children: [
+          { path: '/account', element: <Navigate to="/account/display" replace /> },
+          {
+            element: <PortalLayout />,
+            children: [
+              { path: '/account/display', element: <DisplayPage /> },
+              { path: '/account/password', element: <ChangePasswordPage /> },
+            ],
+          },
+        ],
       },
       // Job seekers and employers (Phase 6B); admins have their queues.
       {

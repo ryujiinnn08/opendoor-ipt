@@ -18,6 +18,8 @@ import { useAnnounce } from '../../components/ui/announcerContext.js'
 import useFormErrors from '../../hooks/useFormErrors.js'
 import { summaryFrom } from '../../lib/errorSummary.js'
 import { DISABILITY_TYPES, EDUCATION_LEVELS } from '../../lib/profileOptions.js'
+import PageTabs from '../../components/ui/PageTabs.jsx'
+import { PROFILE_TABS } from '../../lib/sectionTabs.js'
 
 const SAVED = 'Your profile is saved.'
 const DISABILITY_HINT =
@@ -244,6 +246,7 @@ export default function ProfilePage() {
       <PageHeader
         title="My profile"
         intro="Your job application profile. Every part is optional, but employers learn more about you from a fuller profile."
+        tabs={<PageTabs label="Profile" items={PROFILE_TABS} />}
       />
 
       {loadError && (

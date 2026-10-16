@@ -13,6 +13,8 @@ import { useAnnounce } from '../../components/ui/announcerContext.js'
 import useFormErrors from '../../hooks/useFormErrors.js'
 import { summaryFrom } from '../../lib/errorSummary.js'
 import { PASSWORD_MESSAGES, checkPassword } from '../../lib/passwordRules.js'
+import PageTabs from '../../components/ui/PageTabs.jsx'
+import { ACCOUNT_TABS } from '../../lib/sectionTabs.js'
 
 const FIELDS = ['current_password', 'password', 'password_confirmation']
 const EMPTY = { current_password: '', password: '', password_confirmation: '' }
@@ -83,6 +85,7 @@ export default function ChangePasswordPage() {
             ? 'You logged in with a temporary password that someone else has seen. Choose your own before you continue.'
             : "Other devices where you're logged in are logged out. You stay logged in here."
         }
+        tabs={!forced && <PageTabs label="Account settings" items={ACCOUNT_TABS} />}
       />
 
       {changed ? (

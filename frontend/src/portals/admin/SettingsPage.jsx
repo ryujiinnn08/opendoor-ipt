@@ -7,6 +7,8 @@ import LoadingMessage from '../../components/ui/LoadingMessage.jsx'
 import Notice from '../../components/ui/Notice.jsx'
 import PageHeading from '../../components/ui/PageHeading.jsx'
 import { useAnnounce } from '../../components/ui/announcerContext.js'
+import PageTabs from '../../components/ui/PageTabs.jsx'
+import { DATA_TABS } from '../../lib/sectionTabs.js'
 
 export default function SettingsPage() {
   const announce = useAnnounce()
@@ -52,6 +54,7 @@ export default function SettingsPage() {
   return (
     <div className="max-w-2xl">
       <PageHeading>Settings</PageHeading>
+      <PageTabs label="Data" items={DATA_TABS} className="mt-4" />
       {message && (
         <Notice tone="success" className="mt-6">
           {message}

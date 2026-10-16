@@ -13,6 +13,8 @@ import { TEXT_LINK } from '../../components/ui/buttonLinkStyles.js'
 import { useAnnounce } from '../../components/ui/announcerContext.js'
 import useFormErrors from '../../hooks/useFormErrors.js'
 import { summaryFrom } from '../../lib/errorSummary.js'
+import PageTabs from '../../components/ui/PageTabs.jsx'
+import { PROFILE_TABS } from '../../lib/sectionTabs.js'
 
 const SAVED = 'Your needs are saved. Find jobs now ranks jobs by them.'
 
@@ -86,6 +88,7 @@ export default function NeedsPage() {
       <PageHeader
         title="My needs"
         intro="Tick the workplace accommodations you need. Find jobs ranks jobs by how many of them each one provides."
+        tabs={<PageTabs label="Profile" items={PROFILE_TABS} />}
       />
       <p className="mt-4 max-w-prose">
         <span className="font-bold">Who sees this:</span> Only you. Employers see your needs only when you apply to one of

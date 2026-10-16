@@ -9,6 +9,8 @@ import LoadingMessage from '../../components/ui/LoadingMessage.jsx'
 import Notice from '../../components/ui/Notice.jsx'
 import PageHeading from '../../components/ui/PageHeading.jsx'
 import { inputClasses } from '../../components/ui/fieldStyles.js'
+import PageTabs from '../../components/ui/PageTabs.jsx'
+import { DATA_TABS } from '../../lib/sectionTabs.js'
 
 const byName = (a, b) => a.name.localeCompare(b.name)
 
@@ -131,6 +133,7 @@ export default function CategoriesPage() {
   return (
     <>
       <PageHeading>Job categories</PageHeading>
+      <PageTabs label="Data" items={DATA_TABS} className="mt-4" />
       <p className="mt-4 max-w-prose">
         Categories group job postings by industry, so job seekers can browse and filter them.
       </p>
