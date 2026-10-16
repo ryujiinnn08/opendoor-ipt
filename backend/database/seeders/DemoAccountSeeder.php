@@ -39,7 +39,7 @@ class DemoAccountSeeder extends Seeder
                 ['name' => 'Demo Suspended Job Seeker', 'role' => Role::Candidate, 'password' => $demoPassword, 'consented_at' => now()],
             );
             if ($suspended->wasRecentlyCreated) {
-                $suspended->forceFill(['is_active' => false])->save();
+                $suspended->forceFill(['is_active' => false, 'email_verified_at' => now()])->save();
                 $suspended->accountEvents()->create([
                     'type' => AccountEventType::Suspended,
                     'reason' => self::SUSPENSION_REASON,
@@ -52,7 +52,7 @@ class DemoAccountSeeder extends Seeder
                 ['name' => 'Demo Admin Two', 'role' => Role::Admin, 'password' => Str::password(32)],
             );
             if ($admin2->wasRecentlyCreated) {
-                $admin2->forceFill(['must_change_password' => true])->save();
+                $admin2->forceFill(['must_change_password' => true, 'email_verified_at' => now()])->save();
                 $admin2->accountEvents()->create(['type' => AccountEventType::AdminCreated, 'actor_id' => $admin->id]);
             }
 

@@ -8,6 +8,7 @@ use App\Http\Requests\Auth\AcceptInviteRequest;
 use App\Http\Resources\UserResource;
 use App\Models\DepartmentInvite;
 use App\Models\User;
+use App\Services\EmailVerification;
 use App\Services\InviteService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -37,7 +38,7 @@ class InviteController extends Controller
      * Guests create an account through the invite. A logged-in employer who has no employer
      * profile yet (e.g., an HR officer removed from another company) joins with that account.
      */
-    public function accept(AcceptInviteRequest $request, string $code, InviteService $invites): JsonResponse
+    public function accept(AcceptInviteRequest $request, string $code, InviteService $invites, EmailVerification $verification): JsonResponse
     {
         $invite = $this->findOrFail($code, $invites);
         $current = $request->user();
@@ -65,6 +66,9 @@ class InviteController extends Controller
 
             return $user;
         });
+
+        // Invite links are shared by hand, so the new HR officer still confirms their email.
+        $verification->send($user);
 
         Auth::guard('web')->login($user);
         $request->session()->regenerate();

@@ -10,7 +10,8 @@ use RuntimeException;
 /**
  * Creates the administrator and the demo accounts (plan PHASE_1 §3.1, PHASE_2 decision 23).
  *
- * Existing accounts are never changed, so re-seeding never resets a password.
+ * Existing accounts are never changed, so re-seeding never resets a password. Seeded emails count
+ * as confirmed (EMAIL_VERIFICATION_PLAN §2.8), so nobody is locked out of applying or posting.
  */
 class UserSeeder extends Seeder
 {
@@ -85,6 +86,9 @@ class UserSeeder extends Seeder
             ['email' => $email],
             ['name' => $name, 'role' => $role, 'password' => $password, 'consented_at' => now()],
         );
+        if ($user->wasRecentlyCreated) {
+            $user->markEmailAsVerified();
+        }
 
         $this->command?->line(sprintf(
             '  %s account %s: %s',

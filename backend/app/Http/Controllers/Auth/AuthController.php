@@ -7,6 +7,7 @@ use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Services\EmailVerification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -17,7 +18,7 @@ use Illuminate\Support\Facades\Auth;
  */
 class AuthController extends Controller
 {
-    public function register(RegisterRequest $request): JsonResponse
+    public function register(RegisterRequest $request, EmailVerification $verification): JsonResponse
     {
         $user = User::create([
             'name' => $request->validated('name'),
@@ -26,6 +27,9 @@ class AuthController extends Controller
             'role' => $request->validated('role'),
             'consented_at' => now(),
         ]);
+
+        // Logged in straight away as before; the email only gates applying and posting.
+        $verification->send($user);
 
         Auth::guard('web')->login($user);
         $request->session()->regenerate();

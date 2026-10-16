@@ -114,4 +114,18 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Email Verification
+    |--------------------------------------------------------------------------
+    |
+    | Minutes the link in the "confirm your email" message keeps working. A day,
+    | so people who read their email later still get in (EMAIL_VERIFICATION_PLAN).
+    |
+    */
+
+    'verification' => [
+        'expire' => 1440,
+    ],
+
 ];

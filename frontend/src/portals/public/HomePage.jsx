@@ -7,6 +7,7 @@ import JobCard from '../../components/jobs/JobCard.jsx'
 import Button from '../../components/ui/Button.jsx'
 import FormField from '../../components/ui/FormField.jsx'
 import Notice from '../../components/ui/Notice.jsx'
+import VerificationResult from '../../components/verification/VerificationResult.jsx'
 import PageHeading from '../../components/ui/PageHeading.jsx'
 import { TEXT_LINK } from '../../components/ui/buttonLinkStyles.js'
 
@@ -56,6 +57,7 @@ export default function HomePage() {
 
   return (
     <>
+      <VerificationResult />
       {location.state?.loggedOut && (
         <Notice tone="success" className="mb-8">
           You have logged out.

@@ -64,6 +64,13 @@ export function fieldErrorsFrom(error) {
 }
 
 /**
+ * Whether the API refused because the person hasn't confirmed their email yet (applying, posting).
+ */
+export function isEmailUnverified(error) {
+  return error?.response?.status === 403 && error.response.data?.code === 'email_unverified'
+}
+
+/**
  * A message for errors that don't belong to one field (403, 500, network errors).
  */
 export function generalErrorFrom(error) {

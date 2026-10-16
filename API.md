@@ -86,6 +86,8 @@ Every error is JSON with at least a `message` written for people (the app shows 
 | Apply | 10 a minute per account |
 | Open an invite / accept it | 30 / 10 a minute per IP address |
 | Change password (6A) | 10 a minute per account |
+| Send the confirmation link again | 6 a minute per account |
+| Open a confirmation link | 30 a minute per IP address |
 
 **Caching:** responses with private details (applications, applicants, résumés, notifications and every `/admin/*` response, including temporary passwords) send `Cache-Control: private, no-store`, so a browser never keeps them on disk.
 
@@ -99,12 +101,15 @@ The same objects appear in several endpoints. Field lists are complete; examples
 
 ```json
 { "id": 4, "name": "Demo Employer", "email": "employer@opendoor.test", "role": "employer", "must_change_password": false,
+  "email_verified": true,
   "membership": { "role": "owner", "department": null,
     "employer": { "id": 1, "type": "company", "name": "OpenDoor Demo Corp.", "logo_url": null,
                   "is_verified": true, "verification_status": "verified" } } }
 ```
 
 `membership` appears for employers only (`null` before setup); HR officers have `"role": "hr"` and their `department` (`{ "id", "name" }`). `must_change_password` is `true` for a new administrator until they replace the temporary password (Phase 6A); until then every address except `GET /me`, `PUT /me/password` and `POST /logout` answers **403** `"Change your temporary password before you continue."`
+
+`email_verified` is `false` until the person opens the link in the "Confirm your email for OpenDoor" message. Until then applying for a job and creating a job posting answer **403** `{ "message": "Please confirm your email address first. Use the link we sent to your email.", "code": "email_unverified" }`; everything else works. Seeded accounts count as confirmed.
 
 ### Accommodation
 
@@ -225,10 +230,12 @@ Never the job seeker's shape. In a list:
 
 | Method | Address | Who | Send | Returns |
 |---|---|---|---|---|
-| POST | `/register` | Anyone | `role` (`candidate`\|`employer`), `name` (≤255), `email` (lowercase, unique), `password` + `password_confirmation` (8+ characters with upper and lower case, a number and a symbol), `consent` (must be `true`) | 201, User; also logs in |
+| POST | `/register` | Anyone | `role` (`candidate`\|`employer`), `name` (≤255), `email` (lowercase, unique), `password` + `password_confirmation` (8+ characters with upper and lower case, a number and a symbol), `consent` (must be `true`) | 201, User; also logs in and sends the "confirm your email" message (an email outage never blocks signing up) |
 | POST | `/login` | Anyone | `email`, `password` | 200, User. Wrong details: 422 on `email` ("These details do not match our records. Check your email and password.") |
 | POST | `/logout` | Logged in | — | 204 |
 | GET | `/me` | Logged in | — | User (the app calls it on load to restore the session) |
+| POST | `/email/verification-notification` | Logged in | — | `{ "message": "We sent a new link to maria@example.com.", "email_verified": false }`; when already confirmed, nothing is sent and `"email_verified": true`. **503** `"We couldn't send the email just now. Please try again in a few minutes."`. 6 a minute |
+| GET | `/email/verify/{id}/{hash}?expires=…&signature=…` | Anyone (the link in the email; no login needed) | — | **302** to the website: `FRONTEND_URL/?verified=1` when confirmed (also when it already was), `/?verified=0` when the link was changed, belongs to no account or is older than 24 hours. The signature covers the path and query only, so it works behind a proxy |
 | PUT | `/me/password` | Logged in · 6A | `current_password`, `password` + `password_confirmation` (the registration rules; different from the current one) | User. Ends the person's other sessions; this one continues. 422 `"That isn't your current password."`. 10 a minute |
 
 A suspended account (`is_active = false`) gets **403** `"This account has been suspended. Contact the OpenDoor administrators for help."` at login and on its next request; suspending also deletes its stored sessions (Phase 6A).
@@ -296,6 +303,7 @@ One set of addresses for both sides (as the papers name them); the server answer
 
 Both optional plain text (≤3000 and ≤1000 characters; text that isn't valid UTF-8 is refused). Status, dates and owner are never taken from the request. **201** with the job seeker's Application.
 
+- 403 `"code": "email_unverified"` — the job seeker hasn't confirmed their email yet
 - 404 `"This job isn't taking applications."` — not open (draft, waiting, rejected, closed, past its date, deleted)
 - 409 `{ "message": "You've already applied for this job.", "application_id": 7 }` — once per job, even after withdrawing
 - 422 `"We couldn't read your application. Please try again."` — a body that isn't valid JSON
@@ -416,7 +424,7 @@ Each change is stored with Laravel's database notifications (table `notification
 | Method | Address | Send | Returns |
 |---|---|---|---|
 | GET | `/employer/job-postings` | `status` (`all`\|`draft`\|`pending`\|`open`\|`rejected`\|`closed`\|`removed`), `department` (owners). `removed` lists only postings OpenDoor removed, with `removal`; `all` leaves them out | Employer job postings with `applicants` and `actions`, newest change first (≤200) |
-| POST | `/employer/job-postings` | See below | 201, the posting (Draft, or Waiting for approval with `submit: true`) |
+| POST | `/employer/job-postings` | See below | 201, the posting (Draft, or Waiting for approval with `submit: true`). **403** `"code": "email_unverified"` until the employer confirms their email |
 | GET | `/employer/job-postings/{id}` | — | The posting |
 | PUT | `/employer/job-postings/{id}` | See below | The posting. Saving an open or closed posting sends it back for approval |
 | DELETE | `/employer/job-postings/{id}` | — | 204 (hidden, kept for its applications). **422** while applicants are waiting: `"1 applicant is waiting for your decision. Decide on them or close the posting instead."` |

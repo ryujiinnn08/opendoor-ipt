@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { applyForJob } from '../../api/applications.js'
 import { getProfile } from '../../api/candidate.js'
-import { generalErrorFrom } from '../../api/client.js'
+import { generalErrorFrom, isEmailUnverified } from '../../api/client.js'
 import { getJob } from '../../api/jobs.js'
 import WhatEmployersSee from '../../components/applications/WhatEmployersSee.jsx'
 import Button from '../../components/ui/Button.jsx'
@@ -13,6 +13,7 @@ import Notice from '../../components/ui/Notice.jsx'
 import PageHeader from '../../components/ui/PageHeader.jsx'
 import { TEXT_LINK } from '../../components/ui/buttonLinkStyles.js'
 import { useAnnounce } from '../../components/ui/announcerContext.js'
+import VerifyEmailNotice from '../../components/verification/VerifyEmailNotice.jsx'
 import useFormErrors from '../../hooks/useFormErrors.js'
 import { interviewHint } from '../../lib/applicationText.js'
 import { summaryFrom } from '../../lib/errorSummary.js'
@@ -20,6 +21,7 @@ import { RECORD_ID } from '../../lib/recordId.js'
 
 const NOT_TAKING = "This job isn't taking applications."
 const ALREADY = "You've already applied for this job."
+const UNVERIFIED = 'Please confirm your email address before you apply.'
 
 /**
  * Apply for one job (F6.1, F6.2): an optional cover note and interview accommodation request,
@@ -38,7 +40,7 @@ export default function ApplyPage() {
   const [attempt, setAttempt] = useState(0)
   const [values, setValues] = useState({ cover_note: '', interview_request: '' })
   const [sending, setSending] = useState(false)
-  const [refusal, setRefusal] = useState(null) // { kind: 'already', applicationId } | { kind: 'closed' }
+  const [refusal, setRefusal] = useState(null) // { kind: 'already', applicationId } | { kind: 'closed' } | { kind: 'unverified' }
   const { errors, generalError, focusKey, showApiError, clear } = useFormErrors()
 
   useEffect(() => {
@@ -69,7 +71,7 @@ export default function ApplyPage() {
   // A refusal is read out and takes focus, so nobody presses Send again without knowing why.
   useEffect(() => {
     if (!refusal) return
-    announce(refusal.kind === 'already' ? ALREADY : NOT_TAKING)
+    announce({ already: ALREADY, unverified: UNVERIFIED }[refusal.kind] ?? NOT_TAKING)
     refusalBox.current?.focus()
   }, [refusal, announce])
 
@@ -85,6 +87,7 @@ export default function ApplyPage() {
       const status = error?.response?.status
       if (status === 409) setRefusal({ kind: 'already', applicationId: error.response.data?.application_id })
       else if (status === 404) setRefusal({ kind: 'closed' })
+      else if (isEmailUnverified(error)) setRefusal({ kind: 'unverified' })
       else showApiError(error)
       setSending(false)
     }
@@ -127,19 +130,23 @@ export default function ApplyPage() {
           <form onSubmit={handleSubmit} noValidate className="max-w-prose">
             {refusal && (
               <div ref={refusalBox} tabIndex={-1} className="mb-6 outline-offset-4">
-                <Notice tone="info">
-                  <p>{refusal.kind === 'already' ? ALREADY : NOT_TAKING}</p>
-                  {refusal.kind === 'already' && refusal.applicationId && (
-                    <Link to={`/candidate/applications/${refusal.applicationId}`} className={TEXT_LINK}>
-                      View your application
-                    </Link>
-                  )}
-                  {refusal.kind === 'closed' && (
-                    <Link to="/candidate/jobs" className={TEXT_LINK}>
-                      Browse open jobs
-                    </Link>
-                  )}
-                </Notice>
+                {refusal.kind === 'unverified' ? (
+                  <VerifyEmailNotice title={UNVERIFIED} />
+                ) : (
+                  <Notice tone="info">
+                    <p>{refusal.kind === 'already' ? ALREADY : NOT_TAKING}</p>
+                    {refusal.kind === 'already' && refusal.applicationId && (
+                      <Link to={`/candidate/applications/${refusal.applicationId}`} className={TEXT_LINK}>
+                        View your application
+                      </Link>
+                    )}
+                    {refusal.kind === 'closed' && (
+                      <Link to="/candidate/jobs" className={TEXT_LINK}>
+                        Browse open jobs
+                      </Link>
+                    )}
+                  </Notice>
+                )}
               </div>
             )}
             <ErrorSummary errors={summaryFrom(errors, ['cover_note', 'interview_request'], generalError)} focusKey={focusKey} />

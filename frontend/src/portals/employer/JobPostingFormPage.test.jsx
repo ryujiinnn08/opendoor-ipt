@@ -106,6 +106,19 @@ describe('JobPostingFormPage', () => {
     expect(await screen.findByText('List page')).toBeInTheDocument()
   })
 
+  it('asks an employer with an unconfirmed email to confirm it, with a way to get a new link', async () => {
+    createJobPosting.mockRejectedValue({ response: { status: 403, data: { code: 'email_unverified', message: 'Please confirm your email address first.' } } })
+    renderRoutes(routes, { path: '/employer/job-postings/new', auth: { ...hr, user: { ...hr.user, email: 'ana@example.com', email_verified: false } } })
+
+    await userEvent.type(await screen.findByLabelText('Job title'), 'Clerk')
+    await userEvent.click(screen.getByRole('button', { name: 'Save draft' }))
+
+    expect(await screen.findByText(/Please confirm your email address before you post a job/)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'There is a problem' }).parentElement).toHaveFocus()
+    expect(screen.getByRole('button', { name: 'Send the link again' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Job title')).toHaveValue('Clerk')
+  })
+
   it('warns before sending an open posting back for approval', async () => {
     getJobPosting.mockResolvedValue({ ...fixture, employer: individual.user.membership.employer, department: null })
     renderRoutes(routes, { path: '/employer/job-postings/2/edit', auth: individual })

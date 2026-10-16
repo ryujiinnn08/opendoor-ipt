@@ -95,7 +95,7 @@ export default function RegisterPage() {
     setSubmitting(true)
     try {
       const user = await register({ ...values, name: values.name.trim(), email: values.email.trim().toLowerCase() })
-      announce(`Account created. Welcome to OpenDoor, ${user.name}.`)
+      announce(`Account created. Welcome to OpenDoor, ${user.name}. We sent a link to ${user.email} to confirm your email address.`)
       navigate(dashboardFor(user.role), { replace: true })
     } catch (error) {
       showErrors(fieldErrorsFrom(error), generalErrorFrom(error))
@@ -137,7 +137,7 @@ export default function RegisterPage() {
           <FormField
             id="email"
             label="Email address"
-            hint="You will use this to log in."
+            hint="You will use this to log in. We will send you a link to confirm it."
             type="email"
             autoComplete="email"
             spellCheck={false}

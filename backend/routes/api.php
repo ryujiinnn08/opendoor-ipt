@@ -5,6 +5,7 @@ use App\Http\Controllers\ApplicantResumeController;
 use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\ApplicationStatusController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Candidate;
 use App\Http\Controllers\Employer;
@@ -53,6 +54,11 @@ Route::post('/invites/{code}/accept', [Public\InviteController::class, 'accept']
 Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,1');
 Route::post('/login', [AuthController::class, 'login']);
 
+// The link in the "confirm your email" message: signed, no login needed, redirects to the website.
+Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
+    ->middleware('throttle:30,1,verify-email')
+    ->name('verification.verify');
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
@@ -60,6 +66,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
         // Change password (F1.6, Phase 6A): every portal.
         Route::put('/me/password', [PasswordController::class, 'update'])->middleware('throttle:10,1,password');
+        // Send the confirmation link again (EMAIL_VERIFICATION_PLAN).
+        Route::post('/email/verification-notification', [EmailVerificationController::class, 'send'])->middleware('throttle:6,1,verification-email');
 
         // Notifications (M9, Phase 6B): job seekers and employers, their own only.
         Route::middleware(['role:candidate,employer', 'no.store'])->prefix('notifications')->group(function () {
@@ -96,7 +104,7 @@ Route::middleware('auth:sanctum')->group(function () {
             });
             Route::post('job-postings/{id}/applications', [ApplicationController::class, 'store'])
                 ->where('id', '[0-9]{1,18}')
-                ->middleware(['role:candidate', 'throttle:10,1,applications']);
+                ->middleware(['role:candidate', 'verified', 'throttle:10,1,applications']);
         });
 
         // Employer portal (M3): company or individual profile, verification and team.
@@ -123,7 +131,7 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::get('dashboard', [Employer\DashboardController::class, 'show']);
                 Route::get('trust-score', [Employer\TrustScoreController::class, 'show']);
                 Route::get('job-postings', [Employer\JobPostingController::class, 'index']);
-                Route::post('job-postings', [Employer\JobPostingController::class, 'store']);
+                Route::post('job-postings', [Employer\JobPostingController::class, 'store'])->middleware('verified');
                 Route::get('job-postings/{posting}', [Employer\JobPostingController::class, 'show']);
                 Route::put('job-postings/{posting}', [Employer\JobPostingController::class, 'update']);
                 Route::delete('job-postings/{posting}', [Employer\JobPostingController::class, 'destroy']);

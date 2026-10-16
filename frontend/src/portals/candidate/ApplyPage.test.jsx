@@ -50,6 +50,24 @@ describe('ApplyPage', () => {
     expect(router.state.location.state).toEqual({ sent: 'Acme Corp.' })
   })
 
+  it('asks a job seeker with an unconfirmed email to confirm it and keeps what they typed', async () => {
+    applyForJob.mockRejectedValue({ response: { status: 403, data: { code: 'email_unverified', message: 'Please confirm your email address first.' } } })
+    const announce = vi.fn()
+    renderRoutes(routes, {
+      path: '/candidate/jobs/2/apply',
+      auth: { ...auth, user: { ...auth.user, email: 'ana@example.com', email_verified: false } },
+      announce,
+    })
+    await fillIn()
+    await userEvent.click(screen.getByRole('button', { name: 'Send application' }))
+
+    expect(await screen.findByText('Please confirm your email address before you apply.')).toBeInTheDocument()
+    expect(screen.getByText('ana@example.com')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Send the link again' })).toBeInTheDocument()
+    expect(announce).toHaveBeenCalledWith('Please confirm your email address before you apply.')
+    expect(screen.getByLabelText(/Cover note/)).toHaveValue('I have three years of bookkeeping.')
+  })
+
   it('says so when the job seeker already applied', async () => {
     getJob.mockResolvedValue({ ...job, my_application: { id: 7, status: 'pending', status_label: 'Pending', applied_at: '2026-10-13T02:00:00+00:00' } })
     open()

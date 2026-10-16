@@ -24,6 +24,8 @@ class UserResource extends JsonResource
             'role' => $this->role->value,
             // A new administrator's temporary password must be changed first (Phase 6A, Q4).
             'must_change_password' => (bool) $this->must_change_password,
+            // Job seekers and employers confirm their email before applying or posting.
+            'email_verified' => $this->hasVerifiedEmail(),
             // Employers only: null until they set up a company or individual profile.
             'membership' => $this->when($this->role === Role::Employer, function () {
                 $membership = $this->membership()->with(['employer', 'department'])->first();

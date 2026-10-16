@@ -85,6 +85,7 @@ class DemoFeedbackSeeder extends Seeder
             'role' => Role::Candidate,
             'consented_at' => now(),
         ]);
+        $user->markEmailAsVerified();
         $user->candidateProfile()->create(['headline' => 'Sample job seeker for the OpenDoor demo']);
 
         return $user;

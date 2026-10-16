@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { generalErrorFrom } from '../../api/client.js'
+import { generalErrorFrom, isEmailUnverified } from '../../api/client.js'
 import { getDepartments, getEmployerProfile } from '../../api/employer.js'
 import { createJobPosting, getJobPosting, updateJobPosting } from '../../api/jobPostings.js'
 import { getAccommodationGroups, getCategories } from '../../api/masterData.js'
@@ -17,6 +17,7 @@ import PageHeader from '../../components/ui/PageHeader.jsx'
 import RadioCardGroup from '../../components/ui/RadioCardGroup.jsx'
 import SelectField from '../../components/ui/SelectField.jsx'
 import { TEXT_LINK } from '../../components/ui/buttonLinkStyles.js'
+import VerifyEmailNotice from '../../components/verification/VerifyEmailNotice.jsx'
 import useFormErrors from '../../hooks/useFormErrors.js'
 import { formatDay } from '../../lib/format.js'
 import { closingDateRange, EMPLOYMENT_TYPES, INTERVIEW_FORMATS, WORK_SETUPS } from '../../lib/postingOptions.js'
@@ -117,6 +118,7 @@ export default function JobPostingFormPage() {
   const [departments, setDepartments] = useState([])
   const [loadError, setLoadError] = useState(null)
   const [saving, setSaving] = useState(null) // the key of the button being saved
+  const [unverified, setUnverified] = useState(false) // the API asked for a confirmed email first
 
   useEffect(() => {
     let cancelled = false
@@ -177,7 +179,12 @@ export default function JobPostingFormPage() {
       const saved = editing ? await updateJobPosting(id, payload) : await createJobPosting(payload)
       navigate('/employer/job-postings', { state: { message: savedMessage({ before: posting?.status ?? null, saved }) } })
     } catch (error) {
-      showApiError(error)
+      if (isEmailUnverified(error)) {
+        setUnverified(true)
+        show({}, 'Please confirm your email address before you post a job. You can ask for a new link below.')
+      } else {
+        showApiError(error)
+      }
       setSaving(null)
     }
   }
@@ -230,6 +237,7 @@ export default function JobPostingFormPage() {
 
       <div className="mt-8">
         <ErrorSummary errors={summaryItems(errors, values, generalError)} focusKey={focusKey} />
+        {unverified && <VerifyEmailNotice className="mb-8" />}
 
         <form
           noValidate
