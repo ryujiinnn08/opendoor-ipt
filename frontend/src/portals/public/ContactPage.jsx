@@ -75,9 +75,11 @@ export default function ContactPage() {
       setGeneralError(null)
       announce(thanks)
     } catch (error) {
-      // The server words its "cannot send right now" (503) reply for people; show it as written.
-      const unavailable = error?.response?.status === 503 ? error.response.data?.message : null
-      showErrors(fieldErrorsFrom(error), unavailable || generalErrorFrom(error))
+      // The server words its "cannot send right now" (503) and "too many messages" (429) replies
+      // for people, each saying how long to wait; show them as written.
+      const status = error?.response?.status
+      const worded = status === 503 || status === 429 ? error.response.data?.message : null
+      showErrors(fieldErrorsFrom(error), worded || generalErrorFrom(error))
     } finally {
       setSubmitting(false)
     }

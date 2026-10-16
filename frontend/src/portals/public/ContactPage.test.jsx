@@ -102,4 +102,15 @@ describe('ContactPage', () => {
 
     expect(screen.getByText(message)).toBeInTheDocument()
   })
+
+  it('says how long to wait when the limit is reached', async () => {
+    const message = 'You have sent several messages in a short time. Please wait 10 minutes and try again.'
+    sendContactMessage.mockRejectedValue(laravelError(429, { message }))
+    renderRoutes(routes, { path: '/contact' })
+
+    await fill({ name: 'Maria', email: 'maria@example.com', message: 'I cannot upload my resume.' })
+    await send()
+
+    expect(screen.getByText(message)).toBeInTheDocument()
+  })
 })

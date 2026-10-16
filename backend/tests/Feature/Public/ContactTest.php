@@ -133,15 +133,74 @@ class ContactTest extends TestCase
             ->assertJsonPath('message', 'We could not send your message. Please try again in a few minutes.');
     }
 
-    public function test_it_allows_five_messages_a_minute_then_slows_down(): void
+    /** A message from a given visitor (IP address) and email address. */
+    private function sendFrom(string $ip, string $email): \Illuminate\Testing\TestResponse
+    {
+        return $this->withServerVariables(['REMOTE_ADDR' => $ip])
+            ->postJson('/api/contact', $this->form(['email' => $email]));
+    }
+
+    public function test_one_visitor_can_send_three_messages_in_ten_minutes(): void
     {
         Mail::fake();
 
-        foreach (range(1, 5) as $i) {
-            $this->postJson('/api/contact', $this->form())->assertAccepted();
+        foreach (range(1, 3) as $i) {
+            $this->sendFrom('10.0.0.1', "person{$i}@example.com")->assertAccepted();
         }
 
-        $this->postJson('/api/contact', $this->form())->assertStatus(429);
+        $this->sendFrom('10.0.0.1', 'person4@example.com')
+            ->assertStatus(429)
+            ->assertJsonPath('message', 'You have sent several messages in a short time. Please wait 10 minutes and try again.');
+        $this->sendFrom('10.0.0.2', 'other@example.com')->assertAccepted();
+
+        $this->travel(11)->minutes();
+        $this->sendFrom('10.0.0.1', 'person4@example.com')->assertAccepted();
         Mail::assertSentCount(5);
+    }
+
+    public function test_one_visitor_can_send_ten_messages_a_day(): void
+    {
+        Mail::fake();
+
+        foreach (range(1, 10) as $i) {
+            $this->sendFrom('10.0.0.1', "person{$i}@example.com")->assertAccepted();
+            $this->travel(11)->minutes();
+        }
+
+        $this->sendFrom('10.0.0.1', 'person11@example.com')
+            ->assertStatus(429)
+            ->assertJsonPath('message', "You have reached today's limit for the contact form. Please try again tomorrow, or email us directly.");
+        Mail::assertSentCount(10);
+    }
+
+    public function test_one_email_address_can_send_three_messages_a_day_from_anywhere(): void
+    {
+        Mail::fake();
+
+        foreach (range(1, 3) as $i) {
+            $this->sendFrom("10.0.0.{$i}", 'maria@example.com')->assertAccepted();
+        }
+
+        $this->sendFrom('10.0.0.9', 'Maria@Example.com ')
+            ->assertStatus(429)
+            ->assertJsonPath('message', 'We have already received several messages from this email address today. We will reply soon.');
+        Mail::assertSentCount(3);
+    }
+
+    public function test_the_whole_site_takes_fifty_messages_a_day(): void
+    {
+        Mail::fake();
+
+        foreach (range(1, 50) as $i) {
+            $this->sendFrom("10.0.1.{$i}", "person{$i}@example.com")->assertAccepted();
+        }
+
+        $this->sendFrom('10.0.2.1', 'late@example.com')
+            ->assertStatus(429)
+            ->assertJsonPath('message', 'The contact form is very busy today. Please try again tomorrow, or email us directly.');
+        Mail::assertSentCount(50);
+
+        $this->travel(1)->days();
+        $this->sendFrom('10.0.2.1', 'late@example.com')->assertAccepted();
     }
 }
