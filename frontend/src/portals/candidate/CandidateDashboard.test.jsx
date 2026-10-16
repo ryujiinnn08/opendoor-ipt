@@ -6,7 +6,7 @@ import { publicJobFixture as job } from '../../test/publicJobFixture.js'
 import { renderRoutes } from '../../test/renderWithProviders.jsx'
 import CandidateDashboard from './CandidateDashboard.jsx'
 
-vi.mock('../../api/candidate.js', () => ({ getDashboard: vi.fn() }))
+vi.mock('../../api/candidate.js', () => ({ getDashboard: vi.fn(), getPhotoFile: vi.fn() }))
 const { getDashboard } = await import('../../api/candidate.js')
 
 const routes = [{ path: '/candidate/dashboard', element: <CandidateDashboard /> }]
@@ -28,12 +28,14 @@ describe('CandidateDashboard', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Welcome, Ana Reyes' })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Your top matches' })).not.toBeInTheDocument()
 
-    const missing = screen.getByRole('region', { name: 'Finish your profile' })
-    expect(within(missing).getByRole('link', { name: 'Headline' })).toHaveAttribute('href', '/candidate/profile#profile-basic')
-    expect(within(missing).getByRole('link', { name: 'City or municipality and province' })).toHaveAttribute('href', '/candidate/profile#profile-basic')
-    expect(within(missing).getByRole('link', { name: 'Education' })).toHaveAttribute('href', '/candidate/profile#profile-education')
-    expect(within(missing).getByRole('link', { name: 'Skills' })).toHaveAttribute('href', '/candidate/profile#profile-skills')
-    expect(within(missing).getByRole('link', { name: 'Accommodation needs' })).toHaveAttribute('href', '/candidate/needs')
+    // Get started (UI_FEEDBACK_WAVE_B_PLAN B4): every step to do, worked out from the data.
+    const start = screen.getByRole('region', { name: 'Get started' })
+    expect(within(start).getByText('0 of 4 done')).toBeInTheDocument()
+    expect(within(start).getByRole('link', { name: 'Add your accommodation needs: to do' })).toHaveAttribute('href', '/candidate/needs')
+    expect(within(start).getByRole('link', { name: 'Complete your profile: to do' })).toHaveAttribute('href', '/candidate/profile')
+    expect(within(start).getByText('Still to fill in: headline, city or municipality and province, contact number, education, skills')).toBeInTheDocument()
+    expect(within(start).getByRole('link', { name: 'Upload a résumé: to do' })).toHaveAttribute('href', '/candidate/profile/resume')
+    expect(within(start).getByRole('link', { name: 'Apply for a job: to do' })).toHaveAttribute('href', '/candidate/jobs')
     expect(await axe(container)).toHaveNoViolations()
   })
 
@@ -70,7 +72,6 @@ describe('CandidateDashboard', () => {
     expect(within(top).getByRole('link', { name: 'Data Encoder' })).toHaveAttribute('href', '/candidate/jobs/2')
     expect(within(top).getAllByText('Meets all 2 of your needs')).toHaveLength(2)
     expect(screen.getByRole('link', { name: 'See all matches' })).toHaveAttribute('href', '/candidate/jobs')
-    expect(screen.queryByRole('region', { name: 'Finish your profile' })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Tell us what you need' })).not.toBeInTheDocument()
   })
 
@@ -90,21 +91,53 @@ describe('CandidateDashboard', () => {
     expect(await screen.findByRole('link', { name: 'Tell us what you need' })).toBeInTheDocument()
   })
 
-  it('counts applications, or invites the first one', async () => {
-    getDashboard.mockResolvedValue({ needs_count: 2, top_matches: [], missing_sections: [], applications: { all: 4, waiting: 2, hired: 1, closed: 1 } })
+  it('links each count to the filtered list, shows the latest updates, or invites the first one', async () => {
+    getDashboard.mockResolvedValue({
+      needs_count: 2,
+      top_matches: [],
+      missing_sections: [],
+      applications: { all: 4, waiting: 2, hired: 1, closed: 1 },
+      recent_applications: [
+        {
+          id: 9,
+          status: 'reviewed',
+          applied_at: '2026-10-12T02:00:00Z',
+          updated_at: '2026-10-14T02:00:00Z',
+          job: { id: 2, title: 'Data Encoder', employer: { id: 1, name: 'Acme Corp.', logo_url: null } },
+        },
+      ],
+    })
     const { unmount } = renderPage()
 
-    const tile = (await screen.findByRole('heading', { name: 'My applications' })).closest('li')
-    expect(within(tile).getByText('2 waiting')).toBeInTheDocument()
-    expect(within(tile).getByText('1 hired')).toBeInTheDocument()
-    expect(within(tile).getByText('1 closed')).toBeInTheDocument()
-    expect(within(tile).getByRole('link', { name: 'See my applications' })).toHaveAttribute('href', '/candidate/applications')
-    expect(within(tile).queryByText('Coming in a later update')).not.toBeInTheDocument()
+    const card = await screen.findByRole('region', { name: 'My applications' })
+    expect(within(card).getByRole('link', { name: '2 Waiting for a reply' })).toHaveAttribute('href', '/candidate/applications?status=waiting')
+    expect(within(card).getByRole('link', { name: '1 Hired' })).toHaveAttribute('href', '/candidate/applications?status=hired')
+    expect(within(card).getByRole('link', { name: '1 Closed Not selected or withdrawn' })).toHaveAttribute('href', '/candidate/applications?status=closed')
+    expect(within(card).getByRole('link', { name: 'See all 4' })).toHaveAttribute('href', '/candidate/applications')
+    expect(within(card).getByRole('link', { name: 'Data Encoder' })).toHaveAttribute('href', '/candidate/applications/9')
+    expect(within(card).getByText('Reviewed')).toBeInTheDocument()
     unmount()
 
     getDashboard.mockResolvedValue({ needs_count: 2, top_matches: [], missing_sections: [], applications: { all: 0, waiting: 0, hired: 0, closed: 0 } })
     renderPage()
-    const empty = (await screen.findByRole('heading', { name: 'My applications' })).closest('li')
+    const empty = await screen.findByRole('region', { name: 'My applications' })
     expect(within(empty).getByText("You haven't applied for any jobs yet.")).toBeInTheDocument()
+    expect(within(empty).getByRole('link', { name: 'Find jobs' })).toHaveAttribute('href', '/candidate/jobs')
+  })
+
+  it('hides Get started when asked, and once every step is done', async () => {
+    getDashboard.mockResolvedValue({ needs_count: 2, top_matches: [], missing_sections: ['skills'], profile: { has_resume: true }, applications: { all: 1, waiting: 1, hired: 0, closed: 0 } })
+    const { unmount } = renderPage()
+    const start = await screen.findByRole('region', { name: 'Get started' })
+    expect(within(start).getByText('3 of 4 done')).toBeInTheDocument()
+    await userEvent.click(within(start).getByRole('button', { name: 'Hide this' }))
+    expect(screen.queryByRole('region', { name: 'Get started' })).not.toBeInTheDocument()
+    unmount()
+    localStorage.clear()
+
+    getDashboard.mockResolvedValue({ needs_count: 2, top_matches: [], missing_sections: [], profile: { has_resume: true }, applications: { all: 1, waiting: 1, hired: 0, closed: 0 } })
+    renderPage()
+    await screen.findByRole('region', { name: 'My applications' })
+    expect(screen.queryByRole('region', { name: 'Get started' })).not.toBeInTheDocument()
   })
 })

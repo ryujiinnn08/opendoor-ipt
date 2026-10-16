@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { getApplicantResume, getApplication } from '../../api/applications.js'
+import { getApplicantPhoto, getApplicantResume, getApplication } from '../../api/applications.js'
 import { generalErrorFrom } from '../../api/client.js'
 import ApplicantSummary from '../../components/applications/ApplicantSummary.jsx'
 import ApplicationStatusBadge from '../../components/applications/ApplicationStatusBadge.jsx'
@@ -10,6 +10,8 @@ import Button from '../../components/ui/Button.jsx'
 import LoadingMessage from '../../components/ui/LoadingMessage.jsx'
 import Notice from '../../components/ui/Notice.jsx'
 import PageHeader from '../../components/ui/PageHeader.jsx'
+import Avatar from '../../components/candidate/Avatar.jsx'
+import usePrivateImage from '../../hooks/usePrivateImage.js'
 import { TEXT_LINK } from '../../components/ui/buttonLinkStyles.js'
 import { formatDate } from '../../lib/format.js'
 import { openPdfInNewTab } from '../../lib/openPdf.js'
@@ -97,6 +99,7 @@ export default function ApplicantPage() {
 
       {applicant && (
         <>
+          {!withdrawn && applicant.profile.has_photo && <ApplicantPhoto applicationId={applicant.id} name={applicant.applicant.name} version={applicant.profile.photo_version} />}
           {!withdrawn && (applicant.profile.headline || place) && (
             <div className="mt-2">
               {applicant.profile.headline && <p className="text-xl">{applicant.profile.headline}</p>}
@@ -168,4 +171,11 @@ export default function ApplicantPage() {
       )}
     </>
   )
+}
+
+/** The applicant's photo, only when they chose to show it to employers (UI_FEEDBACK_WAVE_B_PLAN B1). */
+function ApplicantPhoto({ applicationId, name, version }) {
+  const load = useCallback(() => getApplicantPhoto(applicationId), [applicationId])
+  const src = usePrivateImage(load, version)
+  return src ? <Avatar name={name} src={src} size="xl" className="mt-4" /> : null
 }

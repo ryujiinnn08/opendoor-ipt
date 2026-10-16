@@ -97,3 +97,9 @@ export async function replaceTemporaryPassword(id) {
   const { data } = await client.post(`/api/admin/users/${id}/temporary-password`)
   return { user: data.data, temporaryPassword: data.temporary_password }
 }
+
+/** Weekly activity for the dashboard charts: accounts, approvals, applications and hires by week, and verification. */
+export async function getDashboardActivity() {
+  const { data } = await client.get('/api/admin/dashboard/activity')
+  return data.data
+}

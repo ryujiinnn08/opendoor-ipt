@@ -100,6 +100,12 @@ class ApplicantResource extends JsonResource
         if (! $profile['show_disability']) {
             $profile['disability_type'] = null;
         }
+        // The photo only when the job seeker chose to show it (UI_FEEDBACK_WAVE_B_PLAN Q2).
+        if (! $profile['show_photo_to_employers']) {
+            $profile['has_photo'] = false;
+            $profile['photo_version'] = null;
+        }
+        unset($profile['show_photo_to_employers']);
 
         return $profile;
     }

@@ -10,6 +10,11 @@ export default function SiteFooter() {
       <nav aria-label="Footer" className="mx-auto max-w-6xl px-4 py-4 sm:px-6">
         <ul className="flex flex-wrap items-center justify-center gap-x-4">
           <li>
+            <Link to="/help" className={LINK}>
+              How OpenDoor works
+            </Link>
+          </li>
+          <li>
             <Link to="/privacy" className={LINK}>
               Privacy
             </Link>

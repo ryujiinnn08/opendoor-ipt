@@ -55,3 +55,9 @@ export async function getApplicantResume(id) {
     throw error
   }
 }
+
+/** An applicant's photo as a Blob, for their job's employer, when the applicant shares it. */
+export async function getApplicantPhoto(id) {
+  const { data } = await client.get(`/api/applications/${id}/applicant-photo`, { responseType: 'blob' })
+  return data
+}

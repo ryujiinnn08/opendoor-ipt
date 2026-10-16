@@ -32,6 +32,13 @@
   --od-accent-sky: #9adff0;
   --od-accent-lilac: #d4c4ef;
 
+  /* Chart series (UI_FEEDBACK_WAVE_B_PLAN B3): OpenDoor's violet, sky, orange and pink, deepened
+     until they pass the dataviz validator (lightness band, chroma, colour-blind separation, 3:1). */
+  --od-chart-1: #6a4c9c;
+  --od-chart-2: #0f8fb8;
+  --od-chart-3: #c9772b;
+  --od-chart-4: #c2477a;
+
   --od-status-danger: #b42318;
   --od-status-danger-bg: #fef1f1;
   --od-status-success: #116329;

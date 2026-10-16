@@ -37,6 +37,23 @@ class DashboardTest extends TestCase
             ->assertJsonPath('data.applications', ['all' => 5, 'waiting' => 2, 'hired' => 1, 'closed' => 2]);
     }
 
+    public function test_shows_the_three_most_recently_changed_applications_and_the_profile_card(): void
+    {
+        $seeker = User::factory()->create();
+        $old = Application::factory()->create(['user_id' => $seeker->id, 'updated_at' => now()->subDays(9)]);
+        $changed = Application::factory()->reviewed()->create(['user_id' => $seeker->id, 'updated_at' => now()->subDay()]);
+        $newest = Application::factory()->create(['user_id' => $seeker->id, 'updated_at' => now()]);
+        $third = Application::factory()->create(['user_id' => $seeker->id, 'updated_at' => now()->subDays(3)]);
+        Application::factory()->create(); // someone else's
+
+        $response = $this->actingAs($seeker, 'web')->getJson('/api/candidate/dashboard')->assertOk();
+        $this->assertSame([$newest->id, $changed->id, $third->id], $response->json('data.recent_applications.*.id'));
+        $this->assertNotContains($old->id, $response->json('data.recent_applications.*.id'));
+        $response->assertJsonPath('data.recent_applications.1.status', 'reviewed')
+            ->assertJsonPath('data.recent_applications.0.updated_at', $newest->updated_at->toIso8601String())
+            ->assertJsonPath('data.profile', ['headline' => null, 'city' => null, 'province' => null, 'has_resume' => false, 'has_photo' => false, 'photo_version' => null]);
+    }
+
     public function test_a_complete_profile_misses_nothing(): void
     {
         $seeker = User::factory()->create();

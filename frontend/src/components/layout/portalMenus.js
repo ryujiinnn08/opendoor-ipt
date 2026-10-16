@@ -59,7 +59,8 @@ export function accountMenuFor(user) {
     ...(user.role === 'candidate' ? [PROFILE_ITEM] : []),
     { to: '/account/display', label: 'Display settings', icon: 'monitor' },
     { to: '/account/password', label: 'Change password', icon: 'lock' },
-    { to: '/contact', label: 'Help and contact', icon: 'circle-help' },
+    { to: '/help', label: 'How OpenDoor works', icon: 'circle-help' },
+    { to: '/contact', label: 'Contact us', icon: 'chat' },
   ]
 }
 

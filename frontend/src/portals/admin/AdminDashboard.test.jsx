@@ -5,6 +5,7 @@ import { renderRoutes } from '../../test/renderWithProviders.jsx'
 import AdminDashboard from './AdminDashboard.jsx'
 
 vi.mock('../../api/admin.js', () => ({
+  getDashboardActivity: vi.fn(() => new Promise(() => {})),
   getAdminDashboard: vi.fn(),
 }))
 

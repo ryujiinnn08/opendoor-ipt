@@ -75,3 +75,9 @@ export async function moveMember(memberId, departmentId) {
 export async function removeMember(memberId) {
   await client.delete(`/api/employer/members/${memberId}`)
 }
+
+/** Weekly activity for the dashboard charts: { weeks, applications_by_week, applicants_by_posting }. */
+export async function getDashboardActivity() {
+  const { data } = await client.get('/api/employer/dashboard/activity')
+  return data.data
+}

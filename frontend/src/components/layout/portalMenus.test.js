@@ -20,8 +20,8 @@ describe('portalFor', () => {
 
   it('gives job seekers their pages, and Profile in the account menu', () => {
     expect(labels({ role: 'candidate' })).toEqual(['Dashboard', 'Find jobs', 'Applications'])
-    expect(accountMenuFor({ role: 'candidate' }).map((item) => item.label)).toEqual(['Profile', 'Display settings', 'Change password', 'Help and contact'])
-    expect(accountMenuFor({ role: 'admin' }).map((item) => item.label)).toEqual(['Display settings', 'Change password', 'Help and contact'])
+    expect(accountMenuFor({ role: 'candidate' }).map((item) => item.label)).toEqual(['Profile', 'Display settings', 'Change password', 'How OpenDoor works', 'Contact us'])
+    expect(accountMenuFor({ role: 'admin' }).map((item) => item.label)).toEqual(['Display settings', 'Change password', 'How OpenDoor works', 'Contact us'])
   })
 
   it('gives administrators their queues, Feedback and Data', () => {

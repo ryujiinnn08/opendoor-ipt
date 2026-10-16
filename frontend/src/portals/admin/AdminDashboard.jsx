@@ -1,3 +1,4 @@
+import AdminActivity from '../../components/dashboard/AdminActivity.jsx'
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getAdminDashboard } from '../../api/admin.js'
@@ -130,6 +131,8 @@ export default function AdminDashboard() {
           </section>
         </div>
       )}
+
+      <AdminActivity />
 
       <section aria-labelledby="lists-heading" className="mt-12">
         <h2 id="lists-heading" className="text-2xl font-bold">

@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { useAuth } from '../../auth/authContext.js'
 import { employerSummary } from '../../auth/employerAccess.js'
 import { useAnnounce } from '../../components/ui/announcerContext.js'
+import Button from '../../components/ui/Button.jsx'
 import Notice from '../../components/ui/Notice.jsx'
+import { showGetStartedAgain } from '../../lib/getStarted.js'
 import PageHeader from '../../components/ui/PageHeader.jsx'
 import PageTabs from '../../components/ui/PageTabs.jsx'
 import { ACCOUNT_TABS } from '../../lib/sectionTabs.js'
@@ -133,6 +135,24 @@ export default function DisplayPage() {
           <Notice tone="success" className="mt-6 animate-reveal">
             <p className="font-bold text-success">Display settings applied and saved on this device.</p>
           </Notice>
+        )}
+
+        {(user.role === 'candidate' || user.role === 'employer') && (
+          <div className="mt-8 border-t border-border pt-6">
+            <h3 className="text-lg font-semibold">Get started card</h3>
+            <p className="mt-1 text-sm text-muted">If you hid the Get started steps on your dashboard, you can bring them back.</p>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="mt-3"
+              onClick={() => {
+                showGetStartedAgain()
+                announce('The Get started card will show on your dashboard again.')
+              }}
+            >
+              Show the Get started card again
+            </Button>
+          </div>
         )}
       </section>
     </>

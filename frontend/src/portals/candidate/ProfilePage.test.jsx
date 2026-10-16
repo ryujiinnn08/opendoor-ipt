@@ -12,8 +12,11 @@ vi.mock('../../api/candidate.js', () => ({
   uploadResume: vi.fn(),
   removeResume: vi.fn(),
   getResumeFile: vi.fn(),
+  uploadPhoto: vi.fn(),
+  removePhoto: vi.fn(),
+  getPhotoFile: vi.fn(),
 }))
-const { getProfile, saveProfile } = await import('../../api/candidate.js')
+const { getProfile, saveProfile, uploadPhoto, getPhotoFile } = await import('../../api/candidate.js')
 
 const routes = [{ path: '/candidate/profile', element: <ProfilePage /> }]
 const seeker = { status: 'authenticated', role: 'candidate', user: { name: 'Ana Reyes', role: 'candidate' }, refresh: vi.fn() }
@@ -27,6 +30,7 @@ describe('ProfilePage', () => {
     vi.clearAllMocks()
     getProfile.mockResolvedValue(profileFixture)
     saveProfile.mockImplementation(async (values) => ({ ...profileFixture, ...values }))
+    getPhotoFile.mockResolvedValue(new Blob(['x'], { type: 'image/png' }))
   })
 
   it('shows the profile in its sections', async () => {
@@ -123,5 +127,36 @@ describe('ProfilePage', () => {
     await screen.findByLabelText('Headline', { exact: false })
 
     expect(await axe(container)).toHaveNoViolations()
+  })
+
+  it('adds a photo and saves Open to and the photo switch with the profile (UI_FEEDBACK_WAVE_B_PLAN B1)', async () => {
+    const user = userEvent.setup()
+    uploadPhoto.mockResolvedValue({ ...profileFixture, has_photo: true, photo_version: 'abc' })
+    const { announce } = renderPage()
+
+    const photoSection = await screen.findByRole('region', { name: 'Photo' })
+    const input = within(photoSection).getByLabelText('Add a photo')
+    await user.upload(input, new File(['x'], 'me.png', { type: 'image/png' }))
+    expect(uploadPhoto).toHaveBeenCalled()
+    expect(announce).toHaveBeenCalledWith('Photo saved.')
+    expect(await within(photoSection).findByRole('button', { name: 'Remove photo' })).toBeInTheDocument()
+
+    expect(screen.getByRole('checkbox', { name: 'Show my photo to employers I apply to' })).not.toBeChecked()
+    await user.click(within(screen.getByRole('group', { name: 'Work setup' })).getByRole('checkbox', { name: 'Remote' }))
+    await user.click(within(screen.getByRole('group', { name: 'Employment type' })).getByRole('checkbox', { name: 'Internship' }))
+    await user.click(screen.getByRole('button', { name: 'Save profile' }))
+
+    expect(saveProfile).toHaveBeenCalledWith(
+      expect.objectContaining({ show_photo_to_employers: false, open_to_work_setups: ['remote'], open_to_employment_types: ['internship'] }),
+    )
+  })
+
+  it('refuses a photo that is not a JPEG or PNG before uploading', async () => {
+    const user = userEvent.setup({ applyAccept: false })
+    renderPage()
+    const photoSection = await screen.findByRole('region', { name: 'Photo' })
+    await user.upload(within(photoSection).getByLabelText('Add a photo'), new File(['x'], 'me.gif', { type: 'image/gif' }))
+    expect(within(photoSection).getByText('Choose a JPEG or PNG photo.')).toBeInTheDocument()
+    expect(uploadPhoto).not.toHaveBeenCalled()
   })
 })

@@ -34,6 +34,7 @@ class ProfileController extends Controller
             $user->candidateProfile()->updateOrCreate([], [
                 ...array_fill_keys($fields, null),
                 'show_disability' => false,
+                'show_photo_to_employers' => false,
                 ...Arr::only($data, $fields),
             ]);
 

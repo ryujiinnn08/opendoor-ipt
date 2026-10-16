@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Candidate;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\CandidateApplicationResource;
 use App\Http\Resources\PublicJobPostingResource;
 use App\Models\Application;
 use App\Models\User;
@@ -36,7 +37,25 @@ class DashboardController extends Controller
             ], $needs, $user->id)->getCollection()
             : collect();
 
+        $profile = $user->candidateProfile;
+        $recent = $user->applications()
+            ->with(CandidateApplicationResource::RELATIONS)
+            ->withCount('hiredAccommodations')
+            ->orderByDesc('updated_at')
+            ->orderByDesc('id')
+            ->limit(3)
+            ->get();
+
         return response()->json(['data' => [
+            // The profile card and the Get started steps (UI_FEEDBACK_WAVE_B_PLAN B2, B4).
+            'profile' => [
+                'headline' => $profile?->headline,
+                'city' => $profile?->city,
+                'province' => $profile?->province,
+                'has_resume' => (bool) $profile?->resume_path,
+                'has_photo' => (bool) $profile?->photo_path,
+                'photo_version' => $profile?->photo_path ? substr(md5($profile->photo_path), 0, 8) : null,
+            ],
             'needs_count' => $needs?->count() ?? 0,
             'applications' => Application::countsFor($user),
             'feedback_due' => $user->applications()->feedbackOpen()->with('jobPosting.employer')->orderBy('hired_at')->orderBy('id')->get()
@@ -47,6 +66,8 @@ class DashboardController extends Controller
                 ])->all(),
             'top_matches' => PublicJobPostingResource::collection($topMatches)->resolve($request),
             'missing_sections' => $this->missingSections($user, $needs),
+            // The three most recently changed applications, as on My applications.
+            'recent_applications' => CandidateApplicationResource::collection($recent)->resolve($request),
         ]]);
     }
 

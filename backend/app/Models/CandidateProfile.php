@@ -23,6 +23,9 @@ class CandidateProfile extends Model
         'languages',
         'disability_type',
         'show_disability',
+        'show_photo_to_employers',
+        'open_to_work_setups',
+        'open_to_employment_types',
     ];
 
     protected $attributes = [
@@ -34,6 +37,9 @@ class CandidateProfile extends Model
         return [
             'disability_type' => DisabilityType::class,
             'show_disability' => 'boolean',
+            'show_photo_to_employers' => 'boolean',
+            'open_to_work_setups' => 'array',
+            'open_to_employment_types' => 'array',
             'resume_uploaded_at' => 'datetime',
         ];
     }

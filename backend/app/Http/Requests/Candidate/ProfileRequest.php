@@ -4,6 +4,8 @@ namespace App\Http\Requests\Candidate;
 
 use App\Enums\DisabilityType;
 use App\Enums\EducationLevel;
+use App\Enums\EmploymentType;
+use App\Enums\WorkSetup;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
@@ -39,6 +41,12 @@ class ProfileRequest extends FormRequest
             'languages' => ['nullable', 'string', 'max:255'],
             'disability_type' => ['nullable', Rule::enum(DisabilityType::class)],
             'show_disability' => ['sometimes', 'boolean'],
+            // UI_FEEDBACK_WAVE_B_PLAN B1: whether employers see the photo, and the kinds of work wanted.
+            'show_photo_to_employers' => ['sometimes', 'boolean'],
+            'open_to_work_setups' => ['nullable', 'array', 'max:'.count(WorkSetup::cases())],
+            'open_to_work_setups.*' => ['string', 'distinct', Rule::enum(WorkSetup::class)],
+            'open_to_employment_types' => ['nullable', 'array', 'max:'.count(EmploymentType::cases())],
+            'open_to_employment_types.*' => ['string', 'distinct', Rule::enum(EmploymentType::class)],
 
             'experiences' => ['sometimes', 'array', 'max:'.self::MAX_ENTRIES],
             'experiences.*.job_title' => ['required', 'string', 'max:150'],

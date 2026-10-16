@@ -3,20 +3,22 @@ import { Link } from 'react-router-dom'
 import { generalErrorFrom } from '../../api/client.js'
 import { getDashboard } from '../../api/candidate.js'
 import { useAuth } from '../../auth/authContext.js'
+import ApplicationsSummary from '../../components/applications/ApplicationsSummary.jsx'
+import ProfileCard from '../../components/candidate/ProfileCard.jsx'
 import JobCard from '../../components/jobs/JobCard.jsx'
+import GetStarted from '../../components/onboarding/GetStarted.jsx'
 import Button from '../../components/ui/Button.jsx'
-import DashboardTile from '../../components/ui/DashboardTile.jsx'
 import LoadingMessage from '../../components/ui/LoadingMessage.jsx'
 import Notice from '../../components/ui/Notice.jsx'
 import PageHeading from '../../components/ui/PageHeading.jsx'
 import { PRIMARY_LINK, TEXT_LINK } from '../../components/ui/buttonLinkStyles.js'
-import { RATE_ACTION } from '../../lib/feedbackText.js'
 import { PROFILE_SECTIONS as SECTIONS } from '../../lib/profileSections.js'
 
 /**
- * The job seeker's dashboard (F8.1, F2.5). Feedback due comes first (F7.6). Until needs are saved, its main action is
- * Tell us what you need; then it shows the three best matches. Below, the profile sections
- * still missing. Every state keeps the same heading.
+ * The job seeker's dashboard (F8.1, F2.5), laid out like LinkedIn's Jobs home
+ * (UI_FEEDBACK_WAVE_B_PLAN B2, B4): a profile card at the side; then Get started until it's done,
+ * My applications with any feedback due first (F7.6), and either Tell us what you need or the
+ * three best matches. Every state keeps the same heading.
  */
 export default function CandidateDashboard() {
   const { user } = useAuth()
@@ -38,9 +40,9 @@ export default function CandidateDashboard() {
     }
   }, [attempt])
 
-  // Non-zero counts only, e.g. "2 waiting", "1 hired".
-  const counts = dashboard?.applications ?? {}
-  const applicationLines = ['waiting', 'hired', 'closed'].filter((key) => counts[key] > 0).map((key) => `${counts[key]} ${key}`)
+  const counts = dashboard?.applications ?? { all: 0, waiting: 0, hired: 0, closed: 0 }
+  // Profile sections still empty; needs have their own Get started step.
+  const profileGaps = (dashboard?.missing_sections ?? []).filter((key) => key !== 'needs')
 
   return (
     <>
@@ -57,102 +59,70 @@ export default function CandidateDashboard() {
       {!dashboard && !loadError && <LoadingMessage>Loading your dashboard…</LoadingMessage>}
 
       {dashboard && (
-        <>
-          {dashboard.feedback_due?.length > 0 && (
-            <section aria-labelledby="feedback-due-heading" className="mt-8">
-              <h2 id="feedback-due-heading" className="text-2xl font-bold">
-                Feedback due
-              </h2>
-              <ul className="mt-4">
-                {dashboard.feedback_due.map((item) => (
-                  <li key={item.application_id} className="border-b border-border py-4 first:border-t">
-                    <p className="max-w-prose">
-                      Rate how {item.employer_name} delivered the accommodations for {item.job_title}.
-                    </p>
-                    <Link
-                      to={`/candidate/applications/${item.application_id}/feedback`}
-                      aria-label={`${RATE_ACTION} for ${item.job_title}`}
-                      className={`mt-3 ${PRIMARY_LINK}`}
-                    >
-                      {RATE_ACTION}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
+        <div className="mt-6 grid items-start gap-6 lg:grid-cols-[17rem_minmax(0,1fr)]">
+          <aside aria-label="Your profile" className="lg:sticky lg:top-4">
+            <ProfileCard user={user} profile={dashboard.profile} needsCount={dashboard.needs_count} />
+          </aside>
 
-          {dashboard.needs_count === 0 ? (
-            <section aria-labelledby="start-heading" className="mt-8 max-w-prose">
-              <h2 id="start-heading" className="text-2xl font-bold">
-                Start here
-              </h2>
-              <p className="mt-2">Tick the accommodations you need, and Find jobs ranks jobs by them.</p>
-              <Link to="/candidate/needs" className={`mt-4 ${PRIMARY_LINK}`}>
-                Tell us what you need
-              </Link>
-            </section>
-          ) : (
-            <section aria-labelledby="top-matches-heading" className="mt-8">
-              <h2 id="top-matches-heading" className="text-2xl font-bold">
-                Your top matches
-              </h2>
-              {dashboard.top_matches.length > 0 ? (
-                <>
-                  <ul className="mt-4 overflow-hidden rounded-lg border border-border bg-surface">
+          <div className="min-w-0 space-y-6">
+            <GetStarted
+              storageKey={`candidate-${user.id ?? user.email ?? 'me'}`}
+              intro="A few steps so employers can see you and Find jobs can rank jobs for you."
+              steps={[
+                { label: 'Add your accommodation needs', to: '/candidate/needs', done: dashboard.needs_count > 0 },
+                {
+                  label: 'Complete your profile',
+                  to: '/candidate/profile',
+                  done: profileGaps.length === 0,
+                  hint: profileGaps.length > 0 ? `Still to fill in: ${profileGaps.map((key) => SECTIONS[key].label.toLowerCase()).join(', ')}` : null,
+                },
+                { label: 'Upload a résumé', to: '/candidate/profile/resume', done: Boolean(dashboard.profile?.has_resume) },
+                { label: 'Apply for a job', to: '/candidate/jobs', done: (dashboard.applications?.all ?? 0) > 0 },
+              ]}
+            />
+
+            <ApplicationsSummary counts={counts} recent={dashboard.recent_applications} feedbackDue={dashboard.feedback_due} />
+
+            {dashboard.needs_count === 0 ? (
+              <section aria-labelledby="start-heading" className="rounded-lg border border-border bg-surface p-5 sm:p-6">
+                <h2 id="start-heading" className="text-2xl font-bold">
+                  Start here
+                </h2>
+                <p className="mt-2 max-w-prose">Tick the accommodations you need, and Find jobs ranks jobs by them.</p>
+                <Link to="/candidate/needs" className={`mt-4 ${PRIMARY_LINK}`}>
+                  Tell us what you need
+                </Link>
+              </section>
+            ) : (
+              <section aria-labelledby="top-matches-heading">
+                <div className="flex flex-wrap items-baseline justify-between gap-x-4">
+                  <h2 id="top-matches-heading" className="text-2xl font-bold">
+                    Your top matches
+                  </h2>
+                  {dashboard.top_matches.length > 0 && (
+                    <Link to="/candidate/jobs" className={TEXT_LINK}>
+                      See all matches
+                    </Link>
+                  )}
+                </div>
+                {dashboard.top_matches.length > 0 ? (
+                  <ul className="mt-3 overflow-hidden rounded-lg border border-border bg-surface">
                     {dashboard.top_matches.map((job) => (
                       <JobCard key={job.id} job={job} to={`/candidate/jobs/${job.id}`} />
                     ))}
                   </ul>
-                  <p className="mt-4">
-                    <Link to="/candidate/jobs" className={TEXT_LINK}>
-                      See all matches
+                ) : (
+                  <div className="mt-3 rounded-lg border border-border bg-surface p-5">
+                    <p className="text-lg">No open jobs meet your needs yet.</p>
+                    <Link to="/candidate/jobs?show=all" className={TEXT_LINK}>
+                      Browse all jobs
                     </Link>
-                  </p>
-                </>
-              ) : (
-                <div className="mt-4 border-y border-border py-6">
-                  <p className="text-lg">No open jobs meet your needs yet.</p>
-                  <Link to="/candidate/jobs?show=all" className={TEXT_LINK}>
-                    Browse all jobs
-                  </Link>
-                </div>
-              )}
-            </section>
-          )}
-
-          {dashboard.missing_sections.length > 0 && (
-            <section aria-labelledby="finish-heading" className="mt-10">
-              <h2 id="finish-heading" className="text-2xl font-bold">
-                Finish your profile
-              </h2>
-              <p className="mt-2 max-w-prose">Employers learn more about you when these are filled in:</p>
-              <ul className="mt-2">
-                {dashboard.missing_sections.map((key) => (
-                  <li key={key}>
-                    <Link to={SECTIONS[key].to} className={TEXT_LINK}>
-                      {SECTIONS[key].label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-
-          <ul className="mt-10 grid gap-4 md:grid-cols-3">
-            <DashboardTile title="My applications" to="/candidate/applications" linkLabel="See my applications">
-              {applicationLines.length > 0 ? (
-                <ul className="space-y-1">
-                  {applicationLines.map((line) => (
-                    <li key={line}>{line}</li>
-                  ))}
-                </ul>
-              ) : (
-                "You haven't applied for any jobs yet."
-              )}
-            </DashboardTile>
-          </ul>
-        </>
+                  </div>
+                )}
+              </section>
+            )}
+          </div>
+        </div>
       )}
     </>
   )

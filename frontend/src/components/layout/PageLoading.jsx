@@ -1,4 +1,5 @@
 import LoadingMessage from '../ui/LoadingMessage.jsx'
+import LoadingMascot from './LoadingMascot.jsx'
 
 /**
  * Shown while the first page's code is still downloading (the admin and employer pages load
@@ -7,6 +8,7 @@ import LoadingMessage from '../ui/LoadingMessage.jsx'
 export default function PageLoading() {
   return (
     <main id="main" className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
+      <LoadingMascot />
       <LoadingMessage>Loading the page…</LoadingMessage>
     </main>
   )

@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { fieldErrorsFrom, generalErrorFrom } from '../../api/client.js'
-import { getProfile, removeResume, saveProfile, uploadResume } from '../../api/candidate.js'
+import { getProfile, removePhoto, removeResume, saveProfile, uploadPhoto, uploadResume } from '../../api/candidate.js'
 import { useAuth } from '../../auth/authContext.js'
 import EntryList from '../../components/candidate/EntryList.jsx'
+import PhotoField from '../../components/candidate/PhotoField.jsx'
 import ResumeUpload from '../../components/candidate/ResumeUpload.jsx'
 import Button from '../../components/ui/Button.jsx'
 import CheckboxField from '../../components/ui/CheckboxField.jsx'
@@ -17,6 +18,7 @@ import { TEXT_LINK } from '../../components/ui/buttonLinkStyles.js'
 import { useAnnounce } from '../../components/ui/announcerContext.js'
 import useFormErrors from '../../hooks/useFormErrors.js'
 import { summaryFrom } from '../../lib/errorSummary.js'
+import { EMPLOYMENT_TYPES, WORK_SETUPS } from '../../lib/postingOptions.js'
 import { DISABILITY_TYPES, EDUCATION_LEVELS } from '../../lib/profileOptions.js'
 import PageTabs from '../../components/ui/PageTabs.jsx'
 import { PROFILE_TABS } from '../../lib/sectionTabs.js'
@@ -41,6 +43,9 @@ function valuesFrom(profile) {
   return {
     ...text,
     show_disability: profile.show_disability,
+    show_photo_to_employers: Boolean(profile.show_photo_to_employers),
+    open_to_work_setups: profile.open_to_work_setups ?? [],
+    open_to_employment_types: profile.open_to_employment_types ?? [],
     experiences: profile.experiences.map((item) => withKey(blankToEmpty(item))),
     educations: profile.educations.map((item) => withKey({ ...blankToEmpty(item), year_finished: String(item.year_finished ?? '') })),
   }
@@ -116,6 +121,10 @@ export default function ProfilePage() {
     setValues((current) => ({ ...current, [field]: value }))
     setSaved(false)
   }
+  const toggleOpenTo = (field, value, on) => {
+    setValues((current) => ({ ...current, [field]: on ? [...current[field], value] : current[field].filter((item) => item !== value) }))
+    setSaved(false)
+  }
   const setEntries = (field) => (items) => {
     // Entry errors are tied to positions; after an entry is added or removed they would point at
     // the wrong one, so they are cleared until the next save.
@@ -135,6 +144,9 @@ export default function ProfilePage() {
       const updated = await saveProfile({
         ...Object.fromEntries(TEXT_FIELDS.map((field) => [field, values[field]])),
         show_disability: values.show_disability,
+        show_photo_to_employers: values.show_photo_to_employers,
+        open_to_work_setups: values.open_to_work_setups,
+        open_to_employment_types: values.open_to_employment_types,
         // A hidden field (the end month of a current job, the year of current studies) isn't sent.
         experiences: values.experiences.map((item) => ({ ...withoutKey(item), ended_on: item.is_current ? null : item.ended_on })),
         educations: values.educations.map((item) => ({ ...withoutKey(item), year_finished: item.is_studying ? null : item.year_finished })),
@@ -264,6 +276,15 @@ export default function ProfilePage() {
         <form onSubmit={handleSubmit} noValidate className="mt-8 max-w-3xl">
           <ErrorSummary errors={summaryFrom(errors, fieldOrder(values), generalError)} focusKey={focusKey} />
 
+          <Section id="profile-photo" title="Photo">
+            <PhotoField
+              name={values.name || profile.name}
+              profile={profile}
+              onUpload={async (file) => setProfile(await uploadPhoto(file))}
+              onRemove={async () => setProfile(await removePhoto())}
+            />
+          </Section>
+
           <Section id="profile-basic" title="Basic information">
             <FormField id="name" label="Full name" value={values.name} onChange={update('name')} error={errors.name} maxLength={255} autoComplete="name" />
             <FormField
@@ -383,6 +404,31 @@ export default function ProfilePage() {
             />
           </Section>
 
+          <Section id="profile-open-to" title="Open to">
+            <p className="max-w-prose text-muted">The kinds of work you want. Find jobs starts with these filters, and you can switch them off there.</p>
+            <div className="mt-4 grid gap-6 sm:grid-cols-2">
+              {[
+                ['open_to_work_setups', 'Work setup', WORK_SETUPS],
+                ['open_to_employment_types', 'Employment type', EMPLOYMENT_TYPES],
+              ].map(([field, legend, options]) => (
+                <fieldset key={field}>
+                  <legend className="font-semibold">{legend}</legend>
+                  <div className="mt-1">
+                    {options.map((option) => (
+                      <CheckboxField
+                        key={option.value}
+                        id={`${field}-${option.value}`}
+                        label={option.label}
+                        checked={values[field].includes(option.value)}
+                        onChange={(event) => toggleOpenTo(field, option.value, event.target.checked)}
+                      />
+                    ))}
+                  </div>
+                </fieldset>
+              ))}
+            </div>
+          </Section>
+
           <Section id="profile-resume" title="Résumé">
             <p className="mb-4 max-w-prose">
               OpenDoor makes a résumé from this profile.{' '}
@@ -413,6 +459,13 @@ export default function ProfilePage() {
               label="Show my disability type to employers I apply to"
               checked={values.show_disability}
               onChange={update('show_disability')}
+            />
+            <CheckboxField
+              id="show_photo_to_employers"
+              label="Show my photo to employers I apply to"
+              hint="Off unless you turn it on. A photo can show things about you that employers don't need to decide, so OpenDoor keeps it to you by default."
+              checked={values.show_photo_to_employers}
+              onChange={update('show_photo_to_employers')}
             />
           </Section>
 

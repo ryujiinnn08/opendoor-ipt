@@ -89,6 +89,9 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('resume', [Candidate\ResumeController::class, 'show']);
             Route::post('resume', [Candidate\ResumeController::class, 'store']);
             Route::delete('resume', [Candidate\ResumeController::class, 'destroy']);
+            Route::get('profile/photo', [Candidate\PhotoController::class, 'show']);
+            Route::post('profile/photo', [Candidate\PhotoController::class, 'store']);
+            Route::delete('profile/photo', [Candidate\PhotoController::class, 'destroy']);
             Route::get('dashboard', [Candidate\DashboardController::class, 'show']);
         });
 
@@ -97,6 +100,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('applications', [ApplicationController::class, 'index']);
             Route::get('applications/{application}', [ApplicationController::class, 'show'])->where('application', '[0-9]{1,18}');
             Route::get('applications/{application}/resume', [ApplicantResumeController::class, 'show'])->where('application', '[0-9]{1,18}');
+            Route::get('applications/{application}/applicant-photo', [Candidate\PhotoController::class, 'forApplication'])->where('application', '[0-9]{1,18}');
             Route::patch('applications/{application}/status', [ApplicationStatusController::class, 'update'])->where('application', '[0-9]{1,18}');
             // Accommodation feedback (M7, Phase 5): the hired job seeker only.
             Route::middleware('role:candidate')->group(function () {
@@ -132,6 +136,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
                 // Job postings (M4, Phase 2B): department-scoped by JobPostingPolicy.
                 Route::get('dashboard', [Employer\DashboardController::class, 'show']);
+                Route::get('dashboard/activity', [Employer\DashboardController::class, 'activity']);
                 Route::get('trust-score', [Employer\TrustScoreController::class, 'show']);
                 Route::get('job-postings', [Employer\JobPostingController::class, 'index']);
                 Route::post('job-postings', [Employer\JobPostingController::class, 'store'])->middleware('verified');
@@ -145,6 +150,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // Accounts, feedback and temporary passwords: never kept by the browser (review WR-06).
         Route::middleware(['role:admin', 'no.store'])->prefix('admin')->name('admin.')->group(function () {
             Route::get('dashboard', [Admin\DashboardController::class, 'show']);
+            Route::get('dashboard/activity', [Admin\DashboardController::class, 'activity']);
 
             Route::apiResource('categories', Admin\CategoryController::class)->only(['store', 'update', 'destroy']);
 

@@ -15,6 +15,7 @@ use App\Models\Employer;
 use App\Models\Feedback;
 use App\Models\JobPosting;
 use App\Models\User;
+use App\Services\DashboardActivity;
 use App\Services\TeamCapacity;
 use Illuminate\Http\JsonResponse;
 
@@ -60,5 +61,13 @@ class DashboardController extends Controller
             'active_accommodations' => Accommodation::active()->count(),
             'hr_per_department_cap' => $capacity->cap(),
         ]]);
+    }
+
+    /**
+     * Weekly activity for the dashboard charts (UI_FEEDBACK_WAVE_B_PLAN B3).
+     */
+    public function activity(DashboardActivity $activity): JsonResponse
+    {
+        return response()->json(['data' => $activity->forAdmin()]);
     }
 }

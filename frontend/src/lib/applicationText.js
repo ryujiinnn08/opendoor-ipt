@@ -43,9 +43,9 @@ export function nextStepText(application) {
 /** My applications' filters; values match the API's `status`. */
 export const APPLICATION_FILTERS = [
   { value: 'all', label: 'All' },
-  { value: 'waiting', label: 'Waiting' },
+  { value: 'waiting', label: 'Waiting for a reply' },
   { value: 'hired', label: 'Hired' },
-  { value: 'closed', label: 'Closed' },
+  { value: 'closed', label: 'Closed', hint: 'Not selected or withdrawn' },
 ]
 
 /** Said instead of a link to the job when it no longer takes applications. */

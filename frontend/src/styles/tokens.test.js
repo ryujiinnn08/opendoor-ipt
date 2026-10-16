@@ -58,6 +58,8 @@ const BORDER_PAIRS = [
   ['border-focus', 'surface-page'],
   ['brand-primary', 'surface-page'],
   ['status-danger', 'surface-page'],
+  // Chart marks against the card they sit on.
+  ...[1, 2, 3, 4].map((n) => [`chart-${n}`, 'surface-page']),
 ]
 
 describe.each(Object.entries(themes))('design tokens, %s', (_, tokens) => {

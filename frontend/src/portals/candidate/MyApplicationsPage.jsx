@@ -106,7 +106,7 @@ export default function MyApplicationsPage() {
 
   return (
     <>
-      <PageHeader title="My applications" intro="Every job you've applied for, with what happens next." />
+      <PageHeader title="My applications" intro="Track every job you've applied for and what happens next." />
 
       {message && (
         <Notice tone="success" className="mt-6">
@@ -160,7 +160,7 @@ export default function MyApplicationsPage() {
               )}
             </div>
           ) : (
-            <ul className="mt-4">
+            <ul className="mt-4 overflow-hidden rounded-lg border border-border">
               {current.applications.map((application) => (
                 <ApplicationRow key={application.id} application={application} onChanged={load} onStale={load} focusAfter={focusApplication} />
               ))}

@@ -35,6 +35,13 @@ class CandidateProfileResource extends JsonResource
             'languages' => $profile?->languages,
             'disability_type' => $profile?->disability_type?->value,
             'show_disability' => (bool) $profile?->show_disability,
+            // The photo itself comes from GET /api/candidate/profile/photo (or, when shared, the
+            // applicant-photo route for employers); the version busts the browser's copy on change.
+            'has_photo' => (bool) $profile?->photo_path,
+            'photo_version' => $profile?->photo_path ? substr(md5($profile->photo_path), 0, 8) : null,
+            'show_photo_to_employers' => (bool) $profile?->show_photo_to_employers,
+            'open_to_work_setups' => array_values($profile?->open_to_work_setups ?? []),
+            'open_to_employment_types' => array_values($profile?->open_to_employment_types ?? []),
             'experiences' => $this->experiences->map(fn (CandidateExperience $entry) => [
                 'job_title' => $entry->job_title,
                 'company' => $entry->company,

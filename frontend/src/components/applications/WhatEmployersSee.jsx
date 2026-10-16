@@ -35,6 +35,7 @@ export default function WhatEmployersSee({ profile, loadState = 'ready' }) {
           </Link>
         </li>
         {disability && <li>{`Your disability type: ${disability}`}</li>}
+        {profile?.has_photo && profile.show_photo_to_employers && <li>Your photo</li>}
         <li>Your email and contact number</li>
       </ul>
       {empty.length > 0 && (

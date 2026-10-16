@@ -28,3 +28,15 @@ export const REGISTRATION_TYPES = [
 export function registrationLabel(type) {
   return REGISTRATION_TYPES.find((item) => item.value === type)?.label ?? ''
 }
+
+const manilaDay = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit' })
+
+/** "today", "yesterday", "3 days ago", or "on October 2, 2026" after a week, in Philippine days. */
+export function sinceText(iso, now = new Date()) {
+  if (!iso) return ''
+  const days = Math.round((Date.parse(manilaDay.format(now)) - Date.parse(manilaDay.format(new Date(iso)))) / 86400000)
+  if (days <= 0) return 'today'
+  if (days === 1) return 'yesterday'
+  if (days < 7) return `${days} days ago`
+  return `on ${formatDate(iso)}`
+}

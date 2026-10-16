@@ -10,6 +10,7 @@ import ErrorSummary from '../../components/ui/ErrorSummary.jsx'
 import { summaryFrom } from '../../lib/errorSummary.js'
 import FormField from '../../components/ui/FormField.jsx'
 import Notice from '../../components/ui/Notice.jsx'
+import MascotWalkIn from '../../components/home/MascotWalkIn.jsx'
 import PageHeading from '../../components/ui/PageHeading.jsx'
 import PasswordField from '../../components/ui/PasswordField.jsx'
 
@@ -64,51 +65,53 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="max-w-xl">
-      <PageHeading>Log in</PageHeading>
+    <MascotWalkIn>
+      <div className="max-w-xl">
+        <PageHeading>Log in</PageHeading>
 
-      {next && (
-        <Notice tone="info" className="mt-6">
-          Log in to continue to that page.
-        </Notice>
-      )}
+        {next && (
+          <Notice tone="info" className="mt-6">
+            Log in to continue to that page.
+          </Notice>
+        )}
 
-      <div className="mt-8">
-        <ErrorSummary errors={summaryFrom(errors, FIELDS, generalError)} focusKey={focusKey} />
+        <div className="mt-8">
+          <ErrorSummary errors={summaryFrom(errors, FIELDS, generalError)} focusKey={focusKey} />
 
-        <form onSubmit={handleSubmit} noValidate>
-          <FormField
-            id="email"
-            label="Email address"
-            type="email"
-            autoComplete="email"
-            spellCheck={false}
-            value={values.email}
-            onChange={update('email')}
-            error={errors.email}
-          />
-          <PasswordField
-            id="password"
-            label="Password"
-            autoComplete="current-password"
-            value={values.password}
-            onChange={update('password')}
-            error={errors.password}
-          />
-          <Button type="submit" loading={submitting} loadingText="Logging in…">
-            Log in
-          </Button>
-        </form>
+          <form onSubmit={handleSubmit} noValidate>
+            <FormField
+              id="email"
+              label="Email address"
+              type="email"
+              autoComplete="email"
+              spellCheck={false}
+              value={values.email}
+              onChange={update('email')}
+              error={errors.email}
+            />
+            <PasswordField
+              id="password"
+              label="Password"
+              autoComplete="current-password"
+              value={values.password}
+              onChange={update('password')}
+              error={errors.password}
+            />
+            <Button type="submit" loading={submitting} loadingText="Logging in…">
+              Log in
+            </Button>
+          </form>
 
-        <TeamContact />
+          <TeamContact />
 
-        <p className="mt-8">
-          New to OpenDoor?{' '}
-          <Link to="/register" className="font-bold text-primary underline underline-offset-4 hover:no-underline">
-            Create an account
-          </Link>
-        </p>
+          <p className="mt-8">
+            New to OpenDoor?{' '}
+            <Link to="/register" className="font-bold text-primary underline underline-offset-4 hover:no-underline">
+              Create an account
+            </Link>
+          </p>
+        </div>
       </div>
-    </div>
+    </MascotWalkIn>
   )
 }

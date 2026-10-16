@@ -19,6 +19,7 @@ import NeedsPage from './portals/candidate/NeedsPage.jsx'
 import ProfilePage from './portals/candidate/ProfilePage.jsx'
 import ResumePage from './portals/candidate/ResumePage.jsx'
 import AccessibilityPage from './portals/public/AccessibilityPage.jsx'
+import HelpPage from './portals/public/HelpPage.jsx'
 import ContactPage from './portals/public/ContactPage.jsx'
 import BrowseJobsPage from './portals/public/BrowseJobsPage.jsx'
 import EmployerPage from './portals/public/EmployerPage.jsx'
@@ -52,6 +53,7 @@ export const routes = [
           { path: '/', element: <HomePage /> },
           { path: '/privacy', element: <PrivacyPage /> },
           { path: '/accessibility', element: <AccessibilityPage /> },
+          { path: '/help', element: <HelpPage /> },
           { path: '/contact', element: <ContactPage /> },
           { path: '/join/:code', element: <JoinPage /> },
           { path: '/jobs', element: <BrowseJobsPage /> },

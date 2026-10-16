@@ -8,11 +8,11 @@ import { renderRoutes } from '../../test/renderWithProviders.jsx'
 import FindJobsPage from './FindJobsPage.jsx'
 
 vi.mock('../../api/jobs.js', () => ({ searchJobs: vi.fn() }))
-vi.mock('../../api/candidate.js', () => ({ getNeeds: vi.fn() }))
+vi.mock('../../api/candidate.js', () => ({ getNeeds: vi.fn(), getProfile: vi.fn() }))
 vi.mock('../../api/masterData.js', () => ({ getCategories: vi.fn(), getAccommodationGroups: vi.fn() }))
 
 const { searchJobs } = await import('../../api/jobs.js')
-const { getNeeds } = await import('../../api/candidate.js')
+const { getNeeds, getProfile } = await import('../../api/candidate.js')
 const { getCategories, getAccommodationGroups } = await import('../../api/masterData.js')
 
 const routes = [
@@ -34,6 +34,8 @@ describe('FindJobsPage', () => {
     searchJobs.mockResolvedValue(results([matched]))
     getCategories.mockResolvedValue([])
     getAccommodationGroups.mockResolvedValue([])
+    getProfile.mockResolvedValue({ open_to_work_setups: [], open_to_employment_types: [] })
+    sessionStorage.clear()
   })
 
   it('starts in Matches my needs with each job’s match', async () => {
@@ -128,5 +130,27 @@ describe('FindJobsPage', () => {
 
     expect(within(container).getByRole('button', { name: 'Matches my needs' })).toBeInTheDocument()
     expect(await axe(container)).toHaveNoViolations()
+  })
+
+  it('starts from the profile’s Open to choices, says so, and can show every kind of work (UI_FEEDBACK_WAVE_B_PLAN B1)', async () => {
+    const user = userEvent.setup()
+    getProfile.mockResolvedValue({ open_to_work_setups: ['remote'], open_to_employment_types: ['internship'] })
+    const { router } = renderPage()
+
+    expect(await screen.findByText('Using your Open to choices from your profile.')).toBeInTheDocument()
+    expect(router.state.location.search).toBe('?work_setup=remote&type=internship')
+    expect(await screen.findByRole('button', { name: 'Work setup: Remote' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Show every kind of work' }))
+    expect(router.state.location.search).toBe('')
+    expect(screen.queryByText('Using your Open to choices from your profile.')).not.toBeInTheDocument()
+  })
+
+  it('leaves an address that already chooses the kind of work alone', async () => {
+    getProfile.mockResolvedValue({ open_to_work_setups: ['remote'], open_to_employment_types: [] })
+    const { router } = renderPage('/candidate/jobs?work_setup=on_site')
+    await screen.findByText('Meets 1 of 2 of your needs')
+    expect(router.state.location.search).toBe('?work_setup=on_site')
+    expect(screen.queryByText('Using your Open to choices from your profile.')).not.toBeInTheDocument()
   })
 })

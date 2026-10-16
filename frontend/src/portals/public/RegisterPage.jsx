@@ -9,6 +9,7 @@ import CheckboxField from '../../components/ui/CheckboxField.jsx'
 import ErrorSummary from '../../components/ui/ErrorSummary.jsx'
 import { summaryFrom } from '../../lib/errorSummary.js'
 import FormField from '../../components/ui/FormField.jsx'
+import MascotWalkIn from '../../components/home/MascotWalkIn.jsx'
 import PageHeading from '../../components/ui/PageHeading.jsx'
 import PasswordField from '../../components/ui/PasswordField.jsx'
 import RadioCardGroup from '../../components/ui/RadioCardGroup.jsx'
@@ -45,8 +46,7 @@ function validate(values) {
   else if (unmet) errors.password = PASSWORD_MESSAGES[unmet.id]
 
   if (!values.password_confirmation) errors.password_confirmation = 'Enter your password again.'
-  else if (values.password_confirmation !== values.password)
-    errors.password_confirmation = 'The two passwords do not match.'
+  else if (values.password_confirmation !== values.password) errors.password_confirmation = 'The two passwords do not match.'
 
   if (!values.consent) errors.consent = 'You need to agree to the privacy notice to create an account.'
   return errors
@@ -108,95 +108,97 @@ export default function RegisterPage() {
   )
 
   return (
-    <div className="max-w-2xl">
-      <PageHeading>Create an account</PageHeading>
-      <p className="mt-4">It takes about two minutes. All fields are required.</p>
+    <MascotWalkIn>
+      <div className="max-w-2xl">
+        <PageHeading>Create an account</PageHeading>
+        <p className="mt-4">It takes about two minutes. All fields are required.</p>
 
-      <div className="mt-8">
-        <ErrorSummary errors={summary} focusKey={focusKey} />
+        <div className="mt-8">
+          <ErrorSummary errors={summary} focusKey={focusKey} />
 
-        <form onSubmit={handleSubmit} noValidate>
-          <RadioCardGroup
-            name="role"
-            legend="What brings you to OpenDoor?"
-            options={ROLES}
-            value={values.role}
-            onChange={update('role')}
-            error={errors.role}
-          />
+          <form onSubmit={handleSubmit} noValidate>
+            <RadioCardGroup
+              name="role"
+              legend="What brings you to OpenDoor?"
+              options={ROLES}
+              value={values.role}
+              onChange={update('role')}
+              error={errors.role}
+            />
 
-          <FormField
-            id="name"
-            label="Full name"
-            hint={values.role === 'employer' ? 'Your own name. You can add your company details after creating your account.' : null}
-            autoComplete="name"
-            value={values.name}
-            onChange={update('name')}
-            error={errors.name}
-          />
-          <FormField
-            id="email"
-            label="Email address"
-            hint="You will use this to log in. We will send you a link to confirm it."
-            type="email"
-            autoComplete="email"
-            spellCheck={false}
-            value={values.email}
-            onChange={update('email')}
-            error={errors.email}
-          />
-          <PasswordField
-            id="password"
-            label="Password"
-            autoComplete="new-password"
-            value={values.password}
-            onChange={update('password')}
-            error={errors.password}
-            showRules
-          />
-          <PasswordField
-            id="password_confirmation"
-            label="Confirm password"
-            hint="Type the same password again."
-            autoComplete="new-password"
-            value={values.password_confirmation}
-            onChange={update('password_confirmation')}
-            error={errors.password_confirmation}
-          />
-          <CheckboxField
-            id="consent"
-            checked={values.consent}
-            onChange={update('consent')}
-            error={errors.consent}
-            hint={
-              <>
-                Please read the{' '}
-                <Link
-                  to="/privacy"
-                  target="_blank"
-                  rel="noopener"
-                  className="font-bold text-primary underline underline-offset-4 hover:no-underline"
-                >
-                  privacy notice (opens in a new tab)
-                </Link>{' '}
-                to see what information OpenDoor collects and who can see it.
-              </>
-            }
-            label="I have read the privacy notice and agree to OpenDoor collecting and using my information as described."
-          />
+            <FormField
+              id="name"
+              label="Full name"
+              hint={values.role === 'employer' ? 'Your own name. You can add your company details after creating your account.' : null}
+              autoComplete="name"
+              value={values.name}
+              onChange={update('name')}
+              error={errors.name}
+            />
+            <FormField
+              id="email"
+              label="Email address"
+              hint="You will use this to log in. We will send you a link to confirm it."
+              type="email"
+              autoComplete="email"
+              spellCheck={false}
+              value={values.email}
+              onChange={update('email')}
+              error={errors.email}
+            />
+            <PasswordField
+              id="password"
+              label="Password"
+              autoComplete="new-password"
+              value={values.password}
+              onChange={update('password')}
+              error={errors.password}
+              showRules
+            />
+            <PasswordField
+              id="password_confirmation"
+              label="Confirm password"
+              hint="Type the same password again."
+              autoComplete="new-password"
+              value={values.password_confirmation}
+              onChange={update('password_confirmation')}
+              error={errors.password_confirmation}
+            />
+            <CheckboxField
+              id="consent"
+              checked={values.consent}
+              onChange={update('consent')}
+              error={errors.consent}
+              hint={
+                <>
+                  Please read the{' '}
+                  <Link
+                    to="/privacy"
+                    target="_blank"
+                    rel="noopener"
+                    className="font-bold text-primary underline underline-offset-4 hover:no-underline"
+                  >
+                    privacy notice (opens in a new tab)
+                  </Link>{' '}
+                  to see what information OpenDoor collects and who can see it.
+                </>
+              }
+              label="I have read the privacy notice and agree to OpenDoor collecting and using my information as described."
+            />
 
-          <Button type="submit" loading={submitting} loadingText="Creating account…">
-            Create account
-          </Button>
-        </form>
+            <Button type="submit" loading={submitting} loadingText="Creating account…">
+              Create account
+            </Button>
+          </form>
 
-        <p className="mt-8">
-          Already have an account?{' '}
-          <Link to="/login" className="font-bold text-primary underline underline-offset-4 hover:no-underline">
-            Log in
-          </Link>
-        </p>
+          <p className="mt-8">
+            Already have an account?{' '}
+            <Link to="/login" className="font-bold text-primary underline underline-offset-4 hover:no-underline">
+              Log in
+            </Link>
+          </p>
+        </div>
       </div>
-    </div>
+    </MascotWalkIn>
   )
 }

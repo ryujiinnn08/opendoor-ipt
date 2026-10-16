@@ -50,13 +50,14 @@ function withoutPage({ page: _page, ...rest }) {
  * the job seeker's needs load (the heading stays, nothing is fetched yet), then the count. With
  * needs it adds the Show switch (Matches my needs / All jobs) and the Best match sort.
  */
-export default function BrowseJobsPage({ basePath = '/jobs', title = 'Browse jobs', intro = PUBLIC_INTRO, matching }) {
+export default function BrowseJobsPage({ basePath = '/jobs', title = 'Browse jobs', intro = PUBLIC_INTRO, matching, openToNote = null }) {
   const { status } = useAuth()
   const announce = useAnnounce()
   const waiting = matching !== undefined && matching.needsCount === undefined
   const matchMode = Boolean(matching?.needsCount)
   const { filters, setFilters, clearFilters, hrefForPage, activeFilterCount, selectedJob, selectJob } = useJobSearchParams({ matching: matchMode })
   const twoPanes = useTwoPanes()
+
   const paneHeading = useRef(null)
   const focusPane = useRef(false)
   const { key: locationKey } = useLocation()
@@ -266,6 +267,21 @@ export default function BrowseJobsPage({ basePath = '/jobs', title = 'Browse job
         />
         <Button type="submit">Search</Button>
       </form>
+
+      {openToNote && (
+        <p className="mt-4 flex flex-wrap items-center gap-x-3 text-sm">
+          <span>Using your Open to choices from your profile.</span>
+          <Button
+            variant="link"
+            onClick={() => {
+              openToNote.onDismiss()
+              setFilters({ workSetup: [], employmentType: [] })
+            }}
+          >
+            Show every kind of work
+          </Button>
+        </p>
+      )}
 
       <FilterChips
         filters={filters}

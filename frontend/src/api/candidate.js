@@ -59,6 +59,25 @@ export async function getResumeFile() {
   }
 }
 
+/** Adds or replaces the profile photo; returns the updated profile. */
+export async function uploadPhoto(file) {
+  const form = new FormData()
+  form.append('photo', file)
+  const { data } = await client.post('/api/candidate/profile/photo', form)
+  return data.data
+}
+
+export async function removePhoto() {
+  const { data } = await client.delete('/api/candidate/profile/photo')
+  return data.data
+}
+
+/** The job seeker's own photo as a Blob (it is private, so it is fetched with the session). */
+export async function getPhotoFile() {
+  const { data } = await client.get('/api/candidate/profile/photo', { responseType: 'blob' })
+  return data
+}
+
 /** { needs_count, top_matches, missing_sections } */
 export async function getDashboard() {
   const { data } = await client.get('/api/candidate/dashboard')

@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { getDepartments, getEmployerDashboard } from '../../api/employer.js'
 import { useAuth } from '../../auth/authContext.js'
 import { employerKind } from '../../auth/employerAccess.js'
+import EmployerActivity from '../../components/dashboard/EmployerActivity.jsx'
+import GetStarted from '../../components/onboarding/GetStarted.jsx'
 import Button from '../../components/ui/Button.jsx'
 import DashboardTile from '../../components/ui/DashboardTile.jsx'
 import Notice from '../../components/ui/Notice.jsx'
@@ -152,7 +154,7 @@ export default function EmployerDashboard() {
         }
       />
       <WaitingApplicants dashboard={dashboard} />
-      {kind === 'owner' && <OwnerDashboard employer={employer} dashboard={dashboard} />}
+      {kind === 'owner' && <OwnerDashboard user={user} employer={employer} dashboard={dashboard} />}
       {kind === 'hr' && (
         <>
           <p className="mt-4 max-w-prose">
@@ -172,6 +174,14 @@ export default function EmployerDashboard() {
       )}
       {kind === 'individual' && (
         <>
+          <GetStarted
+            storageKey={`employer-${user.id ?? user.email ?? 'me'}`}
+            steps={[
+              { label: 'Complete your profile', to: '/employer/profile', done: Boolean(dashboard.data?.profile_complete) },
+              { label: 'Post your first job', to: '/employer/job-postings/new', done: postedAny(dashboard) },
+            ]}
+            ready={Boolean(dashboard.data)}
+          />
           <p className="mt-4 max-w-prose">You're hiring as an individual employer.</p>
           <ul className="mt-8 grid gap-4 md:grid-cols-3">
             <DashboardTile title="My profile" to="/employer/profile" linkLabel="Edit my profile">
@@ -182,11 +192,17 @@ export default function EmployerDashboard() {
           </ul>
         </>
       )}
+      {kind !== 'none' && <EmployerActivity />}
     </>
   )
 }
 
-function OwnerDashboard({ employer, dashboard }) {
+/** Whether any job was ever written, sent or posted (drafts count: the first step is done). */
+function postedAny(dashboard) {
+  return Object.values(dashboard.data?.postings ?? {}).some((count) => count > 0)
+}
+
+function OwnerDashboard({ user, employer, dashboard }) {
   const [team, setTeam] = useState(null)
   const [teamFailed, setTeamFailed] = useState(false)
 
@@ -207,6 +223,16 @@ function OwnerDashboard({ employer, dashboard }) {
 
   return (
     <>
+      <GetStarted
+        storageKey={`employer-${user.id ?? user.email ?? 'me'}`}
+        steps={[
+          { label: 'Complete your company profile', to: '/employer/company', done: Boolean(dashboard.data?.profile_complete) },
+          { label: 'Submit your business registration for verification', to: '/employer/company', done: employer.verification_status !== 'not_submitted' },
+          { label: 'Post your first job', to: '/employer/job-postings/new', done: postedAny(dashboard) },
+          { label: 'Invite an HR officer', to: '/employer/team', done: hrCount > 0 },
+        ]}
+        ready={Boolean(dashboard.data) && Boolean(team)}
+      />
       <p className="mt-4 max-w-prose">
         <span className="font-bold">{employer.name}</span> is your company. You manage its profile, team and job
         postings.

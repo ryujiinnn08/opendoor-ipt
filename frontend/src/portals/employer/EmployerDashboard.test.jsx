@@ -1,15 +1,18 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { axe } from 'vitest-axe'
 import { renderRoutes } from '../../test/renderWithProviders.jsx'
 import EmployerDashboard from './EmployerDashboard.jsx'
 
 vi.mock('../../api/employer.js', () => ({
   getDepartments: vi.fn(),
   getEmployerDashboard: vi.fn(),
+  getDashboardActivity: vi.fn(),
 }))
 
-const { getDepartments, getEmployerDashboard } = await import('../../api/employer.js')
+const { getDepartments, getEmployerDashboard, getDashboardActivity } = await import('../../api/employer.js')
+const WEEKS = ['2026-08-24', '2026-08-31', '2026-09-07', '2026-09-14', '2026-09-21', '2026-09-28', '2026-10-05', '2026-10-12']
 
 const company = { id: 1, type: 'company', name: 'Acme Corp.', is_verified: true, verification_status: 'verified' }
 const auth = (membership) => ({ status: 'authenticated', role: 'employer', user: { name: 'Ana', role: 'employer', membership } })
@@ -18,6 +21,7 @@ describe('EmployerDashboard', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     getDepartments.mockResolvedValue({ departments: [], cap: 10, defaultLimit: 3 })
+    getDashboardActivity.mockResolvedValue({ weeks: WEEKS, applications_by_week: [0, 0, 0, 0, 0, 0, 0, 0], applicants_by_posting: [] })
   })
 
   it('counts the postings by status and links to them', async () => {
@@ -136,5 +140,33 @@ describe('EmployerDashboard', () => {
     expect(await within(section).findByText("We couldn't load the applicants waiting for review.")).toBeInTheDocument()
     await userEvent.click(within(section).getByRole('button', { name: 'Try again' }))
     expect(await within(section).findByRole('link', { name: 'HR Assistant: 1 new' })).toBeInTheDocument()
+  })
+
+  it('charts applications by week and applicants per open job, with the numbers as a table (UI_FEEDBACK_WAVE_B_PLAN B3)', async () => {
+    getEmployerDashboard.mockResolvedValue({ postings: { draft: 0, pending: 0, open: 1, rejected: 0, closed: 0 }, profile_complete: true })
+    getDashboardActivity.mockResolvedValue({
+      weeks: WEEKS,
+      applications_by_week: [0, 0, 0, 0, 0, 1, 4, 11],
+      applicants_by_posting: [{ id: 3, title: 'Data Encoder', counts: { pending: 5, reviewed: 3, hired: 1, rejected: 2, withdrawn: 0 } }],
+    })
+    const { container } = renderRoutes([{ path: '/', element: <EmployerDashboard /> }], { auth: auth({ role: 'owner', employer: company, department: null }) })
+
+    const weekly = await screen.findByRole('figure', { name: 'Applications received, by week' })
+    expect(within(weekly).getByText('11 applications this week, up from 4 last week. 16 applications in 8 weeks.')).toBeInTheDocument()
+    expect(within(weekly).getByRole('row', { name: 'Week of October 12 11' })).toBeInTheDocument()
+
+    const perJob = screen.getByRole('figure', { name: 'Applicants per open job' })
+    expect(within(perJob).getByText('Data Encoder has the most: 11 applicants.')).toBeInTheDocument()
+    expect(within(perJob).getByRole('row', { name: 'Data Encoder 5 3 1 2 11' })).toBeInTheDocument()
+    expect(await axe(container)).toHaveNoViolations()
+  })
+
+  it('shows Get started to owners until every step is done', async () => {
+    getEmployerDashboard.mockResolvedValue({ postings: { draft: 0, pending: 0, open: 0, rejected: 0, closed: 0 }, profile_complete: true })
+    renderRoutes([{ path: '/', element: <EmployerDashboard /> }], { auth: auth({ role: 'owner', employer: { ...company, verification_status: 'not_submitted' }, department: null }) })
+
+    const start = await screen.findByRole('region', { name: 'Get started' })
+    expect(within(start).getByText('1 of 4 done')).toBeInTheDocument()
+    expect(within(start).getByRole('link', { name: 'Post your first job: to do' })).toHaveAttribute('href', '/employer/job-postings/new')
   })
 })

@@ -5,6 +5,7 @@ import { useAuth } from '../../auth/authContext.js'
 import { dashboardFor } from '../../auth/redirects.js'
 import { useAnnounce } from '../ui/announcerContext.js'
 import EmailVerificationBanner from '../verification/EmailVerificationBanner.jsx'
+import { initialsOf } from '../../lib/initials.js'
 import { accountMenuFor, portalFor } from './portalMenus.js'
 import SiteFooter from './SiteFooter.jsx'
 import SiteHeader from './SiteHeader.jsx'
@@ -82,13 +83,4 @@ export default function PortalLayout() {
       </div>
     </div>
   )
-}
-
-/** "Maria Santos" → "MS", for the round badge on the account menu (decoration). */
-function initialsOf(name = '') {
-  const words = name.trim().split(/\s+/).filter(Boolean)
-  return [words[0], words.length > 1 ? words.at(-1) : null]
-    .filter(Boolean)
-    .map((word) => word[0].toUpperCase())
-    .join('')
 }

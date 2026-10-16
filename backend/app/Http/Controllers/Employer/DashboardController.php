@@ -6,6 +6,7 @@ use App\Enums\ApplicationStatus;
 use App\Enums\PostingStatus;
 use App\Http\Controllers\Controller;
 use App\Models\JobPosting;
+use App\Services\DashboardActivity;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -29,10 +30,14 @@ class DashboardController extends Controller
             ->sortBy([['new_count', 'desc'], ['title', 'asc']])
             ->values();
 
+        $employer = $request->user()->membership->employer;
+
         return response()->json(['data' => [
             'postings' => $counts,
             // The employer's own trust score for the dashboard tile (F8.2); no count below 3.
-            'trust_score' => $request->user()->membership->employer->shownTrustScore(),
+            'trust_score' => $employer->shownTrustScore(),
+            // For the Get started card (UI_FEEDBACK_WAVE_B_PLAN B4): the profile job seekers read.
+            'profile_complete' => filled($employer->description) && filled($employer->industry) && filled($employer->address),
             'waiting_applicants' => [
                 'total' => (int) $waiting->sum('new_count'),
                 'postings' => $waiting->take(10)->map(fn (JobPosting $posting) => [
@@ -42,5 +47,13 @@ class DashboardController extends Controller
                 ])->all(),
             ],
         ]]);
+    }
+
+    /**
+     * Weekly activity for the dashboard charts (UI_FEEDBACK_WAVE_B_PLAN B3).
+     */
+    public function activity(Request $request, DashboardActivity $activity): JsonResponse
+    {
+        return response()->json(['data' => $activity->forEmployer($request->user())]);
     }
 }

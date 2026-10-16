@@ -51,6 +51,8 @@ class CandidateApplicationResource extends JsonResource
             'status' => $this->status->value,
             'status_label' => $this->status->label(),
             'applied_at' => $this->created_at?->toIso8601String(),
+            // The last change, for "Updated 2 days ago" in the job tracker (UI_FEEDBACK_WAVE_B_PLAN B2).
+            'updated_at' => $this->updated_at?->toIso8601String(),
             'reviewed_at' => $this->reviewed_at?->toIso8601String(),
             'rejected_at' => $this->rejected_at?->toIso8601String(),
             'withdrawn_at' => $this->withdrawn_at?->toIso8601String(),
@@ -79,6 +81,7 @@ class CandidateApplicationResource extends JsonResource
                     'name' => $job->employer->name,
                     'type' => $job->employer->type->value,
                     'is_verified' => $job->employer->isVerified(),
+                    'logo_url' => $job->employer->logoUrl(),
                 ],
             ],
         ];

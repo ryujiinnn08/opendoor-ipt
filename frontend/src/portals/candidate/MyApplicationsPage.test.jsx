@@ -36,7 +36,7 @@ describe('MyApplicationsPage', () => {
     expect(within(rows[0]).getByText(/If they want to interview you/)).toBeInTheDocument()
     expect(within(rows[1]).getByText('This job was removed.')).toBeInTheDocument()
     expect(screen.queryByText(/ask the employer to open/)).not.toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Waiting (2)' })).toHaveAttribute('href', '/candidate/applications?status=waiting')
+    expect(screen.getByRole('link', { name: 'Waiting for a reply (2)' })).toHaveAttribute('href', '/candidate/applications?status=waiting')
     expect(await axe(container)).toHaveNoViolations()
   })
 

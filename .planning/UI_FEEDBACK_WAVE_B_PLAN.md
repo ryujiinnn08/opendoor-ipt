@@ -1,6 +1,6 @@
 # Wave B Plan: profiles, the job tracker, charts, onboarding and the mascot
 
-> Status: **DRAFT, waiting for your answers in §3** (written 2026-10-16).
+> Status: **APPROVED and built** (2026-10-16: "I'd go with your recommendations… Let's also try Wave B now"). Q1 was overridden: Wave B was built on Oct 16, before the audit and the tests, so the audit and the tests now run on it. §7 lists what was built.
 > Part of [UI_FEEDBACK_PLAN.md](UI_FEEDBACK_PLAN.md) (approved; Wave A built and committed in `5749f79` and `216953a`). That plan's §3.5–3.8 sketched Wave B. This document turns the sketch into tasks, files, endpoints and tests, based on the current code.
 > It covers these problems from the October 16 review: P9 My applications, P10 a cluttered job seeker page, P11 no onboarding, P12 no admin analytics, P13 no employer analytics, P14 no mascot on Log in / Create account, P15 a plain loading screen, and P16 limited profile customisation.
 
@@ -169,3 +169,18 @@ If your slot is Oct 21 or 22, do B2 and B3 only (see the cut order in §5).
 | W5 | The Get started card is worked out from data, can be hidden, and comes back from Account → Display |
 | W6 | Every mascot animation is hidden from screen readers, still with Reduce motion, and gone in Quiet mode; loading text is still announced |
 | W7 | All tests, lint and build pass; the live site passes its smoke test after deploy |
+
+---
+
+## 7. What was built (2026-10-16)
+
+| Part | Built | Notes |
+|---|---|---|
+| B1 Photo and Open to | Yes | Migration `2026_10_21_100000_add_photo_and_open_to_to_candidate_profiles` (**run it on production before deploying**). `Candidate\PhotoController`: upload, show, remove, and `GET /api/applications/{id}/applicant-photo` for the employer only when shared. Profile page: Photo section, "Open to" checkboxes, "Show my photo to employers" (off). Photo on the dashboard card, on the applicant page when shared, and in "What the employer will see". Find jobs starts from Open to, says so, and "Show every kind of work" switches it off for the visit. *Not done:* the photo in the header's account menu (it would need the photo on every page load) |
+| B2 Dashboard and job tracker | Yes | Profile card on the left. My applications card: feedback due first, the three counts as links to the filtered list, the latest 3 updates with their next step, and Find jobs when empty (the dashboard API adds `recent_applications` and `profile`). Tracker rows are cards with the employer's mark and "Updated 2 days ago" (`updated_at` and the employer logo added to the application resource). Filters read "Waiting for a reply", and Closed has the hint "Not selected or withdrawn" |
+| B3 Charts | Yes | `GET /api/employer/dashboard/activity` and `GET /api/admin/dashboard/activity` (`Services\DashboardActivity`, Manila weeks starting Monday, empty weeks as 0, HR members see only their department). Hand-drawn `ColumnChart`, `StackedBarChart` and `LineChart` in a `ChartFrame` (caption with a written summary, legend in words, Show as table, hover notes). Palette `--od-chart-1…4` (violet, sky, orange, pink) passes the dataviz validator and the contrast test |
+| B4 Get started and help | Yes | `GetStarted` card on the job seeker dashboard (needs, profile, résumé, apply) and for employer owners and individual employers (profile, verification, first job, HR). Hide this, saved per person in the browser; "Show the Get started card again" on Account → Display. `/help` "How OpenDoor works", marked as a draft for team review (Q7), linked from the footer, the account menu and Get started |
+| B5 Mascot | Yes | Log in and Create account: the mascot walks in beside the form, waves once and stands (`Mascot once`), only at 1024 px and wider, gone in Quiet mode. Loading: the mascot hops to an open door after 400 ms (`LoadingMascot` in `PageLoading`); with Reduce motion he waits by the door. *Simplified from Q6:* he hops in his standing pose instead of a new 6-frame run cycle |
+| Checks | Yes | 435 backend and 597 frontend tests, lint, build and Pint pass. Checked in the browser: the employer charts, the dashboard, Log in with the mascot, and a real photo upload and removal on the local server |
+
+**Before deploying:** run the new migration, and include photos in the upload-persistence live check (PHASE_7 L-checks).
