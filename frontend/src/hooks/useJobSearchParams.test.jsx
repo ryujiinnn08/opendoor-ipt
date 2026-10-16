@@ -111,3 +111,21 @@ describe('useJobSearchParams', () => {
     })
   })
 })
+
+describe('useJobSearchParams, the job in the details pane', () => {
+  it('keeps the chosen job apart from the filters', () => {
+    const { current } = setup('/jobs?q=web&job=7')
+    expect(current.selectedJob).toBe(7)
+    expect(current.filters.q).toBe('web')
+    expect(setup('/jobs?job=abc').current.selectedJob).toBeNull()
+  })
+
+  it('opens a job without touching the filters, and a filter change closes it', () => {
+    const { router, current } = setup('/jobs?q=web&page=2')
+    act(() => current.selectJob(4))
+    expect(router.state.location.search).toBe('?q=web&page=2&job=4')
+
+    act(() => current.setFilters({ category: '3' }))
+    expect(router.state.location.search).toBe('?q=web&category=3')
+  })
+})

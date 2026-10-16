@@ -131,6 +131,18 @@ describe('UtilityBar', () => {
     expect(screen.getByRole('button', { name: 'High contrast' })).toHaveAttribute('aria-pressed', 'true')
   })
 
+  it('can be kept open instead of folding away until pointed at', async () => {
+    const user = userEvent.setup()
+    const { announce } = renderBar()
+
+    const pin = screen.getByRole('button', { name: 'Keep open' })
+    expect(pin).toHaveAttribute('aria-pressed', 'false')
+    await user.click(pin)
+    expect(pin).toHaveAttribute('aria-pressed', 'true')
+    expect(document.documentElement).toHaveAttribute('data-bar', 'pinned')
+    expect(announce).toHaveBeenLastCalledWith('Keep this bar open on.')
+  })
+
   it('fades the colours only while high contrast switches', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true })
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })

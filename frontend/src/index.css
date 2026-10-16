@@ -351,6 +351,61 @@
     transition: none;
   }
 
+  /* The display settings bar folds into a thin line on screens with a mouse, until pointed at or
+     until something in it has keyboard focus (UtilityBar). It then opens over the header, so the
+     page doesn't jump. Pinned (data-bar="pinned"), on touch screens and in print it stays as it is. */
+  .od-utility-hint,
+  .od-pointer-only {
+    display: none;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .od-pointer-only {
+      display: inline-flex;
+    }
+    :root:not([data-bar='pinned']) .od-utility {
+      height: 1.5rem;
+    }
+    :root:not([data-bar='pinned']) .od-utility-bar {
+      position: absolute;
+      inset-inline: 0;
+      top: 0;
+      box-shadow: 0 8px 20px rgb(36 27 58 / 0);
+      transition: box-shadow 200ms var(--ease-soft) 350ms;
+    }
+    :root:not([data-bar='pinned']) .od-utility-hint {
+      display: flex;
+      height: 1.5rem;
+      align-items: center;
+      justify-content: center;
+      gap: 0.25rem;
+      font-size: 0.9375rem;
+      font-weight: 700;
+      color: var(--od-text-muted);
+      transition: opacity 150ms var(--ease-soft) 350ms;
+    }
+    :root:not([data-bar='pinned']) .od-utility-row {
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition:
+        max-height 220ms var(--ease-soft) 350ms,
+        opacity 160ms var(--ease-soft) 350ms;
+    }
+    :root:not([data-bar='pinned']) .od-utility:is(:hover, :focus-within) .od-utility-bar {
+      box-shadow: 0 8px 20px rgb(36 27 58 / 0.14);
+      transition-delay: 0s;
+    }
+    :root:not([data-bar='pinned']) .od-utility:is(:hover, :focus-within) .od-utility-hint {
+      display: none;
+    }
+    :root:not([data-bar='pinned']) .od-utility:is(:hover, :focus-within) .od-utility-row {
+      max-height: 12rem;
+      overflow: visible;
+      opacity: 1;
+      transition-delay: 0s;
+    }
+  }
+
   /* The orange highlight behind words in a heading is decoration too. */
   :root[data-quiet] .od-highlight {
     background-color: transparent;

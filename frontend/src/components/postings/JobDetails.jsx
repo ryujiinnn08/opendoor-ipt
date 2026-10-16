@@ -42,9 +42,10 @@ function Detail({ icon, label, children }) {
  * company. The page around it supplies the title (h1) and the status. `markRetired` labels retired
  * accommodation types for admins (decision 31). With `employerHref` (the public job page), the
  * employer's name links to their page and the trust score shows beside it. `fit` (the job seeker's
- * NeedsFit, Apply and the trust score card) is a side column, first on phones.
+ * NeedsFit, Apply and the trust score card) is a side column, first on phones; `stacked` (the
+ * Find jobs details pane) keeps one column with `fit` first.
  */
-export default function JobDetails({ posting, showVerificationStatus = false, markRetired = false, employerHref, fit }) {
+export default function JobDetails({ posting, showVerificationStatus = false, markRetired = false, employerHref, fit, stacked = false }) {
   const { employer } = posting
   const company = employer.type === 'company'
   const groups = byGroup(posting.accommodations ?? [])
@@ -87,10 +88,10 @@ export default function JobDetails({ posting, showVerificationStatus = false, ma
         </div>
       </div>
 
-      <div className={`mt-6 grid gap-6 ${fit ? 'lg:grid-cols-[minmax(0,1fr)_22rem]' : ''}`}>
-        {fit && <div className="space-y-6 lg:col-start-2 lg:row-start-1">{fit}</div>}
+      <div className={`mt-6 grid gap-6 ${fit && !stacked ? 'lg:grid-cols-[minmax(0,1fr)_22rem]' : ''}`}>
+        {fit && <div className={`space-y-6 ${stacked ? '' : 'lg:col-start-2 lg:row-start-1'}`}>{fit}</div>}
 
-        <div className="min-w-0 space-y-6 lg:col-start-1 lg:row-start-1">
+        <div className={`min-w-0 space-y-6 ${stacked ? '' : 'lg:col-start-1 lg:row-start-1'}`}>
           <section aria-labelledby={ids.accommodations} className={`${CARD} border-l-4 border-l-accent`}>
             <h2 id={ids.accommodations} className="text-2xl font-bold">
               Accommodations provided

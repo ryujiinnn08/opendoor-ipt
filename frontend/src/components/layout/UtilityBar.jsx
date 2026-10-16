@@ -11,6 +11,11 @@ const BUTTON =
  * The strip above the header on every page (05 Shared, "Calm controls"): the skip link, then the
  * display settings one click away. Text size opens a slider; the others are toggle buttons that
  * say their state. Changes are announced without moving focus.
+ *
+ * On screens with a mouse it folds into a thin line until pointed at, like a hidden taskbar, and
+ * opens over the header (index.css, .od-utility). It also opens whenever anything in it has
+ * keyboard focus, so the skip link and every button stay reachable by Tab and to screen readers.
+ * Keep open (here or Account → Display) pins it; phones and tablets always show it.
  */
 export default function UtilityBar() {
   const { settings, update } = useDisplaySettings()
@@ -23,41 +28,61 @@ export default function UtilityBar() {
   }
 
   return (
-    <div className="relative z-30 border-b border-border bg-subtle print:hidden">
-      {/* The text size panel is placed against this box, so it stays on screen on phones. */}
-      <div className="relative mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 px-4 sm:px-6">
-        {/* On phones the skip link shows only when focused, so the bar stays one line. */}
-        <a
-          href="#main"
-          className="sr-only min-h-11 items-center text-xs font-bold text-text underline-offset-4 hover:underline focus:not-sr-only focus:inline-flex sm:not-sr-only sm:inline-flex"
-        >
-          Skip to main content
-        </a>
-        <div role="group" aria-label="Display settings" className="-mx-2 flex flex-wrap items-center justify-end sm:mx-0">
-          <TextSizeMenu value={settings.text} onChange={(text) => update({ text })} />
-          <button
-            type="button"
-            aria-pressed={settings.contrast === 'high'}
-            onClick={() => toggle('contrast', 'high', 'standard', 'High contrast')}
-            className={BUTTON}
+    <div className="od-utility relative z-30 print:hidden">
+      <div className="od-utility-bar border-b border-border bg-subtle">
+        <p aria-hidden="true" className="od-utility-hint">
+          <Icon name="chevron-down" className="size-3.5" />
+          Text size, contrast and more
+        </p>
+        {/* The text size panel is placed against this box, so it stays on screen on phones. */}
+        <div className="od-utility-row relative mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 px-4 sm:px-6">
+          {/* On phones the skip link shows only when focused, so the bar stays one line. */}
+          <a
+            href="#main"
+            className="sr-only min-h-11 items-center text-xs font-bold text-text underline-offset-4 hover:underline focus:not-sr-only focus:inline-flex sm:not-sr-only sm:inline-flex"
           >
-            <Icon name="contrast" />
-            High contrast
-          </button>
-          <button type="button" aria-pressed={settings.quiet} onClick={() => toggle('quiet', true, false, 'Quiet mode')} className={BUTTON}>
-            <Icon name="leaf" />
-            Quiet mode
-          </button>
-          <button
-            type="button"
-            aria-pressed={settings.menu === 'compact'}
-            onClick={() => toggle('menu', 'compact', 'full', 'Compact menu')}
-            // Phones always get the compact menu, so the switch is only offered on wider screens.
-            className={`${BUTTON.replace('inline-flex ', '')} hidden sm:inline-flex`}
-          >
-            <Icon name="panel" />
-            Compact menu
-          </button>
+            Skip to main content
+          </a>
+          <div role="group" aria-label="Display settings" className="-mx-2 flex flex-wrap items-center justify-end sm:mx-0">
+            <TextSizeMenu value={settings.text} onChange={(text) => update({ text })} />
+            <button
+              type="button"
+              aria-pressed={settings.contrast === 'high'}
+              onClick={() => toggle('contrast', 'high', 'standard', 'High contrast')}
+              className={BUTTON}
+            >
+              <Icon name="contrast" />
+              High contrast
+            </button>
+            <button
+              type="button"
+              aria-pressed={settings.quiet}
+              onClick={() => toggle('quiet', true, false, 'Quiet mode')}
+              className={BUTTON}
+            >
+              <Icon name="leaf" />
+              Quiet mode
+            </button>
+            <button
+              type="button"
+              aria-pressed={settings.menu === 'compact'}
+              onClick={() => toggle('menu', 'compact', 'full', 'Compact menu')}
+              // Phones always get the compact menu, so the switch is only offered on wider screens.
+              className={`${BUTTON.replace('inline-flex ', '')} hidden sm:inline-flex`}
+            >
+              <Icon name="panel" />
+              Compact menu
+            </button>
+            <button
+              type="button"
+              aria-pressed={settings.bar === 'pinned'}
+              onClick={() => toggle('bar', 'pinned', 'auto', 'Keep this bar open')}
+              className={`${BUTTON.replace('inline-flex ', '')} od-pointer-only`}
+            >
+              <Icon name="pin" />
+              Keep open
+            </button>
+          </div>
         </div>
       </div>
     </div>

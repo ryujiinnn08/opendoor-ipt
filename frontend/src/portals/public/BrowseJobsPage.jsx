@@ -6,6 +6,7 @@ import { getAccommodationGroups, getCategories } from '../../api/masterData.js'
 import { useAuth } from '../../auth/authContext.js'
 import FilterChips from '../../components/jobs/FilterChips.jsx'
 import JobCard from '../../components/jobs/JobCard.jsx'
+import JobPreview from '../../components/jobs/JobPreview.jsx'
 import Button from '../../components/ui/Button.jsx'
 import EmptyState from '../../components/ui/EmptyState.jsx'
 import FormField from '../../components/ui/FormField.jsx'
@@ -17,6 +18,7 @@ import { TEXT_LINK } from '../../components/ui/buttonLinkStyles.js'
 import { useAnnounce } from '../../components/ui/announcerContext.js'
 import useDebouncedValue from '../../hooks/useDebouncedValue.js'
 import useJobSearchParams from '../../hooks/useJobSearchParams.js'
+import useTwoPanes from '../../hooks/useTwoPanes.js'
 import { jobCountText } from '../../lib/jobText.js'
 import { EMPLOYMENT_TYPES, WORK_SETUPS } from '../../lib/postingOptions.js'
 
@@ -53,7 +55,10 @@ export default function BrowseJobsPage({ basePath = '/jobs', title = 'Browse job
   const announce = useAnnounce()
   const waiting = matching !== undefined && matching.needsCount === undefined
   const matchMode = Boolean(matching?.needsCount)
-  const { filters, setFilters, clearFilters, hrefForPage, activeFilterCount } = useJobSearchParams({ matching: matchMode })
+  const { filters, setFilters, clearFilters, hrefForPage, activeFilterCount, selectedJob, selectJob } = useJobSearchParams({ matching: matchMode })
+  const twoPanes = useTwoPanes()
+  const paneHeading = useRef(null)
+  const focusPane = useRef(false)
   const { key: locationKey } = useLocation()
 
   // The search box keeps its own text; the address gets it after a pause or on Enter.
@@ -146,6 +151,18 @@ export default function BrowseJobsPage({ basePath = '/jobs', title = 'Browse job
     resultsHeading.current?.focus()
   }, [results])
 
+  // A job chosen from the list: start at its heading in the details pane.
+  useEffect(() => {
+    if (!focusPane.current) return
+    focusPane.current = false
+    paneHeading.current?.focus()
+  }, [selectedJob])
+
+  function chooseJob(id) {
+    focusPane.current = true
+    selectJob(id)
+  }
+
   function submitSearch(event) {
     event.preventDefault()
     const words = text.trim()
@@ -193,6 +210,10 @@ export default function BrowseJobsPage({ basePath = '/jobs', title = 'Browse job
   const shown = results?.filters ?? filters
   const shownSomethingOn =
     Boolean(shown.q.trim()) || shown.category !== '' || shown.accommodations.length > 0 || shown.workSetup.length > 0 || shown.employmentType.length > 0
+  // Two panes (UI_FEEDBACK_PLAN Q2): the chosen job, or the first on the page, beside the list.
+  const paneJob = selectedJob ?? results?.jobs[0]?.id ?? null
+  const showPane = twoPanes && paneJob !== null && !loadError?.staleFilters
+
   // Every filter on the list shown, by name (UI_FEEDBACK_PLAN P5), not "4 filters on".
   const accommodationNames = new Map(groups.flatMap((group) => group.accommodations.map((item) => [item.id, item.name])))
   const activeNames = [
@@ -258,7 +279,7 @@ export default function BrowseJobsPage({ basePath = '/jobs', title = 'Browse job
         listsError={listsError}
       />
 
-      <div className="mt-6">
+      <div className={showPane ? 'mt-6 grid items-start gap-6 grid-cols-[minmax(0,5fr)_minmax(0,7fr)]' : 'mt-6'}>
         <section aria-labelledby="job-results-heading" aria-busy={Boolean(results) && results.filters !== filters && loadError?.filters !== filters} className="min-w-0">
 
           {loadError?.general && (
@@ -297,7 +318,13 @@ export default function BrowseJobsPage({ basePath = '/jobs', title = 'Browse job
               {results.jobs.length > 0 ? (
                 <ul className="mt-4 overflow-hidden rounded-lg border border-border bg-surface">
                   {results.jobs.map((job) => (
-                    <JobCard key={job.id} job={job} to={`${basePath}/${job.id}`} />
+                    <JobCard
+                      key={job.id}
+                      job={job}
+                      to={`${basePath}/${job.id}`}
+                      onSelect={showPane ? chooseJob : undefined}
+                      selected={showPane && job.id === paneJob}
+                    />
                   ))}
                 </ul>
               ) : (
@@ -336,6 +363,12 @@ export default function BrowseJobsPage({ basePath = '/jobs', title = 'Browse job
             !loadError && <LoadingMessage>Loading jobs…</LoadingMessage>
           )}
         </section>
+
+        {showPane && (
+          <div className="sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto rounded-lg border border-border bg-canvas p-4">
+            <JobPreview id={paneJob} basePath={basePath} employerBasePath={basePath.replace(/jobs$/, 'employers')} headingRef={paneHeading} />
+          </div>
+        )}
       </div>
     </div>
   )

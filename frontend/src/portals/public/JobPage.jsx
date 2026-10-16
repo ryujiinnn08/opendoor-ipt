@@ -5,6 +5,7 @@ import { getJob } from '../../api/jobs.js'
 import ApplyBox from '../../components/applications/ApplyBox.jsx'
 import TrustScoreCard from '../../components/feedback/TrustScoreCard.jsx'
 import NeedsFit from '../../components/jobs/NeedsFit.jsx'
+import StickyApplyBar from '../../components/jobs/StickyApplyBar.jsx'
 import JobDetails from '../../components/postings/JobDetails.jsx'
 import Button from '../../components/ui/Button.jsx'
 import LoadingMessage from '../../components/ui/LoadingMessage.jsx'
@@ -82,6 +83,7 @@ export default function JobPage({ basePath = '/jobs', employerBasePath = '/emplo
               </>
             }
           />
+          <StickyApplyBar job={job} />
         </>
       )}
     </>

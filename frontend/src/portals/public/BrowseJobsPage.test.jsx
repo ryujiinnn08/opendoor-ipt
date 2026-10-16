@@ -6,10 +6,10 @@ import { publicJobFixture as job } from '../../test/publicJobFixture.js'
 import { renderRoutes } from '../../test/renderWithProviders.jsx'
 import BrowseJobsPage from './BrowseJobsPage.jsx'
 
-vi.mock('../../api/jobs.js', () => ({ searchJobs: vi.fn() }))
+vi.mock('../../api/jobs.js', () => ({ searchJobs: vi.fn(), getJob: vi.fn() }))
 vi.mock('../../api/masterData.js', () => ({ getCategories: vi.fn(), getAccommodationGroups: vi.fn() }))
 
-const { searchJobs } = await import('../../api/jobs.js')
+const { searchJobs, getJob } = await import('../../api/jobs.js')
 const { getCategories, getAccommodationGroups } = await import('../../api/masterData.js')
 
 const routes = [
@@ -271,5 +271,35 @@ describe('BrowseJobsPage', () => {
     await screen.findByRole('button', { name: 'Category: Healthcare' })
 
     expect(await axe(container)).toHaveNoViolations()
+  })
+
+  describe('in two panes on wide screens (UI_FEEDBACK_PLAN Q2)', () => {
+    beforeEach(() => {
+      window.matchMedia = vi.fn(() => ({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() }))
+      const second = { ...job, id: 3, title: 'Data Encoder' }
+      searchJobs.mockResolvedValue(results(2, [job, second]))
+      getJob.mockImplementation(async (id) => (String(id) === '3' ? second : job))
+    })
+    afterEach(() => {
+      delete window.matchMedia
+    })
+
+    it('shows the first job beside the list, and a chosen one with focus on its heading', async () => {
+      const user = userEvent.setup()
+      const { router } = renderRoutes(routes, { path: '/jobs' })
+
+      const pane = await screen.findByRole('region', { name: 'Junior Web Developer' })
+      expect(screen.getByRole('link', { name: 'Junior Web Developer' })).toHaveAttribute('aria-current', 'true')
+
+      await user.click(screen.getByRole('link', { name: 'Data Encoder' }))
+
+      expect(router.state.location.pathname).toBe('/jobs')
+      expect(router.state.location.search).toBe('?job=3')
+      const heading = await screen.findByRole('heading', { level: 2, name: 'Data Encoder' })
+      await waitFor(() => expect(heading).toHaveFocus())
+      expect(screen.getByRole('link', { name: 'Open the full job page' })).toHaveAttribute('href', '/jobs/3')
+      expect(searchJobs).toHaveBeenCalledTimes(1)
+      expect(pane).toHaveAccessibleName('Data Encoder')
+    })
   })
 })

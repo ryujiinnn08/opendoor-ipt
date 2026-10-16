@@ -17,7 +17,7 @@ describe('display settings', () => {
   })
 
   it('saves and reads back', () => {
-    const settings = { text: 135, contrast: 'high', motion: 'reduce', quiet: true, menu: 'compact' }
+    const settings = { text: 135, contrast: 'high', motion: 'reduce', quiet: true, menu: 'compact', bar: 'pinned' }
     saveSettings(settings)
     expect(readSettings()).toEqual(settings)
   })
@@ -33,12 +33,13 @@ describe('display settings', () => {
 
   it('sets the text size and the attributes on <html>, and removes them for the defaults', () => {
     const root = document.createElement('html')
-    applySettings({ text: 140, contrast: 'high', motion: 'reduce', quiet: true, menu: 'compact' }, root)
+    applySettings({ text: 140, contrast: 'high', motion: 'reduce', quiet: true, menu: 'compact', bar: 'pinned' }, root)
     expect(root.style.getPropertyValue('--od-font-size')).toBe('140%')
     expect(root.getAttribute('data-contrast')).toBe('high')
     expect(root.getAttribute('data-motion')).toBe('reduce')
     expect(root.hasAttribute('data-quiet')).toBe(true)
     expect(root.getAttribute('data-menu')).toBe('compact')
+    expect(root.getAttribute('data-bar')).toBe('pinned')
 
     applySettings(DEFAULTS, root)
     expect(root.attributes).toHaveLength(0)

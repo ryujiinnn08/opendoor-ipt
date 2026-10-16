@@ -1,6 +1,6 @@
 # UI Feedback Plan: a more formal OpenDoor, learning from LinkedIn and Indeed
 
-> Status: **APPROVED** (2026-10-16: "The recommendations are OK. Start Wave A."). **Wave A built** (2026-10-16), except the two panes and the sticky mini-header (§7).
+> Status: **APPROVED** (2026-10-16: "The recommendations are OK. Start Wave A."). **Wave A built** (2026-10-16), all of it (§7).
 > Builds on [UI_REVAMP_PLAN.md](UI_REVAMP_PLAN.md) (approved; R1 and R2 done) and [NEXT_STEPS_2026-10-16.md](NEXT_STEPS_2026-10-16.md). Where this plan changes a page, it replaces that page's row in UI_REVAMP_PLAN §5. Everything else there still stands.
 > Sources: the team's review of the live site (October 16) and screenshots of Indeed (home, job details, account menu) and LinkedIn (profile, Jobs home, job list with the details pane, "About the company").
 > Out of scope: LinkedIn's messaging, connections, "who viewed", Premium prompts and the feed.
@@ -217,8 +217,12 @@ How the charts are built, accessibly:
 | A2 Navigation | Yes | `ui/BackLink` on every detail page, keeping the list's filters (`lib/backState.js`); the duplicate bottom links are gone. Account menu (name, email, Profile, Display settings, Change password, Help and contact, Log out); the compact Menu lists all of it in one click. Admin's Feedback and Data moved to the left |
 | A3 Filters | Yes | API `work_setup[]` and `employment_type[]` with tests; `jobs/FilterChips` (Matches my needs toggle, Work setup, Employment type, Category, Accommodations dialog, Sort, Clear all); "Showing: Remote, Full-time" under the count; `AccommodationFilterPanel` removed |
 | A4 Job page | Mostly | Employer block with logo or initials and the trust badge; Apply first in the side column; Accommodations provided, Job details (icons), About the job, **About the company** (API adds `industry`, `address`, `description` on the job page only); trust card with a large score and "How is this score worked out?" folded; job cards with logo, New / Closing soon labels (`posted_on` added to the API) and the trust badge |
-| A4 Two panes (Q2) | **Not built** | First in the cut order. Find jobs still opens the job on its own page |
-| A4 Sticky mini-header | **Not built** | Second in the cut order |
+| A4 Two panes (Q2) | Yes | `hooks/useTwoPanes` (1024 px and wider, text at 125 % or less, full menu); `jobs/JobPreview` beside the list, the chosen job in `?job=` (Back returns to the previous one; filters close it); focus moves to the job's heading; a link opens the full page |
+| A4 Sticky mini-header | Yes | `jobs/StickyApplyBar` on the job page: the title and Apply once the heading scrolls away; off at 150 % text; adds scroll padding so focus isn't hidden under it |
 | A5 Checks | Yes | 427 backend and 569 frontend tests, lint and build pass; checked in the browser at 1280 px and 375 px (no sideways scrolling), the filter chips, Back with filters, the account menu and the compact Menu |
 
 Not yet checked: 200 % zoom, 200 % text, high contrast and keyboard-only on the new chips and menus. These belong to the October 18 audit.
+
+### Added on request: the display settings bar folds away (2026-10-16)
+
+On screens with a mouse, the bar with Text size, High contrast, Quiet mode and Compact menu folds into a thin line ("Text size, contrast and more") until pointed at, like a hidden taskbar, and opens over the header so the page doesn't jump. It also opens whenever anything in it has keyboard focus, so the skip link and every button stay reachable by Tab and by screen readers. **Keep open** (in the bar, or Account → Display → Display settings bar) pins it; phones and tablets always show it. The setting is saved in the browser with the other display settings (`bar: auto | pinned`, `data-bar` on `<html>`).

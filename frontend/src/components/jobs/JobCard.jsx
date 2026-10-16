@@ -29,9 +29,11 @@ export function DotList({ items }) {
  * title as heading and link, the employer with its badge, a line of facts, the "New" and
  * "Closing soon" labels, the trust score as a badge, how it meets the job seeker's needs, and the
  * accommodations as tags. Rendered as an <li>, so put it in a <ul>. showEmployer={false} leaves
- * out the employer line where the page is already about that employer.
+ * out the employer line where the page is already about that employer. With `onSelect` (Find jobs
+ * in two panes), a plain click opens the job beside the list instead of on its own page; the
+ * link still works for a new tab. `selected` marks the job that is open there.
  */
-export default function JobCard({ job, to, showEmployer = true }) {
+export default function JobCard({ job, to, showEmployer = true, onSelect, selected = false }) {
   const { employer } = job
   const location = useLocation()
   const { shown, more } = providesParts(job.accommodations ?? [])
@@ -39,7 +41,11 @@ export default function JobCard({ job, to, showEmployer = true }) {
   const labels = jobLabels(job, manilaToday())
 
   return (
-    <li className="flex gap-4 border-b border-border bg-surface p-5 transition-colors duration-200 ease-soft first:rounded-t-lg last:rounded-b-lg last:border-b-0 hover:bg-subtle sm:p-6">
+    <li
+      className={`flex gap-4 border-b border-border p-5 transition-colors duration-200 ease-soft first:rounded-t-lg last:rounded-b-lg last:border-b-0 sm:p-6 ${
+        selected ? 'bg-subtle shadow-[inset_4px_0_0_var(--od-brand-primary)]' : 'bg-surface hover:bg-subtle'
+      }`}
+    >
       <EmployerMark employer={employer} />
 
       <div className="min-w-0 flex-1">
@@ -53,7 +59,16 @@ export default function JobCard({ job, to, showEmployer = true }) {
           </ul>
         )}
         <h3 className="font-display text-lg font-semibold">
-          <Link to={to} state={backState(location)} className="inline-flex min-h-11 items-center text-primary underline-offset-4 hover:text-primary-hover hover:underline">
+          <Link
+            to={to}
+            state={backState(location)}
+            aria-current={selected ? 'true' : undefined}
+            onClick={(event) => {
+              if (!onSelect || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+              event.preventDefault()
+              onSelect(job.id)
+            }}
+            className="inline-flex min-h-11 items-center text-primary underline-offset-4 hover:text-primary-hover hover:underline">
             {job.title}
           </Link>
         </h3>

@@ -17,13 +17,16 @@ export const TEXT_PRESETS = [
 // Settings saved before the slider (Phase 7 R2) used names.
 const OLD_TEXT_SIZES = { standard: 100, large: 125, xlarge: 150 }
 
-export const DEFAULTS = { text: TEXT_MIN, contrast: 'standard', motion: 'allow', quiet: false, menu: 'full' }
+// `bar`: the display settings bar hides until pointed at (`auto`, on mouse screens only) or always
+// shows (`pinned`).
+export const DEFAULTS = { text: TEXT_MIN, contrast: 'standard', motion: 'allow', quiet: false, menu: 'full', bar: 'auto' }
 
 const ALLOWED = {
   contrast: ['standard', 'high'],
   motion: ['allow', 'reduce'],
   quiet: [true, false],
   menu: ['full', 'compact'],
+  bar: ['auto', 'pinned'],
 }
 
 /** A saved text size as a whole percentage in range, or null if it isn't one. */
@@ -67,6 +70,7 @@ export function applySettings(settings, root = document.documentElement) {
     'data-motion': settings.motion === 'reduce' ? 'reduce' : null,
     'data-quiet': settings.quiet ? '' : null,
     'data-menu': settings.menu === 'compact' ? 'compact' : null,
+    'data-bar': settings.bar === 'pinned' ? 'pinned' : null,
   }
   for (const [name, value] of Object.entries(attributes)) {
     if (value === null) root.removeAttribute(name)

@@ -44,6 +44,15 @@ const GROUPS = [
       { value: 'compact', label: 'Compact: one Menu button' },
     ],
   },
+  {
+    name: 'bar',
+    legend: 'Display settings bar',
+    hint: 'The bar at the very top with Text size and High contrast. On phones and tablets it always shows, and it opens when you reach it with the keyboard.',
+    options: [
+      { value: 'auto', label: 'Hide it until I point at it' },
+      { value: 'pinned', label: 'Always show it' },
+    ],
+  },
 ]
 
 const ROLE_NAMES = { candidate: 'Job seeker', admin: 'Administrator' }

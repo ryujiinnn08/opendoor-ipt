@@ -64,18 +64,37 @@ export default function useJobSearchParams({ matching = false } = {}) {
   const { pathname } = useLocation()
   const query = searchParams.toString()
 
+  // The job open in the details pane (Find jobs on wide screens, UI_FEEDBACK_PLAN Q2) is kept
+  // apart from the filters, so choosing a job never reloads the list.
+  const params = new URLSearchParams(query)
+  const jobParam = params.get('job') ?? ''
+  const selectedJob = ID.test(jobParam) ? Number(jobParam) : null
+  params.delete('job')
+  const listQuery = params.toString()
+
   // Keyed on the query text, so the object only changes when the address does.
-  const filters = useMemo(() => parse(new URLSearchParams(query), matching), [query, matching])
+  const filters = useMemo(() => parse(new URLSearchParams(listQuery), matching), [listQuery, matching])
 
   /**
    * Changes some filters: a new history entry, or `replace: true` to update the current one.
-   * Any change except the page goes back to page 1. The scroll position stays where it is.
+   * Any change except the page goes back to page 1, and closes the job in the details pane.
+   * The scroll position stays where it is.
    */
   const setFilters = useCallback(
     (changes, { replace = false } = {}) => {
       const next = { ...filters, ...changes }
       if (!('page' in changes)) next.page = 1
       setSearchParams(toQuery(next, matching), { replace, preventScrollReset: true })
+    },
+    [filters, matching, setSearchParams],
+  )
+
+  /** Opens a job in the details pane: a new history entry, so Back returns to the previous one. */
+  const selectJob = useCallback(
+    (id) => {
+      const next = new URLSearchParams(toQuery(filters, matching))
+      next.set('job', String(id))
+      setSearchParams(next.toString(), { preventScrollReset: true })
     },
     [filters, matching, setSearchParams],
   )
@@ -96,5 +115,5 @@ export default function useJobSearchParams({ matching = false } = {}) {
 
   const activeFilterCount = (filters.category ? 1 : 0) + filters.accommodations.length + filters.workSetup.length + filters.employmentType.length
 
-  return { filters, setFilters, clearFilters, hrefForPage, activeFilterCount }
+  return { filters, setFilters, clearFilters, hrefForPage, activeFilterCount, selectedJob, selectJob }
 }
