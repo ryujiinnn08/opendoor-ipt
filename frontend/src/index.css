@@ -474,3 +474,33 @@
     background-color: var(--od-surface-tint);
   }
 }
+
+/* Non-modal candidate coachmarks: no page-sized pointer-blocking backdrop. */
+.tour-guide { border: 2px solid var(--od-brand-primary); border-radius: 1rem; padding: 1.25rem; background: var(--od-surface-page, Canvas); color: var(--od-text-default, CanvasText); box-shadow: 0 8px 28px #0002; }
+.tour-guide-floating { position: fixed; z-index: 45; width: 350px; max-width: calc(100vw - 2rem); }
+.tour-highlight { outline: 3px dashed var(--od-brand-primary); outline-offset: 5px; }
+@media (max-width: 400px) { .tour-guide .tour-mascot { width: 40px; } }
+@media print { .tour-highlight { outline: none; } .tour-guide { display: none; } }
+/* Reveal the comfort controls during their step without changing the saved preference. */
+:root:not([data-bar='pinned']) .od-utility.tour-highlight { height: auto; }
+:root:not([data-bar='pinned']) .od-utility.tour-highlight .od-utility-bar { position: relative; }
+:root:not([data-bar='pinned']) .od-utility.tour-highlight .od-utility-hint { display: none; }
+:root:not([data-bar='pinned']) .od-utility.tour-highlight .od-utility-row { max-height: none; overflow: visible; opacity: 1; transition: none; }
+
+/* The transparent opening leaves the real feature interactive; the scrim never captures clicks. */
+.tour-spotlight { position: fixed; z-index: 90; pointer-events: none; border-radius: 10px; box-shadow: 0 0 0 9999px rgb(12 8 25 / .68); transition: top 180ms ease-out, left 180ms ease-out, width 180ms ease-out, height 180ms ease-out; animation: tour-dim-in 180ms ease-out both; }
+.tour-guide-floating { z-index: 100; top: 16px; right: 16px; width: min(350px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow-y: auto; animation: tour-card-in 180ms ease-out both; transition: top 220ms ease-out, left 220ms ease-out; }
+.tour-mascot { aspect-ratio: 1; }
+/* Turbulence/displacement filters are costly on the small animated tour portrait. */
+.tour-mascot [filter] { filter: none; }
+@keyframes tour-dim-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes tour-card-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 899px) { .tour-guide-floating { max-height: 48dvh; top: auto; bottom: 16px; } }
+@media (prefers-reduced-motion: reduce) { .tour-guide, .tour-spotlight { animation: none; transition: none; } }
+:root[data-motion='reduce'] .tour-guide, :root[data-motion='reduce'] .tour-spotlight,
+:root[data-quiet] .tour-guide, :root[data-quiet] .tour-spotlight { animation: none; transition: none; }
+@media print { .tour-spotlight { display: none; } }
+
+/* Retain the outline when the user's contrast preference suppresses dimming. */
+:root[data-contrast='high'] .tour-spotlight { display: none; }
+@media (forced-colors: active) { .tour-spotlight { display: none; } }
