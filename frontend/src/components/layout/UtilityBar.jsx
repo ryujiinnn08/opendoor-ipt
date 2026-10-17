@@ -28,7 +28,7 @@ export default function UtilityBar() {
   }
 
   return (
-    <div className="od-utility relative z-30 print:hidden">
+    <div data-tour="display-controls" className="od-utility relative z-30 print:hidden">
       <div className="od-utility-bar border-b border-border bg-yellow-soft">
         <p aria-hidden="true" className="od-utility-hint">
           <Icon name="chevron-down" className="size-3.5" />
@@ -43,25 +43,30 @@ export default function UtilityBar() {
           >
             Skip to main content
           </a>
-          <div role="group" aria-label="Display settings" className="-mx-2 flex flex-wrap items-center justify-end sm:mx-0">
+          <div role="group" aria-label="Display settings" className="-mx-2 flex flex-nowrap items-center justify-end sm:mx-0 sm:flex-wrap">
             <TextSizeMenu value={settings.text} onChange={(text) => update({ text })} />
             <button
               type="button"
               aria-pressed={settings.contrast === 'high'}
+              aria-label="High contrast"
               onClick={() => toggle('contrast', 'high', 'standard', 'High contrast')}
               className={BUTTON}
             >
               <Icon name="contrast" />
-              High contrast
+              {/* Shorter on phones so the three buttons stay on one line down to 320 px. */}
+              <span aria-hidden="true" className="sm:hidden">Contrast</span>
+              <span aria-hidden="true" className="hidden sm:inline">High contrast</span>
             </button>
             <button
               type="button"
               aria-pressed={settings.quiet}
+              aria-label="Quiet mode"
               onClick={() => toggle('quiet', true, false, 'Quiet mode')}
               className={BUTTON}
             >
               <Icon name="leaf" />
-              Quiet mode
+              <span aria-hidden="true" className="sm:hidden">Quiet</span>
+              <span aria-hidden="true" className="hidden sm:inline">Quiet mode</span>
             </button>
             <button
               type="button"

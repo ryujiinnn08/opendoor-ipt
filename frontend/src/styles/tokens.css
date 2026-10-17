@@ -64,6 +64,9 @@
   --od-brand-primary-dark: #2a1850;
   --od-surface-subtle: #ffffff;
   --od-surface-canvas: #ffffff;
+  --od-surface-tint: #ffffff;
+  --od-surface-current: #d3c1f3;
+  --od-accent-yellow-soft: #ffffff;
   --od-border-subtle: #241b3a;
   --od-border-input: #000000;
   --od-border-focus: #000000;

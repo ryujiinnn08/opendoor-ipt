@@ -122,6 +122,14 @@ The header logo is a placeholder at `frontend/public/opendoor-logo.svg` (also us
 
 All icons come from [Lucide](https://lucide.dev) (ISC licence), the set the Figma design uses: 24 px line icons with a 2 px stroke, imported one by one from `lucide-react` in `frontend/src/components/ui/iconImages.js`. They are drawn in the colour of the text around them, so the same icon works for links, badges and the high-contrast theme. To add one, import it there and give it a name; use it with `<Icon name="…" />`.
 
+## Display settings and the mascot
+
+The strip above the header on every page (`frontend/src/components/layout/UtilityBar.jsx`) holds the display settings: **Text size** (100 % to 200 %, a slider), **High contrast**, **Quiet mode** (no decoration or animation), **Compact menu** and **Keep open**. On phones it stays on one line down to 320 px wide, with the shorter labels "Contrast" and "Quiet" (screen readers still hear the full names); on screens with a mouse it folds into a thin line until pointed at or focused. The same settings are on Account → Display, and are saved in the browser (`opendoor-display`).
+
+They are attributes on `<html>` (`data-contrast`, `data-quiet`, `data-menu`, `data-bar`, `data-motion`). High contrast is a set of overrides of the colour tokens in `frontend/src/styles/tokens.css`. When you add a colour token, give it a High contrast value there too; `tokens.test.js` checks the text and border pairs in both themes.
+
+OpenDoor's mascot (the briefcase) appears on Home, Log in, loading and empty states, and in the job seeker's messages. It lives in `frontend/src/components/mascot/` and is decoration only: hidden from screen readers and gone in Quiet mode. Create account has no mascot.
+
 ## Database notes (XAMPP / MariaDB)
 
 XAMPP's MariaDB 10.4 automatically adds "update to the current time" to the first required `timestamp` column of a table. In migrations, use `dateTime()` (not `timestamp()`) for required date columns; nullable timestamps are fine.
