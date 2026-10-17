@@ -77,6 +77,27 @@ class SetupTest extends TestCase
             ]);
     }
 
+    public function test_an_industry_typed_under_others_is_saved_as_written(): void
+    {
+        $user = User::factory()->employer()->create();
+
+        // "Others" sends the person's own words; any text up to 100 characters is fine.
+        $this->actingAs($user, 'web')->postJson('/api/employer/setup', [
+            'type' => 'company',
+            'name' => 'Acme Corp.',
+            'industry' => '  Agriculture & Fisheries ',
+            'address' => 'Pasig City',
+        ])->assertCreated();
+
+        $company = $user->fresh()->membership->employer;
+        $this->assertSame('Agriculture & Fisheries', $company->industry);
+        $this->getJson('/api/employer/profile')->assertOk()->assertJsonPath('data.industry', 'Agriculture & Fisheries');
+
+        $this->actingAs(User::factory()->employer()->create(), 'web')->postJson('/api/employer/setup', ['type' => 'company', 'name' => 'B', 'industry' => str_repeat('a', 101), 'address' => 'X'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('industry');
+    }
+
     public function test_an_employer_can_only_set_up_once(): void
     {
         $user = User::factory()->employer()->create();

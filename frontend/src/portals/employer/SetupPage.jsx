@@ -11,6 +11,8 @@ import RadioCardGroup from '../../components/ui/RadioCardGroup.jsx'
 import { useAnnounce } from '../../components/ui/announcerContext.js'
 import useFormErrors from '../../hooks/useFormErrors.js'
 import { summaryFrom } from '../../lib/errorSummary.js'
+import { industryErrorId, industryErrors, joinIndustry } from '../../lib/industry.js'
+import IndustryField from './IndustryField.jsx'
 
 const TYPES = [
   {
@@ -25,7 +27,7 @@ const TYPES = [
   },
 ]
 
-const FIELDS = ['type', 'name', 'industry', 'address']
+const FIELDS = ['type', 'name', 'industry', 'industryOther', 'address']
 const FIELD_IDS = { type: 'type-company' }
 
 function validate(values) {
@@ -33,7 +35,7 @@ function validate(values) {
   const errors = {}
   if (!values.type) errors.type = 'Choose whether you are hiring for a company or for yourself.'
   if (!values.name.trim()) errors.name = company ? 'Enter the company name.' : 'Enter the name job seekers will see.'
-  if (company && !values.industry.trim()) errors.industry = "Enter the company's industry."
+  if (company) Object.assign(errors, industryErrors(values))
   if (!values.address.trim())
     errors.address = company ? 'Enter the company address.' : 'Enter your city or municipality.'
   return errors
@@ -44,7 +46,7 @@ export default function SetupPage() {
   const navigate = useNavigate()
   const announce = useAnnounce()
   const { errors, generalError, focusKey, show, showApiError } = useFormErrors()
-  const [values, setValues] = useState({ type: '', name: '', industry: '', address: '' })
+  const [values, setValues] = useState({ type: '', name: '', industry: '', industryOther: '', address: '' })
   const [categories, setCategories] = useState([])
   const [submitting, setSubmitting] = useState(false)
   const company = values.type === 'company'
@@ -76,7 +78,8 @@ export default function SetupPage() {
 
     setSubmitting(true)
     try {
-      await setupEmployer({ ...values, industry: company ? values.industry : null })
+      const { industryOther: _other, ...fields } = values
+      await setupEmployer({ ...fields, industry: company ? joinIndustry(values) : null })
       await refresh()
       announce('Your employer profile is ready.')
       navigate('/employer/dashboard', { replace: true })
@@ -86,8 +89,9 @@ export default function SetupPage() {
     }
   }
 
+  const ids = { ...FIELD_IDS, industry: industryErrorId(values) }
   const summary = summaryFrom(errors, FIELDS, generalError).map((item) =>
-    item.id && FIELD_IDS[item.id] ? { ...item, id: FIELD_IDS[item.id] } : item,
+    item.id && ids[item.id] ? { ...item, id: ids[item.id] } : item,
   )
 
   return (
@@ -124,24 +128,12 @@ export default function SetupPage() {
                 autoComplete={company ? 'organization' : 'name'}
               />
               {company && (
-                <>
-                  <FormField
-                    id="industry"
-                    label="Industry"
-                    hint="Choose a suggestion or type your own."
-                    list="industry-options"
-                    value={values.industry}
-                    onChange={update('industry')}
-                    error={errors.industry}
-                    maxLength={100}
-                    autoComplete="off"
-                  />
-                  <datalist id="industry-options">
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.name} />
-                    ))}
-                  </datalist>
-                </>
+                <IndustryField
+                  values={values}
+                  categories={categories}
+                  errors={errors}
+                  onChange={(next) => setValues((current) => ({ ...current, ...next }))}
+                />
               )}
               <FormField
                 id="address"

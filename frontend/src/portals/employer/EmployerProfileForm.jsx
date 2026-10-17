@@ -6,8 +6,10 @@ import ErrorSummary from '../../components/ui/ErrorSummary.jsx'
 import FormField from '../../components/ui/FormField.jsx'
 import useFormErrors from '../../hooks/useFormErrors.js'
 import { summaryFrom } from '../../lib/errorSummary.js'
+import { industryErrorId, industryErrors, joinIndustry, splitIndustry } from '../../lib/industry.js'
+import IndustryField from './IndustryField.jsx'
 
-const FIELDS = ['name', 'industry', 'address', 'description']
+const FIELDS = ['name', 'industry', 'industryOther', 'address', 'description']
 
 /**
  * Edit form for a company profile or an individual employer profile.
@@ -20,15 +22,21 @@ export default function EmployerProfileForm({ employer, onSaved }) {
   const [values, setValues] = useState({
     name: employer.name ?? '',
     industry: employer.industry ?? '',
+    industryOther: '',
     address: employer.address ?? '',
     description: employer.description ?? '',
   })
 
   useEffect(() => {
     if (!company) return
+    // Once the list is known, an industry that isn't on it shows as "Others" with its words.
+    const show = (list) => {
+      setCategories(list)
+      setValues((current) => ({ ...current, ...splitIndustry(current.industry, list) }))
+    }
     getCategories()
-      .then(setCategories)
-      .catch(() => setCategories([]))
+      .then(show)
+      .catch(() => show([]))
   }, [company])
 
   function update(field) {
@@ -41,14 +49,15 @@ export default function EmployerProfileForm({ employer, onSaved }) {
 
     const clientErrors = {}
     if (!values.name.trim()) clientErrors.name = company ? 'Enter the company name.' : 'Enter the name job seekers will see.'
-    if (company && !values.industry.trim()) clientErrors.industry = "Enter the company's industry."
+    if (company) Object.assign(clientErrors, industryErrors(values))
     if (!values.address.trim())
       clientErrors.address = company ? 'Enter the company address.' : 'Enter your city or municipality.'
     if (Object.keys(clientErrors).length) return show(clientErrors)
 
     setSaving(true)
     try {
-      const saved = await updateEmployerProfile({ ...values, industry: company ? values.industry : null })
+      const { industryOther: _other, ...fields } = values
+      const saved = await updateEmployerProfile({ ...fields, industry: company ? joinIndustry(values) : null })
       clear()
       onSaved(saved)
     } catch (error) {
@@ -60,7 +69,12 @@ export default function EmployerProfileForm({ employer, onSaved }) {
 
   return (
     <>
-      <ErrorSummary errors={summaryFrom(errors, FIELDS, generalError)} focusKey={focusKey} />
+      <ErrorSummary
+        errors={summaryFrom(errors, FIELDS, generalError).map((item) =>
+          item.id === 'industry' ? { ...item, id: industryErrorId(values) } : item,
+        )}
+        focusKey={focusKey}
+      />
       <form onSubmit={handleSubmit} noValidate>
         <FormField
           id="name"
@@ -71,24 +85,12 @@ export default function EmployerProfileForm({ employer, onSaved }) {
           maxLength={200}
         />
         {company && (
-          <>
-            <FormField
-              id="industry"
-              label="Industry"
-              hint="Choose a suggestion or type your own."
-              list="industry-options"
-              autoComplete="off"
-              value={values.industry}
-              onChange={update('industry')}
-              error={errors.industry}
-              maxLength={100}
-            />
-            <datalist id="industry-options">
-              {categories.map((category) => (
-                <option key={category.id} value={category.name} />
-              ))}
-            </datalist>
-          </>
+          <IndustryField
+            values={values}
+            categories={categories}
+            errors={errors}
+            onChange={(next) => setValues((current) => ({ ...current, ...next }))}
+          />
         )}
         <FormField
           id="address"
