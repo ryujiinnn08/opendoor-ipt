@@ -1,9 +1,10 @@
+import { useId, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { backState } from '../../lib/backState.js'
 import { formatDay } from '../../lib/format.js'
 import { jobLabels, providesParts } from '../../lib/jobText.js'
 import { EMPLOYMENT_TYPES, manilaToday, optionLabel, WORK_SETUPS } from '../../lib/postingOptions.js'
-import TrustScoreChip from '../feedback/TrustScoreChip.jsx'
+import TrustScoreCorner from '../feedback/TrustScoreCorner.jsx'
 import Tag from '../ui/Tag.jsx'
 import VerificationBadge from '../ui/VerificationBadge.jsx'
 import EmployerMark from './EmployerMark.jsx'
@@ -37,6 +38,10 @@ export default function JobCard({ job, to, showEmployer = true, onSelect, select
   const { employer } = job
   const location = useLocation()
   const { shown, more } = providesParts(job.accommodations ?? [])
+  // "Show more" opens the rest of the accommodations in place, so the card starts short.
+  const [allShown, setAllShown] = useState(false)
+  const tagsId = useId()
+  const tags = allShown ? (job.accommodations ?? []) : shown.map(({ item }) => item)
   const facts = [optionLabel(WORK_SETUPS, job.work_setup), optionLabel(EMPLOYMENT_TYPES, job.employment_type), job.location].filter(Boolean)
   const labels = jobLabels(job, manilaToday())
 
@@ -49,62 +54,76 @@ export default function JobCard({ job, to, showEmployer = true, onSelect, select
       <EmployerMark employer={employer} />
 
       <div className="min-w-0 flex-1">
-        {labels.length > 0 && (
-          <ul aria-label="Labels" className="mb-1 flex flex-wrap gap-2">
-            {labels.map((label) => (
-              <li key={label} className={`rounded-md px-2 py-0.5 text-xs font-bold ${label === 'New' ? 'bg-info-soft text-accent' : 'bg-warning-soft text-warning'}`}>
-                {label}
-              </li>
-            ))}
-          </ul>
-        )}
-        <h3 className="font-display text-lg font-semibold">
-          <Link
-            to={to}
-            state={backState(location)}
-            aria-current={selected ? 'true' : undefined}
-            onClick={(event) => {
-              if (!onSelect || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
-              event.preventDefault()
-              onSelect(job.id)
-            }}
-            className="inline-flex min-h-11 items-center text-primary underline-offset-4 hover:text-primary-hover hover:underline">
-            {job.title}
-          </Link>
-        </h3>
+        <div className="flex items-start gap-3">
+          <div className="min-w-0 flex-1">
+            {labels.length > 0 && (
+              <ul aria-label="Labels" className="mb-1 flex flex-wrap gap-2">
+                {labels.map((label) => (
+                  <li key={label} className={`rounded-md px-2 py-0.5 text-xs font-bold ${label === 'New' ? 'bg-info-soft text-accent' : 'bg-warning-soft text-warning'}`}>
+                    {label}
+                  </li>
+                ))}
+              </ul>
+            )}
+            <h3 className="font-display text-lg font-semibold">
+              <Link
+                to={to}
+                state={backState(location)}
+                aria-current={selected ? 'true' : undefined}
+                onClick={(event) => {
+                  if (!onSelect || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+                  event.preventDefault()
+                  onSelect(job.id)
+                }}
+                className="inline-flex min-h-11 items-center text-primary underline-offset-4 hover:text-primary-hover hover:underline">
+                {job.title}
+              </Link>
+            </h3>
 
-        {showEmployer && (
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <p>{employer.name}</p>
-            {employer.type === 'company' && employer.is_verified && <VerificationBadge status="verified" />}
-            {employer.type !== 'company' && <p className="text-sm text-muted">Individual employer</p>}
+            {showEmployer && (
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <p>{employer.name}</p>
+                {employer.type === 'company' && employer.is_verified && <VerificationBadge status="verified" />}
+                {employer.type !== 'company' && <p className="text-sm text-muted">Individual employer</p>}
+              </div>
+            )}
+
+            {facts.length > 0 && (
+              <p className="mt-1 text-sm text-muted">
+                <DotList items={facts} />
+              </p>
+            )}
           </div>
-        )}
-
-        {facts.length > 0 && (
-          <p className="mt-1 text-sm text-muted">
-            <DotList items={facts} />
-          </p>
-        )}
-
-        {showEmployer && <TrustScoreChip employer={employer} className="mt-3" />}
+          {showEmployer && <TrustScoreCorner employer={employer} />}
+        </div>
 
         {job.match && <MatchBadge match={job.match} />}
 
         {shown.length === 0 ? (
           <p className="mt-3 text-sm text-muted">No accommodations listed.</p>
         ) : (
-          <ul aria-label="Accommodations offered" className="mt-3 flex flex-wrap gap-2">
-            {shown.map(({ item }) => (
+          <ul id={tagsId} aria-label="Accommodations offered" className="mt-3 flex flex-wrap gap-2">
+            {tags.map((item) => (
               <Tag key={item.id} as="li">
                 {item.name}
               </Tag>
             ))}
             {more > 0 && (
-              <Tag as="li">
-                <span aria-hidden="true">+{more} more</span>
-                <span className="sr-only">and {more} more</span>
-              </Tag>
+              <li>
+                <button
+                  type="button"
+                  aria-expanded={allShown}
+                  aria-controls={tagsId}
+                  onClick={() => setAllShown(!allShown)}
+                  className="group -my-1.5 inline-flex min-h-11 items-center"
+                >
+                  {/* A 44 px target around a tag-sized pill. */}
+                  <span className="rounded-full border border-primary px-3 py-1 text-sm font-bold text-primary transition-colors duration-200 ease-soft group-hover:bg-primary-soft">
+                    {allShown ? 'Show less' : 'Show more'}{' '}
+                    <span className="sr-only">{allShown ? 'accommodations' : `accommodations, ${more} more`}</span>
+                  </span>
+                </button>
+              </li>
             )}
           </ul>
         )}

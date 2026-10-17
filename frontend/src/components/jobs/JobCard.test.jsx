@@ -1,4 +1,5 @@
 import { render, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import { axe } from 'vitest-axe'
@@ -33,7 +34,7 @@ describe('JobCard', () => {
       'Remote work',
       'Flexible hours',
       'Screen reader software provided',
-      '+1 moreand 1 more',
+      'Show more accommodations, 1 more',
     ])
     expect(await axe(container)).toHaveNoViolations()
   })
@@ -90,14 +91,30 @@ describe('JobCard', () => {
     expect(screen.getByText('No accommodations listed.')).toBeInTheDocument()
   })
 
-  it("shows the employer's trust score as a badge (UI_FEEDBACK_PLAN P7)", () => {
+  it("shows the employer's trust score in the card's top right corner (UI_FEEDBACK_PLAN P7)", () => {
     renderCard({ job: { ...job, employer: { ...job.employer, trust_score: 88, trust_count: 4 } } })
-    expect(screen.getAllByText(wholeText('SPAN', '88% trust score · 4 ratings'))).not.toHaveLength(0)
+    expect(screen.getByText(wholeText('P', 'Trust score: 88%'))).toBeInTheDocument()
+    expect(screen.getByText(wholeText('P', 'trust · 4 ratings'))).toBeInTheDocument()
+  })
+
+  it('opens the rest of the accommodations from "Show more", and closes them again', async () => {
+    const user = userEvent.setup()
+    renderCard()
+    const more = screen.getByRole('button', { name: 'Show more accommodations, 1 more' })
+    expect(more).toHaveAttribute('aria-expanded', 'false')
+
+    await user.click(more)
+    const list = screen.getByRole('list', { name: 'Accommodations offered' })
+    expect(within(list).getAllByRole('listitem')).toHaveLength(5)
+    expect(screen.getByRole('button', { name: 'Show less accommodations' })).toHaveAttribute('aria-expanded', 'true')
+
+    await user.click(screen.getByRole('button', { name: 'Show less accommodations' }))
+    expect(within(list).getAllByRole('listitem')).toHaveLength(4)
   })
 
   it('says when there is no trust score yet, but not on the employer’s own page', () => {
     const { unmount } = renderCard({ job: { ...job, employer: { ...job.employer, trust_score: null, trust_count: null } } })
-    expect(screen.getByText('Trust score: not rated yet')).toBeInTheDocument()
+    expect(screen.getByText(wholeText('P', 'Trust score: Not rated yet'))).toBeInTheDocument()
     unmount()
 
     renderCard({ showEmployer: false })
