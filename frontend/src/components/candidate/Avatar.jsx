@@ -10,7 +10,7 @@ const SIZES = {
 export default function Avatar({ name, src, size = 'md', className = '' }) {
   if (src) return <img src={src} alt="" className={`${SIZES[size]} shrink-0 rounded-full object-cover ${className}`} />
   return (
-    <span aria-hidden="true" className={`${SIZES[size]} grid shrink-0 place-items-center rounded-full bg-primary-soft font-display font-semibold text-accent ${className}`}>
+    <span aria-hidden="true" className={`${SIZES[size]} grid shrink-0 place-items-center rounded-full bg-yellow font-display font-semibold text-text ${className}`}>
       {initialsOf(name)}
     </span>
   )

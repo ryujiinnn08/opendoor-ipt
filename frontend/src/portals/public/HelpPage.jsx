@@ -78,7 +78,7 @@ export default function HelpPage() {
             <ol className="mt-4 space-y-4">
               {guide.steps.map(([step, detail], index) => (
                 <li key={step} className="flex gap-3">
-                  <span aria-hidden="true" className="grid size-7 shrink-0 place-items-center rounded-full bg-primary text-sm font-bold text-on-primary">
+                  <span aria-hidden="true" className="grid size-7 shrink-0 place-items-center rounded-full bg-yellow text-sm font-bold text-text">
                     {index + 1}
                   </span>
                   <span>

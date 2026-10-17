@@ -29,7 +29,7 @@ export default function UtilityBar() {
 
   return (
     <div className="od-utility relative z-30 print:hidden">
-      <div className="od-utility-bar border-b border-border bg-subtle">
+      <div className="od-utility-bar border-b border-border bg-yellow-soft">
         <p aria-hidden="true" className="od-utility-hint">
           <Icon name="chevron-down" className="size-3.5" />
           Text size, contrast and more

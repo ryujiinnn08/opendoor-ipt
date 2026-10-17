@@ -15,7 +15,7 @@ export default function ProfileCard({ user, profile, needsCount }) {
 
   return (
     <section aria-labelledby="profile-card-heading" className="overflow-hidden rounded-lg border border-border bg-surface">
-      <div aria-hidden="true" className="od-decoration h-14 bg-lilac" />
+      <div aria-hidden="true" className="od-decoration h-14 bg-yellow" />
       <div className="px-5 pb-5">
         <Avatar name={user.name} src={photo} size="lg" className="-mt-8 border-4 border-surface" />
         <h2 id="profile-card-heading" className="mt-2 text-2xl font-bold">

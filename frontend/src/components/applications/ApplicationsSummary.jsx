@@ -11,7 +11,7 @@ import ApplicationStatusBadge from './ApplicationStatusBadge.jsx'
 
 const GROUPS = [
   { key: 'waiting', label: 'Waiting for a reply', icon: 'clock', tone: 'sky' },
-  { key: 'hired', label: 'Hired', icon: 'check', tone: 'orange' },
+  { key: 'hired', label: 'Hired', icon: 'check', tone: 'yellow' },
   { key: 'closed', label: 'Closed', hint: 'Not selected or withdrawn', icon: 'minus', tone: 'lilac' },
 ]
 

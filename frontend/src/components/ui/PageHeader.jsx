@@ -14,6 +14,8 @@ export default function PageHeader({ title, documentTitle, intro, actions, tabs,
       <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
         <div className="max-w-prose">
           <PageHeading title={documentTitle}>{title}</PageHeading>
+          {/* A short yellow stroke under every page heading (decoration; plain in Quiet mode). */}
+          <span aria-hidden="true" className="od-highlight mt-2 block h-1 w-12 rounded-full bg-yellow" />
           {intro && <p className="mt-2 text-muted">{intro}</p>}
         </div>
         {actions && <div className="flex flex-wrap gap-3">{actions}</div>}

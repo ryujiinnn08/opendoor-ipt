@@ -1,6 +1,6 @@
 import Icon from './Icon.jsx'
 
-const TONES = { orange: 'bg-orange', pink: 'bg-pink', sky: 'bg-sky', lilac: 'bg-lilac' }
+const TONES = { orange: 'bg-orange', pink: 'bg-pink', sky: 'bg-sky', lilac: 'bg-lilac', yellow: 'bg-yellow' }
 
 const SIZES = {
   md: { box: 'size-11 rounded-md', icon: 'size-6' },

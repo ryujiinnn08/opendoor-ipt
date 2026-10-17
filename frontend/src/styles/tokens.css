@@ -31,6 +31,9 @@
   --od-accent-pink: #f8b5d1;
   --od-accent-sky: #9adff0;
   --od-accent-lilac: #d4c4ef;
+  /* Yellow, to warm up the violet (2026-10-17): decoration and backgrounds only, never text. */
+  --od-accent-yellow: #ffd23f;
+  --od-accent-yellow-soft: #fff6d2;
 
   /* Chart series (UI_FEEDBACK_WAVE_B_PLAN B3): OpenDoor's violet, sky, orange and pink, deepened
      until they pass the dataviz validator (lightness band, chroma, colour-blind separation, 3:1). */

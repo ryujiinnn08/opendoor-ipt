@@ -47,7 +47,9 @@ export default function JobCard({ job, to, showEmployer = true, onSelect, select
 
   return (
     <li
-      className={`flex gap-4 border-b border-border p-5 transition-colors duration-200 ease-soft first:rounded-t-lg last:rounded-b-lg last:border-b-0 sm:p-6 ${
+      // The whole card opens the job: the title link stretches over it (one link, one tab stop), and
+      // the card shows the focus ring when the link has keyboard focus.
+      className={`group/card relative flex cursor-pointer gap-4 border-b border-border p-5 transition-colors duration-200 ease-soft first:rounded-t-lg last:rounded-b-lg last:border-b-0 has-[a:focus-visible]:z-10 has-[a:focus-visible]:outline-3 has-[a:focus-visible]:-outline-offset-3 has-[a:focus-visible]:outline-focus sm:p-6 ${
         selected ? 'bg-subtle shadow-[inset_4px_0_0_var(--od-brand-primary)]' : 'bg-surface hover:bg-subtle'
       }`}
     >
@@ -59,7 +61,7 @@ export default function JobCard({ job, to, showEmployer = true, onSelect, select
             {labels.length > 0 && (
               <ul aria-label="Labels" className="mb-1 flex flex-wrap gap-2">
                 {labels.map((label) => (
-                  <li key={label} className={`rounded-md px-2 py-0.5 text-xs font-bold ${label === 'New' ? 'bg-info-soft text-accent' : 'bg-warning-soft text-warning'}`}>
+                  <li key={label} className={`rounded-md px-2 py-0.5 text-xs font-bold ${label === 'New' ? 'bg-yellow text-text' : 'bg-warning-soft text-warning'}`}>
                     {label}
                   </li>
                 ))}
@@ -75,7 +77,7 @@ export default function JobCard({ job, to, showEmployer = true, onSelect, select
                   event.preventDefault()
                   onSelect(job.id)
                 }}
-                className="inline-flex min-h-11 items-center text-primary underline-offset-4 hover:text-primary-hover hover:underline">
+                className="inline-flex min-h-11 items-center text-primary underline-offset-4 outline-none after:absolute after:inset-0 after:content-[''] group-hover/card:text-primary-hover group-hover/card:underline focus-visible:shadow-none">
                 {job.title}
               </Link>
             </h3>
@@ -115,7 +117,7 @@ export default function JobCard({ job, to, showEmployer = true, onSelect, select
                   aria-expanded={allShown}
                   aria-controls={tagsId}
                   onClick={() => setAllShown(!allShown)}
-                  className="group -my-1.5 inline-flex min-h-11 items-center"
+                  className="group relative z-10 -my-1.5 inline-flex min-h-11 items-center"
                 >
                   {/* A 44 px target around a tag-sized pill. */}
                   <span className="rounded-full border border-primary px-3 py-1 text-sm font-bold text-primary transition-colors duration-200 ease-soft group-hover:bg-primary-soft">

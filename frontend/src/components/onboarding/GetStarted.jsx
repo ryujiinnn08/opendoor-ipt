@@ -57,7 +57,7 @@ export default function GetStarted({ steps, storageKey, intro, ready = true }) {
         <MascotSad className="hidden w-20 shrink-0 sm:block" />
       </div>
       <div aria-hidden="true" className="mt-3 h-2 overflow-hidden rounded-full bg-primary-soft">
-        <div className="h-full rounded-full bg-primary" style={{ width: `${(done / steps.length) * 100}%` }} />
+        <div className="h-full rounded-full bg-yellow" style={{ width: `${(done / steps.length) * 100}%` }} />
       </div>
       <ol className="mt-4 grid gap-2">
         {steps.map((step) => (

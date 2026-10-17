@@ -45,7 +45,9 @@ const TEXT_PAIRS = [
     [`status-${tone}`, 'surface-page'],
   ]),
   // Icons and numbers on the decorative tiles are drawn in the text colour.
-  ...['orange', 'pink', 'sky', 'lilac'].map((accent) => ['text-default', `accent-${accent}`]),
+  ...['orange', 'pink', 'sky', 'lilac', 'yellow', 'yellow-soft'].map((accent) => ['text-default', `accent-${accent}`]),
+  ['text-muted', 'accent-yellow-soft'],
+  ['brand-primary', 'accent-yellow-soft'],
 ]
 
 // Field borders, outline buttons and the focus ring must reach 3:1 (WCAG 1.4.11). The ring is

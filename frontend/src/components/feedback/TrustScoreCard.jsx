@@ -62,7 +62,7 @@ export default function TrustScoreCard({ summary, short = false, loadingBreakdow
 }
 
 // The accent colours, in turn, for the tiles (decoration: Quiet mode makes them all the plain tint).
-const TONES = ['bg-lilac', 'bg-orange', 'bg-sky', 'bg-pink']
+const TONES = ['bg-lilac', 'bg-yellow', 'bg-sky', 'bg-pink', 'bg-orange']
 
 /**
  * One accommodation as a tile: its group's icon, its name, the ratings in words, and a bar of how

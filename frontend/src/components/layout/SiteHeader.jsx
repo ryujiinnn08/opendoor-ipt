@@ -10,7 +10,7 @@ import { isCurrent } from './portalMenus.js'
 const NAV_ITEM =
   'inline-flex min-h-11 items-center gap-2 whitespace-nowrap px-3 text-base transition-[box-shadow,color] duration-300 ease-soft'
 // The current page is underlined in violet (LinkedIn's top bar), not a tinted pill.
-const NAV_IDLE = 'text-muted hover:text-text hover:shadow-[inset_0_-3px_0_var(--od-border-subtle)]'
+const NAV_IDLE = 'text-muted hover:text-text hover:shadow-[inset_0_-3px_0_var(--od-accent-yellow)]'
 const NAV_CURRENT = 'font-bold text-text shadow-[inset_0_-3px_0_var(--od-brand-primary)]'
 const GAP = 24
 
@@ -60,7 +60,7 @@ export default function SiteHeader({ homeTo = '/', left, right }) {
   const flat = [...left, ...right.flatMap((entry) => (entry.menu ? [...entry.items, entry.logout] : [entry]))]
 
   return (
-    <header className="relative z-20 border-b border-border bg-surface print:hidden">
+    <header className="relative z-20 border-b-[3px] border-yellow bg-surface print:hidden">
       <div ref={rowRef} className="mx-auto max-w-6xl px-4 py-2 sm:px-6">
         {compact ? (
           <CompactRow key="compact" homeTo={homeTo} entries={flat} pathname={pathname} />
@@ -166,7 +166,7 @@ function EntryContent({ entry }) {
 function Avatar({ initials, src }) {
   if (src) return <img src={src} alt="" className="size-8 shrink-0 rounded-full object-cover" />
   return (
-    <span aria-hidden="true" className="inline-grid size-8 shrink-0 place-items-center rounded-full bg-primary-soft text-xs font-bold text-accent">
+    <span aria-hidden="true" className="inline-grid size-8 shrink-0 place-items-center rounded-full bg-yellow text-xs font-bold text-text">
       {initials}
     </span>
   )
