@@ -57,6 +57,18 @@ export async function getUser(id) {
   return data.data
 }
 
+/** Correct a name or email, with a reason (ADMIN_USERS_PLAN U2–U4). Returns the account. */
+export async function updateUser(id, values) {
+  const { data } = await client.patch(`/api/admin/users/${id}`, values)
+  return data.data
+}
+
+/** A job seeker's photo, when they share it with employers (ADMIN_USERS_PLAN U1). */
+export async function getUserPhoto(id) {
+  const { data } = await client.get(`/api/admin/users/${id}/photo`, { responseType: 'blob' })
+  return data
+}
+
 /** Returns { user, temporaryPassword }: the new administrator and their password, shown once. */
 export async function addAdmin(values) {
   const { data } = await client.post('/api/admin/users', values)

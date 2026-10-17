@@ -13,7 +13,13 @@ import { AnnouncerProvider } from './components/ui/Announcer.jsx'
 import DisplaySettingsProvider from './display/DisplaySettingsProvider.jsx'
 import { applySettings, readSettings } from './display/displaySettings.js'
 import './index.css'
+import { reloadForNewBuild } from './lib/staleBuild.js'
 import { router } from './router.jsx'
+
+// Vite reports a page file it couldn't preload, e.g., after a redeploy: fetch the new build once.
+window.addEventListener('vite:preloadError', (event) => {
+  if (reloadForNewBuild()) event.preventDefault()
+})
 
 // Before the first render, so no page appears in the wrong text size or colours.
 applySettings(readSettings())

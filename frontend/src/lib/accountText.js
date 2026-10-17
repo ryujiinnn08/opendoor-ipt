@@ -27,6 +27,24 @@ export function employerLine(employer) {
   return employer.department ? `HR officer in ${employer.department} at ${employer.name}` : `HR officer at ${employer.name}`
 }
 
+// What suspending leaves alone, per role (plan PHASE_6 Q2).
+export function keptText(user) {
+  if (user.role === 'candidate') return 'Their applications stay as they are.'
+  if (user.role === 'admin') return 'Nothing they decided is undone.'
+  return user.postings?.length > 0
+    ? 'The job postings they manage stay as they are; you can remove any of them from their page.'
+    : 'Their company stays as it is.'
+}
+
+/** "Data encoder · Quezon City, Metro Manila" for a job seeker; the company line for employers. */
+export function accountLine(user) {
+  if (user.role === 'employer') return employerLine(user.employer)
+  if (user.role !== 'candidate') return null
+  const place = [user.profile?.city, user.profile?.province].filter(Boolean).join(', ')
+  const line = [user.profile?.headline, place].filter(Boolean).join(' · ')
+  return line || "Hasn't filled in their profile yet"
+}
+
 /** "4 applications, 1 hire" */
 export function applicationCounts({ total, hires }) {
   const applications = total === 1 ? '1 application' : `${total} applications`
@@ -50,6 +68,8 @@ export function historySentence(event) {
       return `Added as an administrator on ${when}${by}.`
     case 'password_changed':
       return `Password changed on ${when}.`
+    case 'details_edited':
+      return `Details edited on ${when}${by}${event.reason ? ':' : '.'}`
     default:
       return `Changed on ${when}${by}.`
   }

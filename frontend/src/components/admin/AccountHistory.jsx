@@ -10,7 +10,7 @@ export default function AccountHistory({
   headingId = 'history-heading',
   headingLevel = 2,
   describe = historySentence,
-  empty = 'Nothing yet. Suspensions, reactivations and password changes appear here.',
+  empty = 'Nothing yet. Edits, suspensions, reactivations and password changes appear here.',
 }) {
   const Heading = `h${headingLevel}`
 

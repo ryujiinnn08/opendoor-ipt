@@ -11,4 +11,6 @@ enum AccountEventType: string
     // A new temporary password for an administrator who hadn't changed theirs (review WR-05).
     case TemporaryPasswordReplaced = 'temporary_password_replaced';
     case PasswordChanged = 'password_changed';
+    // An administrator changed the name or email (ADMIN_USERS_PLAN U2–U4).
+    case DetailsEdited = 'details_edited';
 }

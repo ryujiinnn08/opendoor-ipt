@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\Role;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\AddAdminRequest;
+use App\Http\Requests\Admin\UpdateUserRequest;
 use App\Http\Resources\AdminUserDetailResource;
 use App\Http\Resources\AdminUserResource;
 use App\Models\User;
 use App\Services\AccountService;
+use App\Services\EmailVerification;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,7 +18,8 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Validation\Rule;
 
 /**
- * Every account, one account's page, and adding an administrator (plan PHASE_6 §4.1, F10.1).
+ * Every account, one account's page, editing it, and adding an administrator (plan PHASE_6 §4.1,
+ * F10.1; ADMIN_USERS_PLAN).
  */
 class UserController extends Controller
 {
@@ -54,6 +57,28 @@ class UserController extends Controller
 
     public function show(User $user): AdminUserDetailResource
     {
+        return new AdminUserDetailResource($user->load(AdminUserResource::RELATIONS));
+    }
+
+    /**
+     * Correct a name or email, with a reason (ADMIN_USERS_PLAN U2–U4). A new email gets a fresh
+     * confirmation link; a mail outage doesn't undo the change (they can ask for a new link).
+     */
+    public function update(UpdateUserRequest $request, User $user, AccountService $accounts, EmailVerification $verification): AdminUserDetailResource
+    {
+        $emailChanged = $accounts->updateDetails(
+            $user,
+            $request->user(),
+            $request->validated('name'),
+            $request->validated('email'),
+            $request->validated('reason'),
+        );
+        $user->refresh();
+
+        if ($emailChanged && $user->role !== Role::Admin) {
+            $verification->send($user);
+        }
+
         return new AdminUserDetailResource($user->load(AdminUserResource::RELATIONS));
     }
 

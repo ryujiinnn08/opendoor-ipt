@@ -7,6 +7,7 @@ use App\Http\Requests\Candidate\PhotoRequest;
 use App\Http\Resources\CandidateProfileResource;
 use App\Models\Application;
 use App\Models\CandidateProfile;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
@@ -60,6 +61,14 @@ class PhotoController extends Controller
         $profile = $application->candidate->candidateProfile;
 
         return $this->serve($profile?->show_photo_to_employers ? $profile : null, "This applicant hasn't shared a photo.");
+    }
+
+    /** A job seeker's photo on the admin user list, only when they share it with employers (ADMIN_USERS_PLAN U1). */
+    public function forAdmin(User $user): StreamedResponse
+    {
+        $profile = $user->candidateProfile;
+
+        return $this->serve($profile?->show_photo_to_employers ? $profile : null, "This job seeker hasn't shared a photo.");
     }
 
     private function serve(?CandidateProfile $profile, string $missing): StreamedResponse

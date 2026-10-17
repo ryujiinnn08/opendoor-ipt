@@ -3,6 +3,9 @@ import { Link, useParams } from 'react-router-dom'
 import { getUser, replaceTemporaryPassword, setSuspended } from '../../api/admin.js'
 import { fieldErrorsFrom, generalErrorFrom } from '../../api/client.js'
 import AccountHistory from '../../components/admin/AccountHistory.jsx'
+import EditUserDialog from '../../components/admin/EditUserDialog.jsx'
+import RoleBadge from '../../components/admin/RoleBadge.jsx'
+import UserAvatar from '../../components/admin/UserAvatar.jsx'
 import PostingStatusBadge from '../../components/postings/PostingStatusBadge.jsx'
 import Button from '../../components/ui/Button.jsx'
 import ConfirmDialog from '../../components/ui/ConfirmDialog.jsx'
@@ -15,17 +18,8 @@ import ReasonDialog from '../../components/ui/ReasonDialog.jsx'
 import StatusBadge from '../../components/ui/StatusBadge.jsx'
 import { TEXT_LINK } from '../../components/ui/buttonLinkStyles.js'
 import { useAnnounce } from '../../components/ui/announcerContext.js'
-import { ROLE_LABELS, applicationCounts, employerLine } from '../../lib/accountText.js'
+import { accountLine, applicationCounts, keptText } from '../../lib/accountText.js'
 import { formatDate } from '../../lib/format.js'
-
-// What suspending leaves alone, per role (plan PHASE_6 Q2).
-function keptText(user) {
-  if (user.role === 'candidate') return 'Their applications stay as they are.'
-  if (user.role === 'admin') return 'Nothing they decided is undone.'
-  return user.postings?.length > 0
-    ? 'The job postings they manage stay as they are; you can remove any of them from this page.'
-    : 'Their company stays as it is.'
-}
 
 /**
  * /admin/users/:id: the account, what it's connected to, and its history beside the action
@@ -42,7 +36,7 @@ function UserAccount({ id }) {
   const [user, setUser] = useState(null)
   const [loadError, setLoadError] = useState(null)
   const [message, setMessage] = useState(null)
-  const [acting, setActing] = useState(null) // { action: 'suspend' | 'reactivate' | 'password', open, busy, error, done }
+  const [acting, setActing] = useState(null) // { action: 'edit' | 'suspend' | 'reactivate' | 'password', open, busy, error, done }
   const [newPassword, setNewPassword] = useState(null)
   const messageRef = useRef(null)
   const passwordRef = useRef(null)
@@ -85,6 +79,14 @@ function UserAccount({ id }) {
     }
   }
 
+  function saved(updated) {
+    setUser(updated)
+    const text = `${updated.name}'s details are saved.`
+    setMessage(text)
+    announce(text)
+    setActing((current) => ({ ...current, open: false, done: true }))
+  }
+
   // The dialog stays open while the change is sent, so a refusal is never lost.
   function closeDialog(open) {
     if (!open) setActing((current) => (current && !current.busy ? { ...current, open: false } : current))
@@ -104,12 +106,20 @@ function UserAccount({ id }) {
     <div className="flex flex-wrap items-start justify-between gap-x-8 gap-y-4">
       <div className="max-w-prose">
         <BackLink to="/admin/users">Back to users</BackLink>
-        <PageHeading>{user?.name ?? 'Account'}</PageHeading>
-        {user && (
-          <p className="mt-2 text-lg">
-            {ROLE_LABELS[user.role]}, {user.email}
-          </p>
-        )}
+        <div className="flex items-center gap-4">
+          {user && <UserAvatar user={user} size="lg" />}
+          <div className="min-w-0">
+            <PageHeading>{user?.name ?? 'Account'}</PageHeading>
+            {user && (
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+                <RoleBadge role={user.role} />
+                <span className="break-all text-lg">{user.email}</span>
+              </div>
+            )}
+          </div>
+        </div>
+        {user && accountLine(user) && <p className="mt-3">{accountLine(user)}</p>}
+        {user && <p className="mt-1 text-muted">Joined {formatDate(user.joined_at)}</p>}
       </div>
       {action}
     </div>
@@ -141,14 +151,20 @@ function UserAccount({ id }) {
   return (
     <>
       {header(
-        !user.is_you &&
-          (user.is_active ? (
-            <Button variant="secondary" onClick={() => setActing({ action: 'suspend', open: true })}>
-              Suspend {user.name}
+        !user.is_you && (
+          <div className="flex flex-wrap gap-3">
+            <Button variant="secondary" onClick={() => setActing({ action: 'edit', open: true })}>
+              Edit details
             </Button>
-          ) : (
-            <Button onClick={() => setActing({ action: 'reactivate', open: true })}>Reactivate {user.name}</Button>
-          )),
+            {user.is_active ? (
+              <Button variant="secondary" onClick={() => setActing({ action: 'suspend', open: true })}>
+                Suspend {user.name}
+              </Button>
+            ) : (
+              <Button onClick={() => setActing({ action: 'reactivate', open: true })}>Reactivate {user.name}</Button>
+            )}
+          </div>
+        ),
       )}
 
       {message && (
@@ -174,7 +190,6 @@ function UserAccount({ id }) {
               )}
             </Row>
             {user.role === 'candidate' && <Row label="Applications">{applicationCounts(user.applications)}</Row>}
-            {user.role === 'employer' && <Row label="Employer">{employerLine(user.employer)}</Row>}
             <Row label="Last logged in">{user.last_login_at ? formatDate(user.last_login_at) : 'Not since this was recorded'}</Row>
             {user.must_change_password && <Row label="Password">Still the temporary one</Row>}
           </dl>
@@ -246,6 +261,13 @@ function UserAccount({ id }) {
       </div>
 
 
+      <EditUserDialog
+        user={user}
+        open={Boolean(acting?.open && acting.action === 'edit')}
+        onOpenChange={closeDialog}
+        onSaved={saved}
+        onCloseAutoFocus={afterClose}
+      />
       <ReasonDialog
         open={Boolean(acting?.open && acting.action === 'suspend')}
         onOpenChange={closeDialog}

@@ -9,9 +9,11 @@ vi.mock('../../api/admin.js', () => ({
   getUser: vi.fn(),
   setSuspended: vi.fn(),
   replaceTemporaryPassword: vi.fn(),
+  updateUser: vi.fn(),
+  getUserPhoto: vi.fn(),
 }))
 
-const { getUser, setSuspended, replaceTemporaryPassword } = await import('../../api/admin.js')
+const { getUser, setSuspended, replaceTemporaryPassword, updateUser } = await import('../../api/admin.js')
 
 const routes = [{ path: '/admin/users/:id', element: <UserPage /> }]
 const admin = { status: 'authenticated', role: 'admin', user: { name: 'Ana Cruz', role: 'admin' } }
@@ -26,6 +28,7 @@ const maria = {
   must_change_password: false,
   is_you: false,
   applications: { total: 4, hires: 1 },
+  profile: { headline: 'Data encoder', city: 'Quezon City', province: 'Metro Manila', photo_version: null },
   history: [],
 }
 const suspendedEvent = {
@@ -39,12 +42,15 @@ const suspendedEvent = {
 describe('UserPage', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('shows the account, its counts and its history, but nothing from the profile', async () => {
+  it('shows the account with its role, card basics, counts and history', async () => {
     getUser.mockResolvedValue({ ...maria, history: [suspendedEvent] })
     const { container } = renderRoutes(routes, { path: '/admin/users/3', auth: admin })
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Maria Santos' })).toBeInTheDocument()
-    expect(screen.getByText('Job seeker, maria@example.com')).toBeInTheDocument()
+    expect(screen.getByText('Job seeker')).toBeInTheDocument()
+    expect(screen.getByText('maria@example.com')).toBeInTheDocument()
+    expect(screen.getByText('Data encoder · Quezon City, Metro Manila')).toBeInTheDocument()
+    expect(screen.getByText('Joined October 2, 2026')).toBeInTheDocument()
     expect(screen.getByText('4 applications, 1 hire')).toBeInTheDocument()
     const history = screen.getByRole('heading', { name: 'History' }).closest('section')
     expect(within(history).getByText('Suspended on October 16, 2026 by Ana Cruz:')).toBeInTheDocument()
@@ -168,5 +174,48 @@ describe('UserPage', () => {
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Maria Santos' })).toBe(heading)
     expect(heading).toHaveFocus()
+  })
+
+  it('edits the name and email with a reason, then shows the saved account', async () => {
+    getUser.mockResolvedValue(maria)
+    updateUser.mockResolvedValue({ ...maria, name: 'Maria Santos-Cruz', email: 'maria.cruz@example.com', history: [{ id: 11, type: 'details_edited', reason: 'Name: Maria Santos → Maria Santos-Cruz. Why: Asked by email.', by: 'Ana Cruz', at: '2026-10-17T10:00:00+08:00' }] })
+    renderRoutes(routes, { path: '/admin/users/3', auth: admin })
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Edit details' }))
+    const dialog = screen.getByRole('dialog', { name: "Edit Maria Santos's details" })
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save changes' }))
+    expect(within(dialog).getByText('Say why you are changing these details.')).toBeInTheDocument()
+    expect(updateUser).not.toHaveBeenCalled()
+
+    const name = within(dialog).getByLabelText('Full name')
+    await userEvent.clear(name)
+    await userEvent.type(name, 'Maria Santos-Cruz')
+    const email = within(dialog).getByLabelText('Email address')
+    await userEvent.clear(email)
+    await userEvent.type(email, 'maria.cruz@example.com')
+    await userEvent.type(within(dialog).getByLabelText(/Why/), 'Asked by email.')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save changes' }))
+
+    expect(updateUser).toHaveBeenCalledWith(3, { name: 'Maria Santos-Cruz', email: 'maria.cruz@example.com', reason: 'Asked by email.' })
+    expect(await screen.findByText("Maria Santos-Cruz's details are saved.")).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'Maria Santos-Cruz' })).toBeInTheDocument()
+    expect(screen.getByText('Details edited on October 17, 2026 by Ana Cruz:')).toBeInTheDocument()
+  })
+
+  it('shows a taken email next to the field', async () => {
+    getUser.mockResolvedValue(maria)
+    updateUser.mockRejectedValue({ response: { status: 422, data: { errors: { email: ['An account with this email already exists.'] } } } })
+    renderRoutes(routes, { path: '/admin/users/3', auth: admin })
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Edit details' }))
+    const dialog = screen.getByRole('dialog')
+    const email = within(dialog).getByLabelText('Email address')
+    await userEvent.clear(email)
+    await userEvent.type(email, 'taken@example.com')
+    await userEvent.type(within(dialog).getByLabelText(/Why/), 'Asked by email.')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save changes' }))
+
+    expect(await within(dialog).findByText('An account with this email already exists.')).toBeInTheDocument()
+    expect(within(dialog).getByLabelText('Email address')).toHaveFocus()
   })
 })

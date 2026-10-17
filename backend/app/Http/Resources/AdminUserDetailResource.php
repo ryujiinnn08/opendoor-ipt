@@ -28,7 +28,6 @@ class AdminUserDetailResource extends AdminUserResource
     {
         return [
             ...parent::toArray($request),
-            'last_login_at' => $this->last_login_at?->toIso8601String(),
             'must_change_password' => $this->must_change_password,
             'is_you' => $request->user()->is($this->resource),
             'applications' => $this->when($this->role === Role::Candidate, fn () => [

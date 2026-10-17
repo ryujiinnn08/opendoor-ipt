@@ -116,7 +116,7 @@ class UserManagementTest extends TestCase
             ->assertJsonPath('data.0.employer.department', 'HR');
     }
 
-    public function test_a_job_seekers_page_shows_counts_but_never_their_profile_or_needs(): void
+    public function test_a_job_seekers_page_shows_counts_and_card_basics_but_never_needs_or_disability(): void
     {
         $company = $this->hiringCompany();
         $hire = $this->applicantTo($company['itJob'], 'hired');
@@ -128,10 +128,12 @@ class UserManagementTest extends TestCase
             ->assertJsonPath('data.applications.total', 2)
             ->assertJsonPath('data.applications.hires', 1)
             ->assertJsonMissingPath('data.employer')
-            ->assertJsonMissingPath('data.postings');
+            ->assertJsonMissingPath('data.postings')
+            // Only what employers see on a card (ADMIN_USERS_PLAN U1).
+            ->assertJsonStructure(['data' => ['profile' => ['headline', 'city', 'province', 'photo_version']]]);
 
         $body = $response->getContent();
-        foreach (['headline', 'contact_number', 'needs', 'disability', 'resume', '0917 555 0199'] as $private) {
+        foreach (['contact_number', 'needs', 'disability', 'resume', '0917 555 0199'] as $private) {
             $this->assertStringNotContainsString($private, $body);
         }
     }

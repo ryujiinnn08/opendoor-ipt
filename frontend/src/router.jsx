@@ -6,6 +6,7 @@ import PageLoading from './components/layout/PageLoading.jsx'
 import PortalLayout from './components/layout/PortalLayout.jsx'
 import PublicLayout from './components/layout/PublicLayout.jsx'
 import RootLayout from './components/layout/RootLayout.jsx'
+import RouteError from './components/layout/RouteError.jsx'
 import ChangePasswordPage from './portals/account/ChangePasswordPage.jsx'
 import DisplayPage from './portals/account/DisplayPage.jsx'
 import NotificationsPage from './portals/account/NotificationsPage.jsx'
@@ -46,6 +47,8 @@ export const routes = [
     element: <RootLayout />,
     // Opening or refreshing an on-demand (admin or employer) page: shown until its code arrives.
     hydrateFallbackElement: <PageLoading />,
+    // A page that fails to load, e.g., an old tab after a redeploy, reloads or explains (RouteError).
+    errorElement: <RouteError />,
     children: [
       {
         element: <PublicLayout />,

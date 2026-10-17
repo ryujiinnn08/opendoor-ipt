@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Suspending, reactivating, adding administrators and changing passwords (plan PHASE_6 §4.1).
+ * Suspending, reactivating, editing details, adding administrators and changing passwords (plan PHASE_6 §4.1).
  * Every change is recorded in the account's history.
  */
 class AccountService
@@ -96,6 +96,52 @@ class AccountService
         });
 
         return [$user, $password];
+    }
+
+    /**
+     * An administrator corrects someone's name or email (ADMIN_USERS_PLAN U2–U4): never their own
+     * account. A job seeker's or employer's new email must be confirmed again (U3); the person stays
+     * logged in. The history
+     * keeps what changed and why. Returns whether the email changed, so the caller sends the link.
+     */
+    public function updateDetails(User $user, User $admin, string $name, string $email, string $reason): bool
+    {
+        if ($user->is($admin)) {
+            abort(422, 'Change your own details in your account settings.');
+        }
+
+        return DB::transaction(function () use ($user, $admin, $name, $email, $reason) {
+            $user = User::whereKey($user->id)->lockForUpdate()->firstOrFail();
+            $changes = [];
+            if ($user->name !== $name) {
+                $changes[] = "Name: {$user->name} → {$name}.";
+            }
+            $emailChanged = $user->email !== $email;
+            if ($emailChanged) {
+                $changes[] = "Email: {$user->email} → {$email}.";
+            }
+            if ($changes === []) {
+                throw ValidationException::withMessages(['name' => 'Change the name or the email first.']);
+            }
+
+            try {
+                $user->forceFill([
+                    'name' => $name,
+                    'email' => $email,
+                    // Administrators don't confirm emails (they never apply or post).
+                    ...($emailChanged && $user->role !== Role::Admin ? ['email_verified_at' => null] : []),
+                ])->save();
+            } catch (UniqueConstraintViolationException) {
+                throw ValidationException::withMessages(['email' => 'An account with this email already exists.']);
+            }
+            $user->accountEvents()->create([
+                'type' => AccountEventType::DetailsEdited,
+                'reason' => Str::limit(implode(' ', $changes).' Why: '.$reason, 500),
+                'actor_id' => $admin->id,
+            ]);
+
+            return $emailChanged;
+        });
     }
 
     /**
