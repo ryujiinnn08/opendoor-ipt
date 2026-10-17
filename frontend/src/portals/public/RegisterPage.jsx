@@ -9,7 +9,6 @@ import CheckboxField from '../../components/ui/CheckboxField.jsx'
 import ErrorSummary from '../../components/ui/ErrorSummary.jsx'
 import { summaryFrom } from '../../lib/errorSummary.js'
 import FormField from '../../components/ui/FormField.jsx'
-import AuthScene from '../../components/layout/AuthScene.jsx'
 import PageHeading from '../../components/ui/PageHeading.jsx'
 import PasswordField from '../../components/ui/PasswordField.jsx'
 import RadioCardGroup from '../../components/ui/RadioCardGroup.jsx'
@@ -108,7 +107,7 @@ export default function RegisterPage() {
   )
 
   return (
-    <AuthScene>
+    <>
       <div className="max-w-2xl">
         <PageHeading>Create an account</PageHeading>
         <p className="mt-4">It takes about two minutes. All fields are required.</p>
@@ -199,6 +198,6 @@ export default function RegisterPage() {
           </p>
         </div>
       </div>
-    </AuthScene>
+    </>
   )
 }
