@@ -7,8 +7,10 @@ use App\Enums\PostingStatus;
 use App\Http\Controllers\Controller;
 use App\Models\JobPosting;
 use App\Services\DashboardActivity;
+use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class DashboardController extends Controller
 {
@@ -50,10 +52,31 @@ class DashboardController extends Controller
     }
 
     /**
-     * Weekly activity for the dashboard charts (UI_FEEDBACK_WAVE_B_PLAN B3).
+     * Weekly activity for the dashboard charts (UI_FEEDBACK_WAVE_B_PLAN B3), narrowed by the
+     * charts' filters: weeks (4, 8 or 12), job (a posting this person may see) and statuses.
      */
     public function activity(Request $request, DashboardActivity $activity): JsonResponse
     {
-        return response()->json(['data' => $activity->forEmployer($request->user())]);
+        $user = $request->user();
+        $filters = $request->validate([
+            'weeks' => ['nullable', 'integer', Rule::in(DashboardActivity::EMPLOYER_WEEKS)],
+            'job' => ['nullable', 'integer', function (string $attribute, mixed $value, Closure $fail) use ($user) {
+                if (! JobPosting::visibleTo($user)->whereKey($value)->exists()) {
+                    $fail('Choose one of your job postings.');
+                }
+            }],
+            'statuses' => ['nullable', 'array'],
+            'statuses.*' => ['string', 'distinct', Rule::in(array_map(fn (ApplicationStatus $status) => $status->value, DashboardActivity::CHARTED_STATUSES))],
+        ], [
+            'weeks.in' => 'Choose 4, 8 or 12 weeks.',
+            'statuses.*.in' => 'Choose a status shown on the chart.',
+        ]);
+
+        return response()->json(['data' => $activity->forEmployer(
+            $user,
+            (int) ($filters['weeks'] ?? DashboardActivity::WEEKS),
+            isset($filters['job']) ? (int) $filters['job'] : null,
+            array_map(fn (string $status) => ApplicationStatus::from($status), $filters['statuses'] ?? []),
+        )]);
     }
 }

@@ -47,6 +47,56 @@ class DashboardActivityTest extends TestCase
         $this->assertSame(['HR Assistant'], $hr->json('data.applicants_by_posting.*.title'));
     }
 
+    public function test_employers_filter_the_charts_by_weeks_job_and_status(): void
+    {
+        $team = $this->hiringCompany();
+        $at = fn (string $manila) => Carbon::parse($manila, 'Asia/Manila')->utc();
+        Application::factory()->create(['job_posting_id' => $team['itJob']->id, 'created_at' => $at('2026-10-13 09:00')]);
+        Application::factory()->reviewed()->create(['job_posting_id' => $team['hrJob']->id, 'created_at' => $at('2026-10-14 09:00')]);
+        Application::factory()->hired()->create(['job_posting_id' => $team['hrJob']->id, 'created_at' => $at('2026-08-04 09:00')]); // 11 weeks ago
+        $closed = JobPosting::factory()->closed()->in($team['it'])->create(['title' => 'Data Encoder']);
+        JobPosting::factory()->in($team['it'])->create(['title' => 'Draft Job']);
+        $api = $this->actingAs($team['owner'], 'web');
+
+        // Twelve weeks reach back to the hire; the job list offers open and closed postings only.
+        $twelve = $api->getJson('/api/employer/dashboard/activity?weeks=12')->assertOk();
+        $this->assertCount(12, $twelve->json('data.weeks'));
+        $this->assertSame(3, array_sum($twelve->json('data.applications_by_week')));
+        $this->assertSame(['Data Encoder', 'HR Assistant', 'Junior Web Developer'], $twelve->json('data.jobs.*.title'));
+        $this->assertSame([false, true, true], $twelve->json('data.jobs.*.open'));
+        $this->assertSame(2, array_sum($api->getJson('/api/employer/dashboard/activity?weeks=4')->json('data.applications_by_week')));
+
+        // One job: both charts show only it.
+        $job = $api->getJson("/api/employer/dashboard/activity?job={$team['hrJob']->id}")->assertOk();
+        $this->assertSame(1, array_sum($job->json('data.applications_by_week')));
+        $this->assertSame(['HR Assistant'], $job->json('data.applicants_by_posting.*.title'));
+        // A closed job still has its weekly numbers, but no bar among the open jobs.
+        $this->assertSame([], $api->getJson("/api/employer/dashboard/activity?job={$closed->id}")->json('data.applicants_by_posting'));
+
+        // Statuses: weekly counts and bars hold only applications in those statuses.
+        $reviewed = $api->getJson('/api/employer/dashboard/activity?statuses[]=reviewed&statuses[]=hired&weeks=12')->assertOk();
+        $this->assertSame(2, array_sum($reviewed->json('data.applications_by_week')));
+        $this->assertSame('HR Assistant', $reviewed->json('data.applicants_by_posting.0.title'));
+        $reviewed->assertJsonPath('data.applicants_by_posting.0.counts.reviewed', 1)
+            ->assertJsonPath('data.applicants_by_posting.1.counts.pending', 0);
+    }
+
+    public function test_employer_chart_filters_are_validated(): void
+    {
+        $team = $this->hiringCompany();
+        $otherJob = JobPosting::factory()->open()->create();
+
+        $this->actingAs($team['owner'], 'web')
+            ->getJson("/api/employer/dashboard/activity?weeks=5&job={$otherJob->id}&statuses[]=withdrawn")
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['weeks', 'job', 'statuses.0']);
+        // An HR officer can't pick another department's job.
+        $this->actingAs($team['hr'], 'web')
+            ->getJson("/api/employer/dashboard/activity?job={$team['itJob']->id}")
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['job' => 'Choose one of your job postings.']);
+    }
+
     public function test_admins_get_accounts_postings_applications_hires_and_verification(): void
     {
         $admin = User::factory()->admin()->create();

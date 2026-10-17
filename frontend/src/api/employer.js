@@ -76,8 +76,15 @@ export async function removeMember(memberId) {
   await client.delete(`/api/employer/members/${memberId}`)
 }
 
-/** Weekly activity for the dashboard charts: { weeks, applications_by_week, applicants_by_posting }. */
-export async function getDashboardActivity() {
-  const { data } = await client.get('/api/employer/dashboard/activity')
+/**
+ * Weekly activity for the dashboard charts: { weeks, applications_by_week, applicants_by_posting, jobs }.
+ * filters: { weeks: 4 | 8 | 12, job: postingId, statuses: ['pending', ...] }, each optional.
+ */
+export async function getDashboardActivity(filters = {}) {
+  const params = {}
+  if (filters.weeks) params.weeks = filters.weeks
+  if (filters.job) params.job = filters.job
+  if (filters.statuses?.length) params.statuses = filters.statuses
+  const { data } = await client.get('/api/employer/dashboard/activity', { params })
   return data.data
 }

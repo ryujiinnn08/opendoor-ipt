@@ -161,6 +161,49 @@ describe('EmployerDashboard', () => {
     expect(await axe(container)).toHaveNoViolations()
   })
 
+  it('filters both charts by weeks, job and status, and clears the filters', async () => {
+    getEmployerDashboard.mockResolvedValue({ postings: { draft: 0, pending: 0, open: 1, rejected: 0, closed: 0 }, profile_complete: true })
+    const jobs = [
+      { id: 3, title: 'Data Encoder', open: true },
+      { id: 4, title: 'Old Role', open: false },
+    ]
+    const posting = { id: 3, title: 'Data Encoder', counts: { pending: 5, reviewed: 3, hired: 1, rejected: 2, withdrawn: 0 } }
+    getDashboardActivity.mockImplementation(async ({ weeks = 8, job, statuses = [] } = {}) => ({
+      weeks: WEEKS.slice(-weeks),
+      applications_by_week: Array(weeks).fill(0).with(-1, statuses.length ? 2 : 5),
+      applicants_by_posting: job === '4' ? [] : [posting],
+      jobs,
+    }))
+    const { container } = renderRoutes([{ path: '/', element: <EmployerDashboard /> }], { auth: auth({ role: 'owner', employer: company, department: null }) })
+
+    const filters = await screen.findByRole('group', { name: 'Filter the charts' })
+    expect(getDashboardActivity).toHaveBeenLastCalledWith({ weeks: 8, job: '', statuses: [] })
+
+    await userEvent.selectOptions(within(filters).getByLabelText('Weeks shown'), 'Last 4 weeks')
+    expect(getDashboardActivity).toHaveBeenLastCalledWith({ weeks: 4, job: '', statuses: [] })
+    const weekly = screen.getByRole('figure', { name: 'Applications received, by week' })
+    expect(await within(weekly).findByText('5 applications this week, up from 0 last week. 5 applications in 4 weeks.')).toBeInTheDocument()
+    expect(within(weekly).getAllByRole('row')).toHaveLength(5)
+
+    // Ticking statuses narrows the bars, the legend and the table to those statuses.
+    await userEvent.click(within(filters).getByRole('checkbox', { name: 'Hired' }))
+    await userEvent.click(within(filters).getByRole('checkbox', { name: 'Not opened yet' }))
+    expect(getDashboardActivity).toHaveBeenLastCalledWith({ weeks: 4, job: '', statuses: ['pending', 'hired'] })
+    const perJob = screen.getByRole('figure', { name: 'Applicants per open job' })
+    expect(await within(perJob).findByRole('row', { name: 'Data Encoder 5 1 6' })).toBeInTheDocument()
+    expect(within(perJob).getByText('Data Encoder has the most: 6 applicants.')).toBeInTheDocument()
+
+    await userEvent.selectOptions(within(filters).getByLabelText('Job'), 'Old Role (closed)')
+    expect(getDashboardActivity).toHaveBeenLastCalledWith({ weeks: 4, job: '4', statuses: ['pending', 'hired'] })
+    expect(await screen.findByText("Old Role is closed, so it isn't on this chart. The weekly chart still shows its applications.")).toBeInTheDocument()
+    expect(await axe(container)).toHaveNoViolations()
+
+    await userEvent.click(within(filters).getByRole('button', { name: 'Clear filters' }))
+    expect(getDashboardActivity).toHaveBeenLastCalledWith({ weeks: 8, job: '', statuses: [] })
+    expect(await within(screen.getByRole('figure', { name: 'Applicants per open job' })).findByRole('row', { name: 'Data Encoder 5 3 1 2 11' })).toBeInTheDocument()
+    expect(within(filters).getByRole('checkbox', { name: 'Hired' })).not.toBeChecked()
+  })
+
   it('shows Get started to owners until every step is done', async () => {
     getEmployerDashboard.mockResolvedValue({ postings: { draft: 0, pending: 0, open: 0, rejected: 0, closed: 0 }, profile_complete: true })
     renderRoutes([{ path: '/', element: <EmployerDashboard /> }], { auth: auth({ role: 'owner', employer: { ...company, verification_status: 'not_submitted' }, department: null }) })

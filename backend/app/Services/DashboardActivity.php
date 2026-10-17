@@ -23,33 +23,63 @@ class DashboardActivity
 {
     public const WEEKS = 8;
 
-    /** @return array<string, mixed> */
-    public function forEmployer(User $user): array
+    /** The weeks the employer chart may show, and the statuses its filters may pick. */
+    public const EMPLOYER_WEEKS = [4, 8, 12];
+
+    public const CHARTED_STATUSES = [ApplicationStatus::Pending, ApplicationStatus::Reviewed, ApplicationStatus::Hired, ApplicationStatus::Rejected];
+
+    /**
+     * The employer charts, narrowed by the dashboard's filters: how many weeks back, one job, and
+     * the applications' current statuses (an empty list means every status).
+     *
+     * @param  list<ApplicationStatus>  $statuses
+     * @return array<string, mixed>
+     */
+    public function forEmployer(User $user, int $weekCount = self::WEEKS, ?int $jobId = null, array $statuses = []): array
     {
-        $weeks = $this->weeks();
-        $postings = JobPosting::withTrashed()->visibleTo($user)->pluck('id');
+        $weeks = $this->weeks($weekCount);
+        $postings = $jobId !== null ? collect([$jobId]) : JobPosting::withTrashed()->visibleTo($user)->pluck('id');
         $applied = Application::whereIn('job_posting_id', $postings)
+            ->when($statuses, fn ($query) => $query->whereIn('status', $statuses))
             ->where('created_at', '>=', $this->start($weeks))
             ->pluck('created_at');
 
+        $shown = $statuses ?: self::CHARTED_STATUSES;
         $open = JobPosting::visibleTo($user)
             ->inDisplayStatus(PostingStatus::Open)
-            ->withCount(['applications', ...$this->statusCounts()])
-            ->orderByDesc('applications_count')
-            ->orderBy('title')
-            ->limit(6)
-            ->get();
+            ->when($jobId !== null, fn ($query) => $query->whereKey($jobId))
+            ->withCount($this->statusCounts())
+            ->get()
+            ->map(fn (JobPosting $posting) => [
+                'id' => $posting->id,
+                'title' => $posting->title,
+                'counts' => collect(ApplicationStatus::cases())
+                    ->mapWithKeys(fn (ApplicationStatus $status) => [
+                        $status->value => in_array($status, $shown, true) ? (int) $posting->{$status->value.'_count'} : 0,
+                    ])
+                    ->all(),
+            ])
+            // Most applicants first (counting only the statuses shown), then by title.
+            ->sort(fn (array $a, array $b) => [array_sum($b['counts']), $a['title']] <=> [array_sum($a['counts']), $b['title']])
+            ->take(6)
+            ->values();
 
         return [
             'weeks' => $this->labels($weeks),
             'applications_by_week' => $this->bucket($applied, $weeks),
-            'applicants_by_posting' => $open->map(fn (JobPosting $posting) => [
-                'id' => $posting->id,
-                'title' => $posting->title,
-                'counts' => collect(ApplicationStatus::cases())
-                    ->mapWithKeys(fn (ApplicationStatus $status) => [$status->value => (int) $posting->{$status->value.'_count'}])
-                    ->all(),
-            ])->all(),
+            'applicants_by_posting' => $open->all(),
+            // The choices for the Job filter: the postings this person may see that ever took
+            // applications (open or closed), open ones flagged.
+            'jobs' => JobPosting::visibleTo($user)
+                ->whereIn('status', [PostingStatus::Open, PostingStatus::Closed])
+                ->orderBy('title')
+                ->get()
+                ->map(fn (JobPosting $posting) => [
+                    'id' => $posting->id,
+                    'title' => $posting->title,
+                    'open' => $posting->displayStatus() === PostingStatus::Open,
+                ])
+                ->all(),
         ];
     }
 
@@ -98,11 +128,11 @@ class DashboardActivity
     }
 
     /** @return list<Carbon> Monday 00:00 in Manila of each week, the oldest first. */
-    private function weeks(): array
+    private function weeks(int $count = self::WEEKS): array
     {
         $current = now($this->zone())->startOfWeek(Carbon::MONDAY);
 
-        return array_map(fn (int $back) => $current->copy()->subWeeks($back), range(self::WEEKS - 1, 0));
+        return array_map(fn (int $back) => $current->copy()->subWeeks($back), range($count - 1, 0));
     }
 
     /** @param list<Carbon> $weeks */
