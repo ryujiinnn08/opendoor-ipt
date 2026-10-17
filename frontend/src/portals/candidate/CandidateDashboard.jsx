@@ -1,3 +1,4 @@
+import TourEntry from '../../onboarding/TourEntry.jsx'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { generalErrorFrom } from '../../api/client.js'
@@ -58,8 +59,9 @@ export default function CandidateDashboard() {
       )}
       {!dashboard && !loadError && <LoadingMessage>Loading your dashboard…</LoadingMessage>}
 
+      {dashboard && <TourEntry welcome />}
       {dashboard && (
-        <div className="mt-6 grid items-start gap-6 lg:grid-cols-[17rem_minmax(0,1fr)]">
+        <div data-tour="dashboard-content" className="mt-6 grid items-start gap-6 lg:grid-cols-[17rem_minmax(0,1fr)]">
           <aside aria-label="Your profile" className="lg:sticky lg:top-4">
             <ProfileCard user={user} profile={dashboard.profile} needsCount={dashboard.needs_count} />
           </aside>

@@ -1,3 +1,4 @@
+import TourEntry from '../../onboarding/TourEntry.jsx'
 import { useState } from 'react'
 import { useAuth } from '../../auth/authContext.js'
 import { employerSummary } from '../../auth/employerAccess.js'
@@ -155,6 +156,7 @@ export default function DisplayPage() {
           </div>
         )}
       </section>
+      <TourEntry />
     </>
   )
 }

@@ -1,3 +1,4 @@
+import { useCandidateTour } from '../../onboarding/tourContext.js'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fieldErrorsFrom, generalErrorFrom } from '../../api/client.js'
@@ -38,6 +39,7 @@ function withRetiredNeeds(groups, needs) {
  * PageHeader, so the focused heading survives loading.
  */
 export default function NeedsPage() {
+  const tour = useCandidateTour()
   const announce = useAnnounce()
   const [lists, setLists] = useState(null) // { groups, needs }
   const [selected, setSelected] = useState([])
@@ -72,6 +74,7 @@ export default function NeedsPage() {
       clear()
       setLists((current) => ({ ...current, needs }))
       setSelected(needs.map((need) => ({ id: need.id, note: '' })))
+      tour?.markSaved()
       setSaved(true)
       announce(SAVED)
     } catch (error) {
@@ -109,7 +112,7 @@ export default function NeedsPage() {
       {lists && (
         <div className="mt-8">
           <ErrorSummary errors={summaryFrom(errors, ['needs'], generalError)} focusKey={focusKey} />
-          <form onSubmit={handleSubmit} noValidate>
+          <form data-tour="candidate-needs" onSubmit={handleSubmit} noValidate>
             <AccommodationPicker
               id="needs"
               legend="Accommodations I need"

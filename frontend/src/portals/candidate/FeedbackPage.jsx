@@ -1,3 +1,4 @@
+import { useCandidateTour } from '../../onboarding/tourContext.js'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { generalErrorFrom } from '../../api/client.js'
@@ -24,6 +25,7 @@ const ALREADY_SENT = "You've already sent your ratings."
  * before then, and the job seeker's own ratings once sent. After sending, the thank-you takes focus.
  */
 export default function FeedbackPage() {
+  const tour = useCandidateTour()
   const { id } = useParams()
   const validId = RECORD_ID.test(id)
   const announce = useAnnounce()
@@ -68,6 +70,7 @@ export default function FeedbackPage() {
 
   function sent(updated) {
     setLoaded((previous) => ({ ...previous, form: updated }))
+    tour?.markSaved()
     setJustSent(true)
   }
 
@@ -103,7 +106,7 @@ export default function FeedbackPage() {
 
       {form?.state === 'open' && (
         <div className="mt-6">
-          <div className="max-w-prose space-y-2">
+          <div data-tour="feedback-form" className="max-w-prose space-y-2">
             <p>Rate each accommodation they listed when they hired you.</p>
             <p>{PRIVACY_TEXT}</p>
           </div>

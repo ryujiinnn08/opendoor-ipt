@@ -11,5 +11,5 @@ export default function EmailVerificationBanner({ className = 'mb-8' }) {
 
   if (!asked || user.email_verified !== false) return null
 
-  return <VerifyEmailNotice className={className} />
+  return <div data-tour="email-verification"><VerifyEmailNotice className={className} /></div>
 }

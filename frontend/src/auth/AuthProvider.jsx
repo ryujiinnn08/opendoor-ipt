@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import * as authApi from '../api/auth.js'
 import { setProfileRequiredHandler, setUnauthorizedHandler } from '../api/client.js'
+import { inviteCandidate } from '../onboarding/tourStorage.js'
 import { AuthContext } from './authContext.js'
 
 export default function AuthProvider({ children }) {
@@ -53,6 +54,7 @@ export default function AuthProvider({ children }) {
   const register = useCallback(
     async (values) => {
       const created = await authApi.register(values)
+      inviteCandidate(created)
       applyUser(created)
       return created
     },

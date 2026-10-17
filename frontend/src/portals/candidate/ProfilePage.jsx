@@ -1,3 +1,4 @@
+import { useCandidateTour } from '../../onboarding/tourContext.js'
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { fieldErrorsFrom, generalErrorFrom } from '../../api/client.js'
@@ -67,7 +68,7 @@ function fieldOrder(values) {
 
 function Section({ id, title, children }) {
   return (
-    <section aria-labelledby={`${id}-heading`} id={id} className="border-t border-border py-8 first:border-t-0">
+    <section data-tour={id} aria-labelledby={`${id}-heading`} id={id} className="border-t border-border py-8 first:border-t-0">
       <h2 id={`${id}-heading`} tabIndex={-1} className="mb-4 text-2xl font-bold outline-none focus-visible:outline-2">
         {title}
       </h2>
@@ -81,6 +82,7 @@ function Section({ id, title, children }) {
  * the résumé, which uploads on its own. Every field is optional except the name.
  */
 export default function ProfilePage() {
+  const tour = useCandidateTour()
   const { refresh } = useAuth()
   const announce = useAnnounce()
   const { hash } = useLocation()
@@ -153,6 +155,7 @@ export default function ProfilePage() {
       })
       clear()
       setProfile(updated)
+      tour?.markSaved()
       setSaved(true)
       announce(SAVED)
       // The portal header shows the account name.
@@ -286,7 +289,7 @@ export default function ProfilePage() {
       )}
 
       {values && (
-        <form onSubmit={handleSubmit} noValidate className="mt-8 max-w-3xl">
+        <form data-tour="profile-form" onSubmit={handleSubmit} noValidate className="mt-8 max-w-3xl">
           <ErrorSummary errors={summaryFrom(errors, fieldOrder(values), generalError)} focusKey={focusKey} />
 
           <Section id="profile-photo" title="Photo">

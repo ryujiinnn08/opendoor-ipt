@@ -1,3 +1,5 @@
+import CandidateTourProvider from '../../onboarding/CandidateTourProvider.jsx'
+import { useCandidateTour } from '../../onboarding/tourContext.js'
 import { useEffect, useRef } from 'react'
 import { Outlet, ScrollRestoration, useLocation } from 'react-router-dom'
 
@@ -6,6 +8,11 @@ import { Outlet, ScrollRestoration, useLocation } from 'react-router-dom'
  * new page's <h1> so screen-reader and keyboard users start at the top of the new content.
  */
 export default function RootLayout() {
+  return <CandidateTourProvider><RootContent /></CandidateTourProvider>
+}
+
+function RootContent() {
+  const tour = useCandidateTour()
   const { pathname } = useLocation()
   const isFirstPage = useRef(true)
 
@@ -14,9 +21,10 @@ export default function RootLayout() {
       isFirstPage.current = false
       return
     }
+    if (tour?.active) return
     const frame = requestAnimationFrame(() => document.querySelector('main h1')?.focus())
     return () => cancelAnimationFrame(frame)
-  }, [pathname])
+  }, [pathname, tour?.active])
 
   return (
     <>

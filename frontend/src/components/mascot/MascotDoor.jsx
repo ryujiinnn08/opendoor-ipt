@@ -162,10 +162,11 @@ function markup(p) {
  * The door greeting beside Log in and Create account. Decoration only (hidden from screen
  * readers). With Reduce motion or Quiet mode he stands outside the open door, still.
  */
-export default function MascotDoor({ className = 'w-full' }) {
+export default function MascotDoor({ className = 'w-full', forceStill = false }) {
   const p = useSvgPrefix()
   const svgRef = useRef(null)
-  const still = useMascotStill()
+  const preferenceStill = useMascotStill()
+  const still = forceStill || preferenceStill
 
   useEffect(() => {
     const svg = svgRef.current

@@ -1,3 +1,4 @@
+import { useCandidateTour } from '../../onboarding/tourContext.js'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { applyForJob } from '../../api/applications.js'
@@ -28,6 +29,7 @@ const UNVERIFIED = 'Please confirm your email address before you apply.'
  * and what the employer will see. A refusal while sending keeps the typed text on the page.
  */
 export default function ApplyPage() {
+  const tour = useCandidateTour()
   const { id } = useParams()
   const navigate = useNavigate()
   const announce = useAnnounce()
@@ -82,6 +84,7 @@ export default function ApplyPage() {
     setSending(true)
     try {
       await applyForJob(id, values)
+      tour?.markSaved()
       navigate('/candidate/applications', { state: { sent: job.employer.name } })
     } catch (error) {
       const status = error?.response?.status
@@ -127,7 +130,7 @@ export default function ApplyPage() {
 
       {job && !applied && (
         <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_22rem]">
-          <form onSubmit={handleSubmit} noValidate className="max-w-prose">
+          <form data-tour="apply-form" onSubmit={handleSubmit} noValidate className="max-w-prose">
             {refusal && (
               <div ref={refusalBox} tabIndex={-1} className="mb-6 outline-offset-4">
                 {refusal.kind === 'unverified' ? (

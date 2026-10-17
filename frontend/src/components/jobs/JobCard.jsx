@@ -69,6 +69,7 @@ export default function JobCard({ job, to, showEmployer = true, onSelect, select
             )}
             <h3 className="font-display text-lg font-semibold">
               <Link
+                data-tour-record="job"
                 to={to}
                 state={backState(location)}
                 aria-current={selected ? 'true' : undefined}

@@ -26,6 +26,7 @@ export default function ApplicationRow({ application, onChanged, onStale, focusA
           <div>
             <h3 className="font-display text-lg font-semibold">
               <Link
+                data-tour-record="application"
                 to={`/candidate/applications/${application.id}`}
                 state={backState(location)}
                 className="inline-flex min-h-11 items-center text-primary underline-offset-4 hover:underline"

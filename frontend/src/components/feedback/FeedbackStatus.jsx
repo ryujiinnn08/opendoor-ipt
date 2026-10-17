@@ -14,7 +14,7 @@ export default function FeedbackStatus({ application, className = '' }) {
     return (
       <p className={className}>
         {/* The spoken name starts with the visible words, so voice control can say them. */}
-        <Link to={`/candidate/applications/${application.id}/feedback`} aria-label={`${RATE_ACTION} for ${application.job.title}`} className={PRIMARY_LINK}>
+        <Link data-tour-record="feedback" to={`/candidate/applications/${application.id}/feedback`} aria-label={`${RATE_ACTION} for ${application.job.title}`} className={PRIMARY_LINK}>
           {RATE_ACTION}
         </Link>
       </p>

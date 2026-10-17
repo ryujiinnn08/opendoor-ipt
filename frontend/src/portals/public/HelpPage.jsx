@@ -1,3 +1,4 @@
+import TourEntry from '../../onboarding/TourEntry.jsx'
 import { Link } from 'react-router-dom'
 import IconTile from '../../components/ui/IconTile.jsx'
 import Notice from '../../components/ui/Notice.jsx'
@@ -98,6 +99,7 @@ export default function HelpPage() {
           Contact us
         </Link>
       </p>
+      <TourEntry />
     </>
   )
 }

@@ -40,7 +40,7 @@ export default function ApplyBox({ job }) {
         </>
       )}
       {role === 'candidate' && !applied && (
-        <Link to={applyPath} className={`mt-3 ${PRIMARY_LINK}`}>
+        <Link data-tour-record="apply" to={applyPath} className={`mt-3 ${PRIMARY_LINK}`}>
           Apply for this job
         </Link>
       )}

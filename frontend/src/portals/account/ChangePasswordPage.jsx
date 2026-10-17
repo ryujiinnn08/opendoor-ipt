@@ -1,3 +1,4 @@
+import { useCandidateTour } from '../../onboarding/tourContext.js'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { changePassword } from '../../api/auth.js'
@@ -36,6 +37,7 @@ function validate(values, forced) {
  * here until they replace their temporary password (ProtectedRoute).
  */
 export default function ChangePasswordPage() {
+  const tour = useCandidateTour()
   const { user, refresh } = useAuth()
   const announce = useAnnounce()
   const [forced] = useState(Boolean(user.must_change_password))
@@ -62,6 +64,7 @@ export default function ChangePasswordPage() {
     setSaving(true)
     try {
       await changePassword(values)
+      tour?.markSaved()
       clear()
       setValues(EMPTY)
       setChanged(true)

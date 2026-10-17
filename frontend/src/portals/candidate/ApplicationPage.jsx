@@ -134,7 +134,7 @@ export default function ApplicationPage() {
 
           <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_22rem]">
             <div>
-              <section aria-labelledby="path-heading">
+              <section data-tour="application-details" aria-labelledby="path-heading">
                 <h2 id="path-heading" className="text-2xl font-bold">
                   Your application
                 </h2>

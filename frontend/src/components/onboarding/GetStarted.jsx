@@ -1,3 +1,4 @@
+import { useCandidateTour } from '../../onboarding/tourContext.js'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Button from '../ui/Button.jsx'
@@ -13,12 +14,14 @@ import MascotSad from '../mascot/MascotSad.jsx'
  * Ordinary page content, not a pop-up tour, so it never traps focus or covers the page.
  */
 export default function GetStarted({ steps, storageKey, intro, ready = true }) {
+  const tour = useCandidateTour()
+  const tourVisible = tour?.active || tour?.completion || tour?.state.invitation === 'pending'
   const [hidden, setHidden] = useState(() => isGetStartedHidden(storageKey))
   const [celebrated] = useState(() => wasCelebrated(storageKey))
   const done = steps.filter((step) => step.done).length
   const allDone = done === steps.length
   // The first time every step is done, the happy mascot says so once; after that the card is gone.
-  const celebrate = ready && allDone && !hidden && !celebrated
+  const celebrate = !tourVisible && ready && allDone && !hidden && !celebrated
   useEffect(() => {
     if (celebrate) markCelebrated(storageKey)
   }, [celebrate, storageKey])
@@ -54,7 +57,7 @@ export default function GetStarted({ steps, storageKey, intro, ready = true }) {
           {intro && <p className="mt-1 text-muted">{intro}</p>}
         </div>
         {/* A little sad while steps are left (decoration only). */}
-        <MascotSad className="hidden w-20 shrink-0 sm:block" />
+        {!tourVisible && <MascotSad className="hidden w-20 shrink-0 sm:block" />}
       </div>
       <div aria-hidden="true" className="mt-3 h-2 overflow-hidden rounded-full bg-primary-soft">
         <div className="h-full rounded-full bg-yellow" style={{ width: `${(done / steps.length) * 100}%` }} />

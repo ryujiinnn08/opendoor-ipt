@@ -1,3 +1,4 @@
+import TourPageLink from '../../onboarding/TourPageLink.jsx'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { getUnreadCount } from '../../api/notifications.js'
@@ -78,7 +79,8 @@ export default function PortalLayout() {
 
       <main id="main" tabIndex={-1} className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 outline-none sm:px-6">
         <EmailVerificationBanner />
-        <div key={location.pathname} className="animate-page-in">
+        <TourPageLink />
+        <div data-tour={location.pathname === "/help" ? "help-content" : location.pathname === "/contact" ? "contact-content" : "page-content"} key={location.pathname} className="animate-page-in">
           <Outlet context={{ refreshNotifications, unreadNotifications: unread }} />
         </div>
       </main>

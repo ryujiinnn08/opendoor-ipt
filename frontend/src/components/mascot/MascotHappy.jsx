@@ -99,10 +99,11 @@ function markup(p) {
  * He celebrates once when he appears (a jump, arms up, confetti), then keeps bouncing. Decoration
  * only, hidden from screen readers; with Reduce motion or Quiet mode he holds the arms-up pose.
  */
-export default function MascotHappy({ className = 'w-44' }) {
+export default function MascotHappy({ className = 'w-44', forceStill = false, noConfetti = false }) {
   const p = useSvgPrefix()
   const svgRef = useRef(null)
-  const still = useMascotStill()
+  const preferenceStill = useMascotStill()
+  const still = forceStill || preferenceStill
 
   useEffect(() => {
     const svg = svgRef.current
@@ -167,7 +168,7 @@ export default function MascotHappy({ className = 'w-44' }) {
 
       for (const item of confetti) {
         const k = c - 0.4 - item.delay
-        if (k <= 0 || k > 3.4) {
+        if (noConfetti || k <= 0 || k > 3.4) {
           item.el.setAttribute('visibility', 'hidden')
           continue
         }
@@ -193,7 +194,7 @@ export default function MascotHappy({ className = 'w-44' }) {
     }
     frame(0, 0)
     return runClock(svg, FPS, (T) => frame(T, T))
-  }, [p, still])
+  }, [p, still, noConfetti])
 
   return (
     <svg

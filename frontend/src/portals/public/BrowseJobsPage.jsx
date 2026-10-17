@@ -252,7 +252,7 @@ export default function BrowseJobsPage({ basePath = '/jobs', title = 'Browse job
         </p>
       )}
 
-      <form role="search" onSubmit={submitSearch} className="mt-8 flex max-w-3xl flex-wrap items-end gap-3">
+      <form data-tour="job-search" role="search" onSubmit={submitSearch} className="mt-8 flex max-w-3xl flex-wrap items-end gap-3">
         <FormField
           id="job-search"
           label="Search jobs"
@@ -296,7 +296,7 @@ export default function BrowseJobsPage({ basePath = '/jobs', title = 'Browse job
       />
 
       <div className={showPane ? 'mt-6 grid items-start gap-6 grid-cols-[minmax(0,5fr)_minmax(0,7fr)]' : 'mt-6'}>
-        <section aria-labelledby="job-results-heading" aria-busy={Boolean(results) && results.filters !== filters && loadError?.filters !== filters} className="min-w-0">
+        <section data-tour="job-results" aria-labelledby="job-results-heading" aria-busy={Boolean(results) && results.filters !== filters && loadError?.filters !== filters} className="min-w-0">
 
           {loadError?.general && (
             <Notice tone="error" className="mb-6">

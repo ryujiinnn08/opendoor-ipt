@@ -60,7 +60,7 @@ export default function SiteHeader({ homeTo = '/', left, right }) {
   const flat = [...left, ...right.flatMap((entry) => (entry.menu ? [...entry.items, entry.logout] : [entry]))]
 
   return (
-    <header className="relative z-20 border-b-[3px] border-yellow bg-surface print:hidden">
+    <header data-tour="site-navigation" className="relative z-20 border-b-[3px] border-yellow bg-surface print:hidden">
       <div ref={rowRef} className="mx-auto max-w-6xl px-4 py-2 sm:px-6">
         {compact ? (
           <CompactRow key="compact" homeTo={homeTo} entries={flat} pathname={pathname} />
@@ -131,7 +131,7 @@ function Entry({ entry, current, measuring }) {
   const look = `${NAV_ITEM} ${current ? NAV_CURRENT : NAV_IDLE}`
   if (measuring) return <span className={look}>{content}</span>
   return (
-    <Link to={entry.to} aria-current={current ? 'page' : undefined} className={look}>
+    <Link data-tour={`nav-${entry.to}`} to={entry.to} aria-current={current ? 'page' : undefined} className={look}>
       {content}
     </Link>
   )
@@ -209,6 +209,7 @@ function AccountMenu({ entry }) {
     <div ref={wrapperRef} onKeyDown={onKeyDown} className="relative">
       <button
         ref={buttonRef}
+        data-tour="account-menu"
         type="button"
         aria-expanded={open}
         aria-controls={panelId}
@@ -239,6 +240,7 @@ function AccountMenu({ entry }) {
             return (
               <li key={item.label}>
                 <Link
+                  data-tour={`nav-${item.to}`}
                   to={item.to}
                   aria-current={here ? 'page' : undefined}
                   className={`${ITEM} ${here ? 'bg-selected font-bold text-accent' : 'text-text hover:bg-primary-soft'}`}
@@ -315,6 +317,7 @@ function CompactRow({ homeTo, entries, pathname }) {
       <nav aria-label="Main" ref={wrapperRef} onKeyDown={onKeyDown} className="relative">
         <button
           ref={buttonRef}
+          data-tour="compact-menu"
           type="button"
           aria-expanded={open}
           aria-controls={panelId}

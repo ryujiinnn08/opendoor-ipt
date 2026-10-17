@@ -59,14 +59,14 @@ export default function JobDetails({ posting, showVerificationStatus = false, ma
   const aboutCompany = employerHref && (employer.description || employer.industry || employer.address)
 
   return (
-    <div>
+    <div data-tour="job-details">
       <div className={`mt-4 flex flex-wrap items-start gap-4 ${CARD}`}>
         <EmployerMark employer={employer} size="lg" />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <p className="text-lg font-bold">
               {employerHref ? (
-                <Link to={employerHref} className="inline-flex min-h-11 items-center text-primary underline underline-offset-4 hover:no-underline">
+                <Link data-tour-record="employer" to={employerHref} className="inline-flex min-h-11 items-center text-primary underline underline-offset-4 hover:no-underline">
                   {employer.name}
                 </Link>
               ) : (

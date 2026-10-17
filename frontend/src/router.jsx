@@ -1,3 +1,4 @@
+import TourHub from './onboarding/TourHub.jsx'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { RequireEmployerProfile, RequireNoEmployerProfile } from './auth/EmployerRoutes.jsx'
 import GuestRoute from './auth/GuestRoute.jsx'
@@ -73,6 +74,7 @@ export const routes = [
         ],
       },
       portal('candidate', [
+        { path: '/candidate/tour', element: <TourHub /> },
         { path: '/candidate/dashboard', element: <CandidateDashboard /> },
         { path: '/candidate/needs', element: <NeedsPage /> },
         { path: '/candidate/profile', element: <ProfilePage /> },

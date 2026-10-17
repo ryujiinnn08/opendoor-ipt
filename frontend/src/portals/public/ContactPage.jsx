@@ -1,3 +1,4 @@
+import { useCandidateTour } from '../../onboarding/tourContext.js'
 import { TEAM_EMAIL } from '../../lib/contact.js'
 import { TEXT_LINK } from '../../components/ui/buttonLinkStyles.js'
 import { useEffect, useRef, useState } from 'react'
@@ -28,6 +29,7 @@ function validate(values) {
 
 /** "Contact us": a short form that emails the OpenDoor team. */
 export default function ContactPage() {
+  const tour = useCandidateTour()
   const announce = useAnnounce()
   const [values, setValues] = useState(EMPTY)
   const [errors, setErrors] = useState({})
@@ -69,6 +71,7 @@ export default function ContactPage() {
         message: values.message.trim(),
         website: values.website,
       })
+      tour?.markSaved()
       setSentMessage(thanks)
       setValues(EMPTY)
       setErrors({})

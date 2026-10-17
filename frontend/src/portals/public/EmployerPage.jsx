@@ -140,7 +140,7 @@ export default function EmployerPage({ basePath = '/jobs' }) {
             {!company && <p className="text-muted">Individual employer</p>}
           </div>
 
-          <dl className="mt-6 grid max-w-3xl gap-x-6 gap-y-3 sm:grid-cols-[max-content_minmax(0,1fr)]">
+          <dl data-tour="employer-details" className="mt-6 grid max-w-3xl gap-x-6 gap-y-3 sm:grid-cols-[max-content_minmax(0,1fr)]">
             {details
               .filter(([, value]) => value)
               .map(([label, value]) => (
