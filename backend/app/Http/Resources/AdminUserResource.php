@@ -34,6 +34,8 @@ class AdminUserResource extends JsonResource
             'email' => $this->email,
             'role' => $this->role->value,
             'is_active' => $this->is_active,
+            // Administrators never confirm an email, so theirs is shown as confirmed.
+            'email_confirmed' => $this->role === Role::Admin || $this->hasVerifiedEmail(),
             'joined_at' => $this->created_at?->toIso8601String(),
             'last_login_at' => $this->last_login_at?->toIso8601String(),
             'profile' => $this->when($this->role === Role::Candidate, fn () => $this->profileBasics()),

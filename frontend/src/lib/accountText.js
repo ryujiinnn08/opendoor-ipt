@@ -70,6 +70,8 @@ export function historySentence(event) {
       return `Password changed on ${when}.`
     case 'details_edited':
       return `Details edited on ${when}${by}${event.reason ? ':' : '.'}`
+    case 'email_confirmed':
+      return `Email confirmed on ${when}${by}${event.reason ? ':' : '.'}`
     default:
       return `Changed on ${when}${by}.`
   }

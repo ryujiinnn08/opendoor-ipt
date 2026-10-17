@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\Role;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\AddAdminRequest;
+use App\Http\Requests\Admin\ConfirmEmailRequest;
 use App\Http\Requests\Admin\UpdateUserRequest;
 use App\Http\Resources\AdminUserDetailResource;
 use App\Http\Resources\AdminUserResource;
@@ -78,6 +79,17 @@ class UserController extends Controller
         if ($emailChanged && $user->role !== Role::Admin) {
             $verification->send($user);
         }
+
+        return new AdminUserDetailResource($user->load(AdminUserResource::RELATIONS));
+    }
+
+    /**
+     * Confirm a job seeker's or employer's email for them, with a reason, when the link can't
+     * reach them. Recorded in the account's history.
+     */
+    public function confirmEmail(ConfirmEmailRequest $request, User $user, AccountService $accounts): AdminUserDetailResource
+    {
+        $user = $accounts->confirmEmail($user, $request->user(), $request->validated('reason'));
 
         return new AdminUserDetailResource($user->load(AdminUserResource::RELATIONS));
     }

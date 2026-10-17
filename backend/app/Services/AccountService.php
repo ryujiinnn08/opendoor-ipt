@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\AccountEventType;
 use App\Enums\Role;
 use App\Models\User;
+use Illuminate\Auth\Events\Verified;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -142,6 +143,36 @@ class AccountService
 
             return $emailChanged;
         });
+    }
+
+    /**
+     * An administrator confirms a job seeker's or employer's email for them, e.g., when the link
+     * never arrives. Never their own account or another administrator's (administrators don't
+     * confirm emails). The history keeps why.
+     */
+    public function confirmEmail(User $user, User $admin, string $reason): User
+    {
+        if ($user->is($admin) || $user->role === Role::Admin) {
+            abort(422, 'Only a job seeker\'s or employer\'s email can be confirmed here.');
+        }
+
+        DB::transaction(function () use ($user, $admin, $reason) {
+            $user = User::whereKey($user->id)->lockForUpdate()->firstOrFail();
+
+            if ($user->hasVerifiedEmail()) {
+                abort(409, 'This email is already confirmed.');
+            }
+
+            $user->markEmailAsVerified();
+            event(new Verified($user));
+            $user->accountEvents()->create([
+                'type' => AccountEventType::EmailConfirmed,
+                'reason' => $reason,
+                'actor_id' => $admin->id,
+            ]);
+        });
+
+        return $user->refresh();
     }
 
     /**

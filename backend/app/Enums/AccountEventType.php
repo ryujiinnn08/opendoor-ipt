@@ -13,4 +13,6 @@ enum AccountEventType: string
     case PasswordChanged = 'password_changed';
     // An administrator changed the name or email (ADMIN_USERS_PLAN U2–U4).
     case DetailsEdited = 'details_edited';
+    // An administrator confirmed the email for someone who couldn't get the link.
+    case EmailConfirmed = 'email_confirmed';
 }

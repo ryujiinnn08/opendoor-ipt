@@ -179,6 +179,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::patch('users/{user}', [Admin\UserController::class, 'update']);
             Route::get('users/{user}/photo', [Candidate\PhotoController::class, 'forAdmin']);
             Route::patch('users/{user}/suspend', [Admin\UserStatusController::class, 'update']);
+            Route::post('users/{user}/confirm-email', [Admin\UserController::class, 'confirmEmail']);
             Route::post('users/{user}/temporary-password', [Admin\UserController::class, 'temporaryPassword']);
 
             Route::get('settings', [Admin\SettingsController::class, 'show']);

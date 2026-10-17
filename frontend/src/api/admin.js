@@ -81,6 +81,12 @@ export async function setSuspended(id, suspended, reason) {
   return data.data
 }
 
+/** Confirm a job seeker's or employer's email for them, with a reason. Returns the account. */
+export async function confirmEmail(id, reason) {
+  const { data } = await client.post(`/api/admin/users/${id}/confirm-email`, { reason })
+  return data.data
+}
+
 /** Remove a posting; the employer sees the reason. */
 export async function removePosting(id, reason) {
   await client.delete(`/api/admin/job-postings/${id}`, { data: { reason } })

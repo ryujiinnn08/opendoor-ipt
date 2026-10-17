@@ -11,9 +11,10 @@ vi.mock('../../api/admin.js', () => ({
   replaceTemporaryPassword: vi.fn(),
   updateUser: vi.fn(),
   getUserPhoto: vi.fn(),
+  confirmEmail: vi.fn(),
 }))
 
-const { getUser, setSuspended, replaceTemporaryPassword, updateUser } = await import('../../api/admin.js')
+const { getUser, setSuspended, replaceTemporaryPassword, updateUser, confirmEmail } = await import('../../api/admin.js')
 
 const routes = [{ path: '/admin/users/:id', element: <UserPage /> }]
 const admin = { status: 'authenticated', role: 'admin', user: { name: 'Ana Cruz', role: 'admin' } }
@@ -23,6 +24,7 @@ const maria = {
   email: 'maria@example.com',
   role: 'candidate',
   is_active: true,
+  email_confirmed: true,
   joined_at: '2026-10-02T10:00:00+08:00',
   last_login_at: '2026-10-15T09:00:00+08:00',
   must_change_password: false,
@@ -174,6 +176,26 @@ describe('UserPage', () => {
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Maria Santos' })).toBe(heading)
     expect(heading).toHaveFocus()
+  })
+
+  it('confirms an email that was never confirmed, with a reason', async () => {
+    const steve = { ...maria, id: 8, name: 'Steve Jobs', email: 'stevejobs@example.com', role: 'employer', employer: null, postings: [], email_confirmed: false }
+    getUser.mockResolvedValue(steve)
+    confirmEmail.mockResolvedValue({ ...steve, email_confirmed: true, history: [{ id: 12, type: 'email_confirmed', reason: 'The link never arrived.', by: 'Ana Cruz', at: '2026-10-17T10:00:00+08:00' }] })
+    const { container } = renderRoutes(routes, { path: '/admin/users/8', auth: admin })
+
+    expect(await screen.findByText('Not confirmed')).toBeInTheDocument()
+    expect(screen.getByText("Can't post new jobs yet.")).toBeInTheDocument()
+    expect(await axe(container)).toHaveNoViolations()
+    await userEvent.click(screen.getByRole('button', { name: 'Confirm email' }))
+    const dialog = screen.getByRole('dialog', { name: "Confirm Steve Jobs's email?" })
+    await userEvent.type(within(dialog).getByLabelText(/Why/), 'The link never arrived.')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Confirm email' }))
+
+    expect(confirmEmail).toHaveBeenCalledWith(8, 'The link never arrived.')
+    expect(await screen.findByText("Steve Jobs's email is confirmed.")).toBeInTheDocument()
+    expect(screen.getByText('Confirmed')).toBeInTheDocument()
+    expect(screen.getByText('Email confirmed on October 17, 2026 by Ana Cruz:')).toBeInTheDocument()
   })
 
   it('edits the name and email with a reason, then shows the saved account', async () => {

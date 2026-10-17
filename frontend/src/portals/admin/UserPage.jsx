@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { getUser, replaceTemporaryPassword, setSuspended } from '../../api/admin.js'
+import { confirmEmail, getUser, replaceTemporaryPassword, setSuspended } from '../../api/admin.js'
 import { fieldErrorsFrom, generalErrorFrom } from '../../api/client.js'
 import AccountHistory from '../../components/admin/AccountHistory.jsx'
 import EditUserDialog from '../../components/admin/EditUserDialog.jsx'
@@ -36,7 +36,7 @@ function UserAccount({ id }) {
   const [user, setUser] = useState(null)
   const [loadError, setLoadError] = useState(null)
   const [message, setMessage] = useState(null)
-  const [acting, setActing] = useState(null) // { action: 'edit' | 'suspend' | 'reactivate' | 'password', open, busy, error, done }
+  const [acting, setActing] = useState(null) // { action: 'edit' | 'suspend' | 'reactivate' | 'password' | 'confirm', open, busy, error, done }
   const [newPassword, setNewPassword] = useState(null)
   const messageRef = useRef(null)
   const passwordRef = useRef(null)
@@ -70,6 +70,22 @@ function UserAccount({ id }) {
       const updated = await setSuspended(user.id, suspending, reason)
       setUser(updated)
       const text = suspending ? `${updated.name}'s account is suspended.` : `${updated.name}'s account is active again.`
+      setMessage(text)
+      announce(text)
+      setActing((current) => ({ ...current, busy: false, open: false, done: true }))
+    } catch (error) {
+      const fieldErrors = fieldErrorsFrom(error)
+      setActing((current) => current && { ...current, busy: false, error: Object.values(fieldErrors)[0] ?? generalErrorFrom(error) })
+    }
+  }
+
+  // For someone whose confirmation link never arrives; they can apply or post straight away.
+  async function confirm(reason) {
+    setActing((current) => ({ ...current, busy: true, error: null }))
+    try {
+      const updated = await confirmEmail(user.id, reason)
+      setUser(updated)
+      const text = `${updated.name}'s email is confirmed.`
       setMessage(text)
       announce(text)
       setActing((current) => ({ ...current, busy: false, open: false, done: true }))
@@ -190,6 +206,25 @@ function UserAccount({ id }) {
               )}
             </Row>
             {user.role === 'candidate' && <Row label="Applications">{applicationCounts(user.applications)}</Row>}
+            {user.role !== 'admin' && (
+              <Row label="Email">
+                {user.email_confirmed ? (
+                  'Confirmed'
+                ) : (
+                  <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <StatusBadge tone="warning">
+                      Not confirmed
+                    </StatusBadge>
+                    {user.role === 'employer' ? "Can't post new jobs yet." : "Can't apply for jobs yet."}
+                    {!user.is_you && (
+                      <Button variant="link" onClick={() => setActing({ action: 'confirm', open: true })}>
+                        Confirm email
+                      </Button>
+                    )}
+                  </span>
+                )}
+              </Row>
+            )}
             <Row label="Last logged in">{user.last_login_at ? formatDate(user.last_login_at) : 'Not since this was recorded'}</Row>
             {user.must_change_password && <Row label="Password">Still the temporary one</Row>}
           </dl>
@@ -279,6 +314,21 @@ function UserAccount({ id }) {
         confirmVariant="primary"
         minLength={5}
         onConfirm={act}
+        busy={acting?.busy}
+        error={acting?.error}
+        onCloseAutoFocus={afterClose}
+      />
+      <ReasonDialog
+        open={Boolean(acting?.open && acting.action === 'confirm')}
+        onOpenChange={closeDialog}
+        title={`Confirm ${user.name}'s email?`}
+        description={`Only do this when you know ${user.email} belongs to them, e.g., they asked from it or showed you the inbox. They can ${user.role === 'employer' ? 'post jobs' : 'apply for jobs'} straight away.`}
+        label="Why (only administrators see this)"
+        hint="It stays in the account's history, e.g., The confirmation email never arrived; checked by phone."
+        confirmLabel="Confirm email"
+        confirmVariant="primary"
+        minLength={5}
+        onConfirm={confirm}
         busy={acting?.busy}
         error={acting?.error}
         onCloseAutoFocus={afterClose}
