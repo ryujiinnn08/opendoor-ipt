@@ -419,6 +419,49 @@
     }
   }
 
+  /* The loading squares (LoadingMessage): two outlined squares that tip over one after the other,
+     in the brand violet (darker in High contrast). Sized in rem, so they follow Text size. A border
+     rather than an inset shadow, so Windows high-contrast mode still draws them. */
+  .od-loader {
+    display: inline-flex;
+    gap: 0.3125rem;
+  }
+  .od-loader::before,
+  .od-loader::after {
+    content: '';
+    box-sizing: border-box;
+    width: 1.5625rem;
+    aspect-ratio: 1;
+    border: 3px solid var(--od-brand-primary);
+    animation: od-loader 1.5s infinite;
+  }
+  .od-loader::after {
+    --s: -1;
+    border-color: var(--od-text-accent);
+    animation-delay: 0.75s;
+  }
+  @keyframes od-loader {
+    0% {
+      transform: scaleX(var(--s, 1)) translate(0) rotate(0);
+    }
+    16.67% {
+      transform: scaleX(var(--s, 1)) translate(-50%) rotate(0);
+    }
+    33.33% {
+      transform: scaleX(var(--s, 1)) translate(-50%) rotate(90deg);
+    }
+    50%,
+    100% {
+      transform: scaleX(var(--s, 1)) translate(0) rotate(90deg);
+    }
+  }
+  @media (forced-colors: active) {
+    .od-loader::before,
+    .od-loader::after {
+      border-color: CanvasText;
+    }
+  }
+
   /* The orange highlight behind words in a heading is decoration too. */
   :root[data-quiet] .od-highlight {
     background-color: transparent;
