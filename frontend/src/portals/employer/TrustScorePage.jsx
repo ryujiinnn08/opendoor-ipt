@@ -45,7 +45,7 @@ export default function TrustScorePage() {
       {!summary && !loadError && <LoadingMessage>Loading your trust score…</LoadingMessage>}
 
       {summary && (
-        <div className="mt-8 grid max-w-3xl gap-10">
+        <div className="mt-8 grid gap-10">
           <TrustScoreCard summary={summary} />
           <section aria-labelledby="meaning-heading">
             <h2 id="meaning-heading" className="text-2xl font-bold">

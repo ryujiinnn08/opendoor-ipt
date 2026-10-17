@@ -151,7 +151,8 @@ export default function EmployerPage({ basePath = '/jobs' }) {
               ))}
           </dl>
 
-          <div className="mt-10 max-w-3xl">
+          {/* The full page width, so the rating tiles sit five across. */}
+          <div className="mt-10">
             <TrustScoreCard
               summary={(trust?.employerId === employer.id && trust.summary) || { score: employer.trust_score, responses: employer.trust_count }}
               loadingBreakdown={employer.trust_score != null && trust?.employerId !== employer.id}
