@@ -4,6 +4,7 @@ import { backState } from '../../lib/backState.js'
 import { RATE_ACTION } from '../../lib/feedbackText.js'
 import { sinceText } from '../../lib/format.js'
 import EmployerMark from '../jobs/EmployerMark.jsx'
+import MascotSad from '../mascot/MascotSad.jsx'
 import IconTile from '../ui/IconTile.jsx'
 import { PRIMARY_LINK, TEXT_LINK, buttonClasses } from '../ui/buttonLinkStyles.js'
 import ApplicationStatusBadge from './ApplicationStatusBadge.jsx'
@@ -60,11 +61,14 @@ export default function ApplicationsSummary({ counts, recent = [], feedbackDue =
       )}
 
       {counts.all === 0 ? (
-        <div className="mt-3">
-          <p>You haven&apos;t applied for any jobs yet.</p>
-          <Link to="/candidate/jobs" className={`mt-3 ${PRIMARY_LINK}`}>
-            Find jobs
-          </Link>
+        <div className="mt-3 flex flex-col items-center gap-x-5 gap-y-2 text-center sm:flex-row sm:text-left">
+          <MascotSad className="w-24 shrink-0" />
+          <div>
+            <p>You haven&apos;t applied for any jobs yet.</p>
+            <Link to="/candidate/jobs" className={`mt-3 ${PRIMARY_LINK}`}>
+              Find jobs
+            </Link>
+          </div>
         </div>
       ) : (
         <>

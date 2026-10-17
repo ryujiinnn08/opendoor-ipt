@@ -17,6 +17,23 @@ export function hideGetStarted(key) {
   }
 }
 
+/** Whether the "You're all set" celebration was already shown to this person (shown once). */
+export function wasCelebrated(key) {
+  try {
+    return window.localStorage.getItem(`${PREFIX}${key}:celebrated`) === '1'
+  } catch {
+    return true
+  }
+}
+
+export function markCelebrated(key) {
+  try {
+    window.localStorage.setItem(`${PREFIX}${key}:celebrated`, '1')
+  } catch {
+    // Not remembered; it may show once more.
+  }
+}
+
 /** Brings back every Get started card hidden in this browser (Account → Display). */
 export function showGetStartedAgain() {
   try {

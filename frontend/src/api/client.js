@@ -16,6 +16,9 @@ export function getCsrfCookie() {
   return client.get('/sanctum/csrf-cookie')
 }
 
+// Set when the API ends a session because the account was suspended (read by Log in).
+export const SUSPENDED_KEY = 'opendoor-suspended'
+
 let onUnauthorized = () => {}
 let onProfileRequired = () => {}
 
@@ -46,6 +49,16 @@ client.interceptors.response.use(
       onUnauthorized()
     }
 
+    // Suspended while logged in: the API has ended the session. Remember why for the Log in page.
+    if (response?.status === 403 && response.data?.code === 'account_suspended' && !config?.url?.endsWith('/login')) {
+      try {
+        window.sessionStorage.setItem(SUSPENDED_KEY, '1')
+      } catch {
+        // Not remembered; Log in just shows the form.
+      }
+      onUnauthorized()
+    }
+
     if (response?.status === 409 && response.data?.code === 'employer_profile_required') {
       onProfileRequired()
     }
@@ -61,6 +74,11 @@ export function fieldErrorsFrom(error) {
   const errors = error?.response?.data?.errors
   if (!errors) return {}
   return Object.fromEntries(Object.entries(errors).map(([field, messages]) => [field, messages[0]]))
+}
+
+/** Whether the API refused because the account is suspended (logging in, or any later request). */
+export function isAccountSuspended(error) {
+  return error?.response?.status === 403 && error.response.data?.code === 'account_suspended'
 }
 
 /**

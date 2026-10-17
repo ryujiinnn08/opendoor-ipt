@@ -1,5 +1,5 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
-import LoadingMessage from '../components/ui/LoadingMessage.jsx'
+import PageLoading from '../components/layout/PageLoading.jsx'
 import { useAuth } from './authContext.js'
 import { CHANGE_PASSWORD_PATH, dashboardFor } from './redirects.js'
 
@@ -12,7 +12,8 @@ export default function ProtectedRoute({ roles }) {
   const { status, role, user } = useAuth()
   const location = useLocation()
 
-  if (status === 'loading') return <LoadingMessage />
+  // Restoring the session after a reload: the same loading screen as a page that is still loading.
+  if (status === 'loading') return <PageLoading />
 
   if (status === 'guest') {
     const next = encodeURIComponent(location.pathname + location.search)

@@ -53,6 +53,27 @@ describe('LoginPage', () => {
     expect(screen.getByText(message)).toBeInTheDocument()
   })
 
+  it('shows "Your account is on hold" with the sad mascot when the account is suspended', async () => {
+    const message = 'This account has been suspended. Contact the OpenDoor administrators for help.'
+    const login = vi.fn().mockRejectedValue(laravelError(403, { message, code: 'account_suspended' }))
+    renderRoutes(routes, { path: '/login', auth: { login } })
+
+    await submit('maria@example.com', 'Secure@123')
+
+    const held = await screen.findByRole('alert')
+    expect(held).toHaveTextContent('Your account is on hold')
+    expect(screen.getByRole('heading', { name: 'Your account is on hold' })).toHaveFocus()
+    expect(screen.getByRole('link', { name: 'Contact the OpenDoor team' })).toHaveAttribute('href', '/contact')
+  })
+
+  it('explains a suspension that ended the session on another page', () => {
+    sessionStorage.setItem('opendoor-suspended', '1')
+    renderRoutes(routes, { path: '/login', auth: { login: vi.fn() } })
+
+    expect(screen.getByRole('heading', { name: 'Your account is on hold' })).toBeInTheDocument()
+    expect(sessionStorage.getItem('opendoor-suspended')).toBeNull()
+  })
+
   it('opens the dashboard for the logged-in role', async () => {
     const login = vi.fn().mockResolvedValue({ name: 'HR', role: 'employer' })
     renderRoutes(routes, { path: '/login', auth: { login } })

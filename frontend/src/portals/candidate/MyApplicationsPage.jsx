@@ -7,6 +7,7 @@ import Button from '../../components/ui/Button.jsx'
 import EmptyState from '../../components/ui/EmptyState.jsx'
 import FilterTabs from '../../components/ui/FilterTabs.jsx'
 import LoadingMessage from '../../components/ui/LoadingMessage.jsx'
+import MascotMessage from '../../components/mascot/MascotMessage.jsx'
 import Notice from '../../components/ui/Notice.jsx'
 import PageHeader from '../../components/ui/PageHeader.jsx'
 import Pagination from '../../components/ui/Pagination.jsx'
@@ -109,9 +110,19 @@ export default function MyApplicationsPage() {
       <PageHeader title="My applications" intro="Track every job you've applied for and what happens next." />
 
       {message && (
-        <Notice tone="success" className="mt-6">
-          {message}
-        </Notice>
+        <MascotMessage
+          mood="happy"
+          title="Application sent!"
+          className="mt-6"
+          action={
+            <Link to="/candidate/jobs" className="inline-flex min-h-11 items-center font-bold text-primary underline underline-offset-4 hover:no-underline">
+              Find more jobs
+            </Link>
+          }
+        >
+          <p>{message}</p>
+          <p className="mt-1 text-muted">It's in the list below, with what happens next.</p>
+        </MascotMessage>
       )}
 
       <div className="mt-8">
@@ -147,6 +158,7 @@ export default function MyApplicationsPage() {
                 </EmptyState>
               ) : status === 'all' ? (
                 <EmptyState
+                  mascot
                   action={
                     <Link to="/candidate/jobs" className={TEXT_LINK}>
                       Find jobs

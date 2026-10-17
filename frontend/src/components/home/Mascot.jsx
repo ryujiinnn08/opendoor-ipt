@@ -68,19 +68,14 @@ function look(t) {
   return { dx, dy, shut }
 }
 
-// With `once`, he greets one time and then stands: a frame after the wave, between two bounces.
-const REST_AFTER_ONCE = 3 * BOB
-
 /**
  * Decoration: hidden from screen readers, since the heading beside it says what the page is.
  * It moves only while on screen, and holds still with Reduce motion (the system setting or
- * Account → Display) and in Quiet mode. `once` waves a single time and then stands still (Log in
- * and Create account, UI_FEEDBACK_WAVE_B_PLAN Q5); `pose` holds one moment without moving (the
- * loading screen), e.g. 0 for standing with his arm down.
+ * Account → Display) and in Quiet mode.
  */
-export default function Mascot({ className = '', once = false, pose = null }) {
+export default function Mascot({ className = '' }) {
   const { settings } = useDisplaySettings()
-  const still = pose !== null || settings.motion === 'reduce' || settings.quiet
+  const still = settings.motion === 'reduce' || settings.quiet
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '')
   const ids = { boil: `${uid}-boil`, turb: `${uid}-turb`, glove: `${uid}-glove`, eyes: `${uid}-eyes` }
   const refs = useRef({})
@@ -136,7 +131,7 @@ export default function Mascot({ className = '', once = false, pose = null }) {
     }
 
     if (still) {
-      frame(pose ?? STILL_POSE)
+      frame(STILL_POSE)
       turb.setAttribute('seed', 1)
       return undefined
     }
@@ -148,11 +143,6 @@ export default function Mascot({ className = '', once = false, pose = null }) {
     function loop(now) {
       if (t0 === null) t0 = now
       const q = Math.floor(((now - t0) / 1000) * FPS)
-      if (once && q / FPS >= REST_AFTER_ONCE) {
-        frame(REST_AFTER_ONCE)
-        stop()
-        return
-      }
       if (q !== last) {
         last = q
         frame(q / FPS)
@@ -185,7 +175,7 @@ export default function Mascot({ className = '', once = false, pose = null }) {
       observer?.disconnect()
       document.removeEventListener('visibilitychange', onVisibility)
     }
-  }, [still, once, pose])
+  }, [still])
 
   return (
     <div ref={set('stage')} aria-hidden="true" className={`relative aspect-[2050/1760] w-full ${className}`}>

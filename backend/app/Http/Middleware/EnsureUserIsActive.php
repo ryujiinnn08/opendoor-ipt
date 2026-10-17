@@ -22,7 +22,11 @@ class EnsureUserIsActive
                 $request->session()->regenerateToken();
             }
 
-            abort(403, 'This account has been suspended. Contact the OpenDoor administrators for help.');
+            // The code lets the website show the "account on hold" page instead of a plain error.
+            abort(response()->json([
+                'message' => 'This account has been suspended. Contact the OpenDoor administrators for help.',
+                'code' => 'account_suspended',
+            ], 403));
         }
 
         return $next($request);

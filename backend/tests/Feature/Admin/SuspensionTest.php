@@ -91,7 +91,8 @@ class SuspensionTest extends TestCase
         $this->actingAs($maria->fresh(), 'web')->getJson('/api/me')->assertForbidden();
         $this->postJson('/api/login', ['email' => 'maria@example.com', 'password' => 'Password@123'])
             ->assertForbidden()
-            ->assertJsonPath('message', 'This account has been suspended. Contact the OpenDoor administrators for help.');
+            ->assertJsonPath('message', 'This account has been suspended. Contact the OpenDoor administrators for help.')
+            ->assertJsonPath('code', 'account_suspended');
     }
 
     public function test_reactivating_restores_the_account_and_is_recorded(): void

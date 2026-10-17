@@ -357,6 +357,7 @@ export default function BrowseJobsPage({ basePath = '/jobs', title = 'Browse job
                     </EmptyState>
                   ) : matchMode && shown.show === 'matches' && !shownSomethingOn ? (
                     <EmptyState
+                      mascot
                       action={
                         <Button variant="secondary" onClick={showAllJobs}>
                           Show all jobs
@@ -366,9 +367,9 @@ export default function BrowseJobsPage({ basePath = '/jobs', title = 'Browse job
                       {NO_MATCHES}
                     </EmptyState>
                   ) : shownSomethingOn ? (
-                    <EmptyState action={clearButton}>No jobs match these filters. Try fewer filters or different words.</EmptyState>
+                    <EmptyState mascot action={clearButton}>No jobs match these filters. Try fewer filters or different words.</EmptyState>
                   ) : (
-                    <EmptyState>No open jobs right now. Check back soon.</EmptyState>
+                    <EmptyState mascot>No open jobs right now. Check back soon.</EmptyState>
                   )}
                 </div>
               )}

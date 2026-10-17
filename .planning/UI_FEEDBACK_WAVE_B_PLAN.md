@@ -184,3 +184,18 @@ If your slot is Oct 21 or 22, do B2 and B3 only (see the cut order in §5).
 | Checks | Yes | 435 backend and 597 frontend tests, lint, build and Pint pass. Checked in the browser: the employer charts, the dashboard, Log in with the mascot, and a real photo upload and removal on the local server |
 
 **Before deploying:** run the new migration, and include photos in the upload-persistence live check (PHASE_7 L-checks).
+
+---
+
+## 8. The four mascot animations (2026-10-17)
+
+From the team's `mascot-loader.html`, `mascot-sad.html`, `mascot-happy.html` and `mascot-door-login.html`. **Only the animations were taken** (your instruction): the drawings and their motion, ported to `components/mascot/`. The samples' page layouts, fonts (Bowlby One, DM Sans), cream background, buttons, tabs, progress bar, Skip button and iris reveal were not. Images were extracted to `src/assets/mascot-sad|happy|door|loader/`.
+
+| Mascot | Component | Where it appears |
+|---|---|---|
+| Door greeting | `MascotDoor` (loaded only with its pages) in `layout/AuthScene` | Log in and Create account, beside the form at 1024 px and wider. He glances at the field you are typing in. Replaces the walk-in |
+| Loader | `MascotLoader` in `layout/LoadingMascot` | Every full-page load (`PageLoading`: opening a portal page, and restoring the session after a reload), after 400 ms. The stroll and scrolling scenery only, in OpenDoor's colours |
+| Sad | `MascotSad`, `MascotMessage mood="sad"`, `EmptyState mascot` | A suspended account at Log in ("Your account is on hold"; the API now returns `code: account_suspended`, and a session ended by suspension lands there too), Page not found, empty lists (no applications, no matching or open jobs), and small in the Get started card while steps are left |
+| Happy | `MascotHappy`, `MascotMessage mood="happy"` | Application sent (My applications), accommodation ratings sent (thank you), and "You're all set!" once when every Get started step is done |
+
+All of them are decoration (`aria-hidden`); the words beside them carry the meaning. With Reduce motion or Quiet mode they hold one still pose; the door greeting and the loader are hidden in Quiet mode, like the other decoration. Each drawing prefixes its own ids, so two on a page never share a mask or filter.

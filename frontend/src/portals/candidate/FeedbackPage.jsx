@@ -4,6 +4,7 @@ import { generalErrorFrom } from '../../api/client.js'
 import { getFeedbackForm } from '../../api/feedback.js'
 import FeedbackForm from '../../components/feedback/FeedbackForm.jsx'
 import FeedbackSummary from '../../components/feedback/FeedbackSummary.jsx'
+import MascotMessage from '../../components/mascot/MascotMessage.jsx'
 import Button from '../../components/ui/Button.jsx'
 import LoadingMessage from '../../components/ui/LoadingMessage.jsx'
 import Notice from '../../components/ui/Notice.jsx'
@@ -135,9 +136,9 @@ export default function FeedbackPage() {
           )}
           {justSent && (
             <div ref={thanksBox} tabIndex={-1} className="focus:outline-3 focus:outline-offset-4 focus:outline-(--od-focus)">
-              <Notice tone="success">
+              <MascotMessage mood="happy" title="Thank you!">
                 <p>{thankYouText(form.employer.name)}</p>
-              </Notice>
+              </MascotMessage>
             </div>
           )}
           <FeedbackSummary sent={form.sent} title="What you sent" />

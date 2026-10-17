@@ -39,7 +39,8 @@ class LoginTest extends TestCase
 
         $this->postJson('/api/login', ['email' => 'maria@example.com', 'password' => 'Password@123'])
             ->assertForbidden()
-            ->assertJsonPath('message', 'This account has been suspended. Contact the OpenDoor administrators for help.');
+            ->assertJsonPath('message', 'This account has been suspended. Contact the OpenDoor administrators for help.')
+            ->assertJsonPath('code', 'account_suspended');
 
         $this->assertGuest('web');
     }

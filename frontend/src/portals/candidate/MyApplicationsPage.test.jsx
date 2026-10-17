@@ -143,6 +143,8 @@ describe('MyApplicationsPage', () => {
 
     // The name's own full stop ends the sentence ("Acme Corp.", not "Acme Corp..").
     expect(await screen.findByText('Your application was sent to Acme Corp.')).toBeInTheDocument()
+    // Good news gets the happy mascot (decoration; the words carry the message).
+    expect(screen.getByRole('heading', { name: 'Application sent!' })).toBeInTheDocument()
     expect(announce).toHaveBeenCalledWith('Your application was sent to Acme Corp.')
     // Shown once: the message leaves the history entry, so Back or a reload won't repeat it.
     await waitFor(() => expect(router.state.location.state).toBeNull())

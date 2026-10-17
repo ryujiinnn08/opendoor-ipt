@@ -89,8 +89,6 @@
   --animate-hero-text: od-slide-from-left 760ms var(--ease-soft) backwards;
   --animate-hero-mascot: od-slide-from-right 1100ms cubic-bezier(0.34, 1.35, 0.64, 1) backwards;
   --animate-twinkle: od-twinkle 3.2s ease-in-out infinite;
-  /* The mascot walking in beside Log in and Create account (UI_FEEDBACK_WAVE_B_PLAN B5). */
-  --animate-mascot-walk: od-walk-in 1300ms var(--ease-soft) both;
 
   @keyframes od-reveal {
     from {
@@ -131,33 +129,6 @@
       transform: translateX(120px) rotate(4deg);
     }
     to {
-      opacity: 1;
-      transform: none;
-    }
-  }
-
-  @keyframes od-walk-in {
-    0% {
-      opacity: 0;
-      transform: translateX(70%);
-    }
-    15% {
-      opacity: 1;
-      transform: translateX(55%) translateY(-4%);
-    }
-    30% {
-      transform: translateX(40%) translateY(0);
-    }
-    45% {
-      transform: translateX(26%) translateY(-4%);
-    }
-    60% {
-      transform: translateX(13%) translateY(0);
-    }
-    75% {
-      transform: translateX(4%) translateY(-3%);
-    }
-    100% {
       opacity: 1;
       transform: none;
     }
@@ -446,51 +417,6 @@
       opacity: 1;
       transition-delay: 0s;
     }
-  }
-
-  /* The loading mascot hops towards the door and slips through it, again and again. With Reduce
-     motion he simply waits by the door (the general rule would end the animation inside it). */
-  .od-run {
-    animation: od-run-to-door 1.6s var(--ease-soft-in-out) infinite;
-  }
-  @keyframes od-run-to-door {
-    0% {
-      opacity: 0;
-      transform: translateX(0);
-    }
-    10% {
-      opacity: 1;
-    }
-    20% {
-      transform: translateX(1.6rem) translateY(-0.5rem);
-    }
-    35% {
-      transform: translateX(3.2rem) translateY(0);
-    }
-    50% {
-      transform: translateX(4.8rem) translateY(-0.5rem);
-    }
-    65% {
-      transform: translateX(6.4rem) translateY(0);
-    }
-    80% {
-      opacity: 1;
-      transform: translateX(8.4rem) scale(0.9);
-    }
-    100% {
-      opacity: 0;
-      transform: translateX(9.2rem) scale(0.7);
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .od-run {
-      animation: none !important;
-      transform: translateX(6.4rem);
-    }
-  }
-  :root[data-motion='reduce'] .od-run {
-    animation: none !important;
-    transform: translateX(6.4rem);
   }
 
   /* The orange highlight behind words in a heading is decoration too. */

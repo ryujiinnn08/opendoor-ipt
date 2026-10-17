@@ -14,6 +14,6 @@ describe('LoadingMascot', () => {
     const picture = container.firstChild
     expect(picture).toHaveAttribute('aria-hidden', 'true')
     expect(picture).toHaveClass('od-decoration')
-    expect(picture.querySelector('.od-run')).not.toBeNull()
+    expect(picture.querySelector('svg')).not.toBeNull()
   })
 })
