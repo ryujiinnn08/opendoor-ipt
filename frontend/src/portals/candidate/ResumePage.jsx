@@ -35,7 +35,12 @@ export default function ResumePage() {
       <PageHeader
         title={profile?.name ?? 'My résumé'}
         documentTitle="My résumé"
-        intro={<span className="print:hidden">This is how your résumé looks to employers.</span>}
+        intro={
+          <span className="print:hidden">
+            Don&apos;t have a résumé yet? OpenDoor builds this one from your profile, and it updates when you change your profile. You can
+            also upload your own on My profile. This is how it looks to employers.
+          </span>
+        }
         tabs={<PageTabs label="Profile" items={PROFILE_TABS} className="mt-6 print:hidden" />}
         actions={
           profile && (

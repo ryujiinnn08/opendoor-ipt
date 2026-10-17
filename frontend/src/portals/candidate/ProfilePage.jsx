@@ -273,6 +273,19 @@ export default function ProfilePage() {
       {!values && !loadError && <LoadingMessage>Loading your profile…</LoadingMessage>}
 
       {values && (
+        <Notice tone="info" title="Don't have a résumé yet? OpenDoor can make one." className="mt-6 max-w-3xl">
+          <p>
+            If you have your own résumé, upload it under Résumé below. If you don&apos;t, OpenDoor builds one from this profile: fill in the
+            sections and it appears on{' '}
+            <Link to="/candidate/profile/resume" className="font-bold text-primary underline underline-offset-4 hover:no-underline">
+              My résumé
+            </Link>
+            , ready for employers and to print or save as a PDF.
+          </p>
+        </Notice>
+      )}
+
+      {values && (
         <form onSubmit={handleSubmit} noValidate className="mt-8 max-w-3xl">
           <ErrorSummary errors={summaryFrom(errors, fieldOrder(values), generalError)} focusKey={focusKey} />
 
@@ -437,7 +450,8 @@ export default function ProfilePage() {
 
           <Section id="profile-resume" title="Résumé">
             <p className="mb-4 max-w-prose">
-              OpenDoor makes a résumé from this profile.{' '}
+              Upload your own résumé if you have one. No résumé yet? OpenDoor builds one from this profile, and employers see it when you
+              apply.{' '}
               <Link to="/candidate/profile/resume" className="font-bold text-primary underline underline-offset-4 hover:no-underline">
                 View My résumé
               </Link>

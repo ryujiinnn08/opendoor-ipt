@@ -84,11 +84,11 @@ export default function ResumeUpload({ resume, onUpload, onRemove }) {
           </Button>
         </div>
       ) : (
-        <p className="mb-4 text-muted">No PDF uploaded. Employers will see your My résumé page.</p>
+        <p className="mb-4 text-muted">No résumé uploaded yet. Until you add one, employers see the résumé OpenDoor builds from your profile.</p>
       )}
 
       <label htmlFor={id} className="block font-bold">
-        PDF résumé
+        Your résumé (PDF)
       </label>
       <p id={hintId} className="mt-1 text-muted">
         A PDF, smaller than 5 MB. It uploads on its own; you don't need to save the profile.

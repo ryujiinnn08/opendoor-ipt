@@ -61,7 +61,7 @@ describe('ResumeUpload', () => {
   it('checks the file before uploading', async () => {
     const onUpload = vi.fn()
     render(<ResumeUpload resume={null} onUpload={onUpload} onRemove={vi.fn()} />)
-    const input = screen.getByLabelText('PDF résumé')
+    const input = screen.getByLabelText('Your résumé (PDF)')
 
     await userEvent.upload(input, pdf(1000, 'cv.txt', 'text/plain'), { applyAccept: false })
     await userEvent.click(screen.getByRole('button', { name: 'Upload résumé' }))
@@ -77,7 +77,7 @@ describe('ResumeUpload', () => {
     const onUpload = vi.fn().mockResolvedValue()
     render(<ResumeUpload resume={null} onUpload={onUpload} onRemove={vi.fn()} />)
 
-    await userEvent.upload(screen.getByLabelText('PDF résumé'), pdf(1000, 'cv.pdf', ''))
+    await userEvent.upload(screen.getByLabelText('Your résumé (PDF)'), pdf(1000, 'cv.pdf', ''))
     await userEvent.click(screen.getByRole('button', { name: 'Upload résumé' }))
 
     expect(onUpload).toHaveBeenCalled()
@@ -90,7 +90,7 @@ describe('ResumeUpload', () => {
         <ResumeUpload resume={null} onUpload={vi.fn().mockResolvedValue()} onRemove={vi.fn()} />
       </AnnouncerContext.Provider>,
     )
-    await userEvent.upload(screen.getByLabelText('PDF résumé'), pdf())
+    await userEvent.upload(screen.getByLabelText('Your résumé (PDF)'), pdf())
     await userEvent.click(screen.getByRole('button', { name: 'Upload résumé' }))
     expect(announce).toHaveBeenCalledWith('Your résumé is uploaded.')
 
@@ -107,14 +107,14 @@ describe('ResumeUpload', () => {
       </AnnouncerContext.Provider>,
     )
     expect(announce).toHaveBeenCalledWith('Your résumé is removed.')
-    expect(screen.getByLabelText('PDF résumé')).toHaveFocus()
+    expect(screen.getByLabelText('Your résumé (PDF)')).toHaveFocus()
   })
 
   it('uploads a PDF and shows the server’s message if it is refused', async () => {
     const onUpload = vi.fn().mockRejectedValue(new Error('The résumé must be a PDF file.'))
     render(<ResumeUpload resume={null} onUpload={onUpload} onRemove={vi.fn()} />)
 
-    await userEvent.upload(screen.getByLabelText('PDF résumé'), pdf())
+    await userEvent.upload(screen.getByLabelText('Your résumé (PDF)'), pdf())
     await userEvent.click(screen.getByRole('button', { name: 'Upload résumé' }))
 
     expect(onUpload).toHaveBeenCalled()

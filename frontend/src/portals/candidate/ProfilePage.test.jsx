@@ -161,4 +161,13 @@ describe('ProfilePage', () => {
     expect(within(photoSection).getByText('Choose a JPEG or PNG photo.')).toBeInTheDocument()
     expect(uploadPhoto).not.toHaveBeenCalled()
   })
+
+  it('lets the job seeker upload their own résumé, or know OpenDoor builds one from this profile', async () => {
+    renderPage()
+    const note = await screen.findByText("Don't have a résumé yet? OpenDoor can make one.")
+    expect(note.closest('div').parentElement).toHaveTextContent('If you have your own résumé, upload it under Résumé below')
+    expect(note.closest('div').parentElement).toHaveTextContent('OpenDoor builds one from this profile')
+    expect(screen.getAllByRole('link', { name: 'My résumé' })[0]).toHaveAttribute('href', '/candidate/profile/resume')
+    expect(screen.getByLabelText('Your résumé (PDF)')).toBeInTheDocument()
+  })
 })

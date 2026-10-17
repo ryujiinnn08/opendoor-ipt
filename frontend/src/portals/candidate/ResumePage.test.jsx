@@ -24,7 +24,7 @@ describe('ResumePage', () => {
     const { container } = renderRoutes(routes, { path: '/candidate/profile/resume', auth: seeker })
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Ana Reyes' })).toBeInTheDocument()
-    expect(screen.getByText('This is how your résumé looks to employers.')).toBeInTheDocument()
+    expect(screen.getByText(/Don.t have a résumé yet\? OpenDoor builds this one from your profile/)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Edit my profile' })).toHaveAttribute('href', '/candidate/profile')
     await userEvent.click(screen.getByRole('button', { name: 'Print or save as PDF' }))
     expect(window.print).toHaveBeenCalled()
