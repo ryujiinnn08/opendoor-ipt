@@ -22,7 +22,7 @@ const GAP = 24
  *
  * Entries are links { to, label, icon, end?, match?, count?, cta? }, buttons
  * { onClick, label, icon, loading?, loadingText? }, or the account menu
- * { menu: true, label, avatar, avatarSrc?, name, email, items, logout }.
+ * { menu: true, label, avatar, avatarSrc?, avatarFit?, name, email, items, logout }.
  */
 export default function SiteHeader({ homeTo = '/', left, right }) {
   const { settings } = useDisplaySettings()
@@ -140,7 +140,7 @@ function Entry({ entry, current, measuring }) {
 function EntryContent({ entry }) {
   return (
     <>
-      {entry.avatar ? <Avatar initials={entry.avatar} src={entry.avatarSrc} /> : entry.icon && <Icon name={entry.icon} className={entry.onClick ? 'size-4' : 'size-5'} />}
+      {entry.avatar ? <Avatar initials={entry.avatar} src={entry.avatarSrc} fit={entry.avatarFit} /> : entry.icon && <Icon name={entry.icon} className={entry.onClick ? 'size-4' : 'size-5'} />}
       {/* One span, so the space before the count survives inside the flex link. Screen readers
           hear "Notifications (2 unread)"; the red pill shows the number. */}
       <span>
@@ -162,9 +162,14 @@ function EntryContent({ entry }) {
   )
 }
 
-/** The person's photo (job seekers who added one) or initials, beside Account (decoration). */
-function Avatar({ initials, src }) {
-  if (src) return <img src={src} alt="" className="size-8 shrink-0 rounded-full object-cover" />
+/** The person's photo (job seekers), their company logo (employers) or initials, beside Account (decoration). */
+function Avatar({ initials, src, fit = 'cover' }) {
+  // A logo that fails to load (deleted, offline) falls back to the initials.
+  const [failed, setFailed] = useState(null)
+  if (src && failed !== src) {
+    const look = fit === 'contain' ? 'border border-border bg-white object-contain p-0.5' : 'object-cover'
+    return <img src={src} alt="" onError={() => setFailed(src)} className={`size-8 shrink-0 rounded-full ${look}`} />
+  }
   return (
     <span aria-hidden="true" className="inline-grid size-8 shrink-0 place-items-center rounded-full bg-yellow text-xs font-bold text-text">
       {initials}
@@ -216,7 +221,7 @@ function AccountMenu({ entry }) {
         onClick={() => setOpenOn(open ? null : pathname)}
         className={`${NAV_ITEM} ${current ? NAV_CURRENT : NAV_IDLE}`}
       >
-        <Avatar initials={entry.avatar} src={entry.avatarSrc} />
+        <Avatar initials={entry.avatar} src={entry.avatarSrc} fit={entry.avatarFit} />
         <span>{entry.label}</span>
         <Icon name="chevron-down" className={`size-4 transition-transform duration-200 ease-soft ${open ? 'rotate-180' : ''}`} />
       </button>
@@ -228,7 +233,7 @@ function AccountMenu({ entry }) {
         className="od-pop absolute right-0 z-30 mt-2 w-[min(20rem,calc(100vw-2rem))] rounded-lg border border-border bg-surface p-2 shadow-[0_12px_28px_rgba(36,27,58,0.16)]"
       >
         <div className="flex items-center gap-3 border-b border-border px-3 pt-2 pb-3">
-          <Avatar initials={entry.avatar} src={entry.avatarSrc} />
+          <Avatar initials={entry.avatar} src={entry.avatarSrc} fit={entry.avatarFit} />
           <div className="min-w-0">
             <p className="font-bold">{entry.name}</p>
             {entry.email && <p className="text-sm break-all text-muted">{entry.email}</p>}

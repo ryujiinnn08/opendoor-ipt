@@ -25,7 +25,9 @@ export default function PortalLayout() {
   const location = useLocation()
   const portal = portalFor(user)
   // A job seeker's photo in the account menu; a new version (after a change) loads the new photo.
-  const photo = usePrivateImage(getPhotoFile, role === 'candidate' ? user.photo_version : null)
+  // Employers show their company logo (or an individual employer's photo or logo), a public image.
+  const candidatePhoto = usePrivateImage(getPhotoFile, role === 'candidate' ? user.photo_version : null)
+  const photo = role === 'employer' ? (user.membership?.employer?.logo_url ?? null) : candidatePhoto
   // Job seekers and employers get notifications; admins have their queues (plan PHASE_6 §4.4).
   const notified = role === 'candidate' || role === 'employer'
   const [unread, setUnread] = useState(0)
@@ -65,6 +67,7 @@ export default function PortalLayout() {
       label: 'Account',
       avatar: initialsOf(user.name),
       avatarSrc: photo,
+      avatarFit: role === 'employer' ? 'contain' : 'cover',
       name: user.name,
       email: user.email,
       items: accountMenuFor(user),

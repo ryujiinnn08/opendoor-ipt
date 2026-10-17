@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react'
+import { fireEvent, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -109,5 +109,33 @@ describe('PortalLayout', () => {
     const menu = screen.getByRole('button', { name: 'Account' })
     await vi.waitFor(() => expect(menu.querySelector('img')).toHaveAttribute('src', 'blob:photo'))
     expect(menu.querySelector('img')).toHaveAttribute('alt', '')
+  })
+
+  it('shows an employer’s company logo, and the initials if the logo fails to load', async () => {
+    const employerRoutes = [
+      { element: <PortalLayout />, children: [{ path: '/employer/dashboard', element: <h1>Dashboard</h1> }] },
+    ]
+    const membership = { role: 'owner', department: null, employer: { id: 4, type: 'company', name: 'Acme Corp.', logo_url: 'https://api.test/api/employers/4/logo?v=1' } }
+    renderRoutes(employerRoutes, {
+      path: '/employer/dashboard',
+      auth: { status: 'authenticated', role: 'employer', user: { name: 'Jose Reyes', role: 'employer', membership } },
+    })
+
+    const menu = screen.getByRole('button', { name: 'Account' })
+    const logo = menu.querySelector('img')
+    expect(logo).toHaveAttribute('src', 'https://api.test/api/employers/4/logo?v=1')
+    expect(logo).toHaveClass('object-contain')
+    fireEvent.error(logo)
+    expect(menu.querySelector('img')).toBeNull()
+    expect(menu).toHaveTextContent('JR')
+  })
+
+  it('shows initials for an administrator', () => {
+    const adminRoutes = [{ element: <PortalLayout />, children: [{ path: '/admin/dashboard', element: <h1>Dashboard</h1> }] }]
+    renderRoutes(adminRoutes, { path: '/admin/dashboard', auth: { status: 'authenticated', role: 'admin', user: { name: 'Ana Cruz', role: 'admin' } } })
+
+    const menu = screen.getByRole('button', { name: 'Account' })
+    expect(menu.querySelector('img')).toBeNull()
+    expect(menu).toHaveTextContent('AC')
   })
 })

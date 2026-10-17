@@ -1,14 +1,18 @@
 import { fieldErrorsFrom, generalErrorFrom } from '../../api/client.js'
 import { removeLogo, uploadLogo } from '../../api/employer.js'
+import { useAuth } from '../../auth/authContext.js'
 import FileUpload from '../../components/ui/FileUpload.jsx'
 
 /**
  * Logo (or photo, for individual employers) upload for the employer profile.
  */
 export default function LogoSection({ employer, label, onChange }) {
+  const { refresh } = useAuth()
+
   async function run(action) {
     try {
       onChange(await action())
+      refresh?.() // the account menu shows the new logo
     } catch (error) {
       throw new Error(fieldErrorsFrom(error).logo ?? generalErrorFrom(error))
     }
