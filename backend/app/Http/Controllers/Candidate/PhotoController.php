@@ -63,12 +63,10 @@ class PhotoController extends Controller
         return $this->serve($profile?->show_photo_to_employers ? $profile : null, "This applicant hasn't shared a photo.");
     }
 
-    /** A job seeker's photo on the admin user list, only when they share it with employers (ADMIN_USERS_PLAN U1). */
+    /** A job seeker's photo for administrators, whether or not employers see it (ADMIN_USERS_PLAN U1). */
     public function forAdmin(User $user): StreamedResponse
     {
-        $profile = $user->candidateProfile;
-
-        return $this->serve($profile?->show_photo_to_employers ? $profile : null, "This job seeker hasn't shared a photo.");
+        return $this->serve($user->candidateProfile, "This job seeker hasn't added a photo.");
     }
 
     private function serve(?CandidateProfile $profile, string $missing): StreamedResponse

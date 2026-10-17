@@ -8,8 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * An account in the admin user list (plan PHASE_6 §4.1). For job seekers, only the card basics
- * employers also see: headline, place and a shared photo (ADMIN_USERS_PLAN U1). Never their
+ * An account in the admin user list (plan PHASE_6 §4.1). For job seekers, only the card basics:
+ * headline, place and their photo (ADMIN_USERS_PLAN U1). Never their
  * needs, disability type, contact number, résumé or ratings (PHASE_6 Q3).
  *
  * @mixin User
@@ -56,8 +56,8 @@ class AdminUserResource extends JsonResource
     private function profileBasics(): array
     {
         $profile = $this->candidateProfile;
-        // The photo only when they chose to show it to employers (UI_FEEDBACK_WAVE_B_PLAN Q2).
-        $photo = $profile?->show_photo_to_employers ? $profile->photo_path : null;
+        // Admins see any uploaded photo; "Show my photo to employers" is about employers only.
+        $photo = $profile?->photo_path;
 
         return [
             'headline' => $profile?->headline,

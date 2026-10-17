@@ -116,19 +116,26 @@ class UserEditTest extends TestCase
         $this->assertStringNotContainsString('0917 555 0199', $response->getContent());
     }
 
-    public function test_a_photo_is_shown_to_admins_only_when_shared_with_employers(): void
+    public function test_admins_see_an_uploaded_photo_even_when_employers_dont(): void
     {
         Storage::fake('local');
         $maria = User::factory()->create();
-        $path = UploadedFile::fake()->image('me.jpg')->store('photos', 'local');
+        $jose = User::factory()->create();
         $profile = $maria->candidateProfile()->create([]);
-        $profile->forceFill(['photo_path' => $path, 'show_photo_to_employers' => false])->save();
+        $profile->forceFill(['photo_path' => UploadedFile::fake()->image('me.jpg')->store('photos', 'local'), 'show_photo_to_employers' => false])->save();
 
-        $this->actingAs($this->admin, 'web')->get("/api/admin/users/{$maria->id}/photo")->assertNotFound();
-        $this->getJson("/api/admin/users/{$maria->id}")->assertJsonPath('data.profile.photo_version', null);
-
-        $profile->forceFill(['show_photo_to_employers' => true])->save();
-        $this->get("/api/admin/users/{$maria->id}/photo")->assertOk();
+        $this->actingAs($this->admin, 'web')->get("/api/admin/users/{$maria->id}/photo")->assertOk();
         $this->assertNotNull($this->getJson("/api/admin/users/{$maria->id}")->json('data.profile.photo_version'));
+
+        // No photo yet.
+        $this->get("/api/admin/users/{$jose->id}/photo")->assertNotFound();
+        $this->getJson("/api/admin/users/{$jose->id}")->assertJsonPath('data.profile.photo_version', null);
+    }
+
+    public function test_only_administrators_see_photos_here(): void
+    {
+        $maria = User::factory()->create();
+
+        $this->actingAs(User::factory()->employer()->create(), 'web')->get("/api/admin/users/{$maria->id}/photo")->assertForbidden();
     }
 }
