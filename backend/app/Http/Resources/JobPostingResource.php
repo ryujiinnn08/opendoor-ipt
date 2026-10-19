@@ -38,6 +38,8 @@ class JobPostingResource extends JsonResource
             'employment_type' => $this->employment_type?->value,
             'work_setup' => $this->work_setup?->value,
             'interview_format' => $this->interview_format?->value,
+            ...$this->resource->capacity(),
+            'closure_reason' => $this->closure_reason,
             'closes_on' => $this->closes_on?->toDateString(),
             'status' => $status->value,
             'closed_automatically' => $this->isExpired(),

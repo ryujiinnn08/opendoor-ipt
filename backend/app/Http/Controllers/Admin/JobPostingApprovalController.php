@@ -24,7 +24,7 @@ class JobPostingApprovalController extends Controller
             'status' => ['nullable', Rule::in(['pending', 'open', 'rejected'])],
         ])['status'] ?? 'pending');
 
-        $postings = JobPosting::with(JobPostingResource::RELATIONS)
+        $postings = JobPosting::with(JobPostingResource::RELATIONS)->withCapacityCounts()
             ->inDisplayStatus($status)
             ->when(
                 $status === PostingStatus::Pending,

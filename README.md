@@ -160,3 +160,5 @@ The production settings, the database steps and the planned hardening are in [.p
 Job seekers and employers can reach the **OpenDoor team** through `/contact` or by emailing **contact-opendoor@ruzgal.org**. This is platform support (account help, accessibility barriers and privacy requests); job applications go through each posting's application page.
 
 Set `CONTACT_TO_EMAIL=contact-opendoor@ruzgal.org` on the deployed API and clear cached configuration after changing it. The contact form sends through the configured mail driver, from OpenDoor's verified sending address, with the visitor's address as Reply-To. The team should monitor the receiving inbox and use Reply to answer the visitor. A sending-domain verification alone does not confirm that the inbox can receive mail; verify delivery to the real inbox after deployment. Local `MAIL_MAILER=log` writes messages to the application log instead of delivering them.
+
+Security rules, migration rollout, and MySQL concurrency verification are documented in [Hiring security](docs/HIRING_SECURITY.md).

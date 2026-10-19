@@ -54,8 +54,8 @@ class NotificationTest extends TestCase
         $this->getJson("/api/applications/{$opened->id}")->assertOk();
         $this->patchJson("/api/applications/{$hired->id}/status", ['status' => 'hired', 'expected_status' => 'reviewed'])->assertOk();
         $this->patchJson("/api/applications/{$rejected->id}/status", ['status' => 'rejected', 'expected_status' => 'reviewed'])->assertOk();
-        $this->actingAs($withdrawn->candidate, 'web')->patchJson("/api/applications/{$withdrawn->id}/status", ['status' => 'withdrawn', 'expected_status' => 'reviewed'])->assertOk();
-        $this->actingAs($confirmed->candidate, 'web')->patchJson("/api/applications/{$confirmed->id}/status", ['status' => 'hired', 'expected_status' => 'reviewed'])->assertOk();
+        $this->actingAs($withdrawn->candidate, 'web')->patchJson("/api/applications/{$withdrawn->id}/status", ['status' => 'withdrawn', 'expected_status' => 'reviewed'])->assertForbidden();
+        $this->actingAs($confirmed->candidate, 'web')->patchJson("/api/applications/{$confirmed->id}/status", ['status' => 'hired', 'expected_status' => 'reviewed'])->assertForbidden();
 
         foreach ([[$opened, 'reviewed'], [$hired, 'hired'], [$rejected, 'rejected']] as [$application, $status]) {
             $data = $this->recorded($application->candidate, ApplicationStatusChanged::class);
@@ -65,8 +65,7 @@ class NotificationTest extends TestCase
             $this->assertSame('Junior Web Developer', $data[0]['job_title']);
         }
         $toEmployer = collect($this->recorded($team['owner'], ApplicationStatusChanged::class));
-        $this->assertEqualsCanonicalizing(['withdrawn', 'hired'], $toEmployer->pluck('status')->all());
-        $this->assertSame(['candidate', 'candidate'], $toEmployer->pluck('actor')->all());
+        $this->assertCount(0, $toEmployer);
         $this->assertSame(0, $withdrawn->candidate->notifications()->count());
     }
 

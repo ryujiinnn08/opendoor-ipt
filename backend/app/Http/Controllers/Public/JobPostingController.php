@@ -26,7 +26,7 @@ class JobPostingController extends Controller
 
     public function show(Request $request, int $id): PublicJobPostingResource
     {
-        $job = JobPosting::publiclyVisible()->with(PublicJobPostingResource::RELATIONS)->findOrFail($id);
+        $job = JobPosting::publiclyVisible()->with(PublicJobPostingResource::RELATIONS)->withCapacityCounts()->findOrFail($id);
         $job->match = CandidateNeeds::for($request->user())?->matchFor($job, withNeeds: true);
         $job->myApplication = $this->myApplication($request->user(), $job);
         $job->withEmployerAbout = true;

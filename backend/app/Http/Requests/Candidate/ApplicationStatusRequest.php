@@ -8,14 +8,13 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
- * A job seeker withdrawing or confirming a hire, or an employer hiring or rejecting. expected_status is the status they saw, so a
- * change made meanwhile is never overwritten.
+ * An employer hiring or rejecting. expected_status prevents overwriting a newer decision.
  */
 class ApplicationStatusRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->role === Role::Employer;
     }
 
     /**
@@ -24,7 +23,7 @@ class ApplicationStatusRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'status' => ['required', 'string', Rule::in($this->user()?->role === Role::Employer ? ['hired', 'rejected'] : ['withdrawn', 'hired'])],
+            'status' => ['required', 'string', Rule::in(['hired', 'rejected'])],
             'expected_status' => ['required', 'string', Rule::enum(ApplicationStatus::class)],
         ];
     }

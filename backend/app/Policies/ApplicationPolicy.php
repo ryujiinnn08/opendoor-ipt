@@ -74,10 +74,10 @@ class ApplicationPolicy
     }
 
     /**
-     * Withdrawing and confirming a hire.
+     * Applicants cannot change their status.
      */
     public function actAsCandidate(User $user, Application $application): Response
     {
-        return $application->user_id === $user->id ? Response::allow() : Response::deny(self::NOT_YOURS);
+        return Response::deny('Only the authorized employer can change an application status.');
     }
 }

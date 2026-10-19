@@ -33,11 +33,7 @@ enum ApplicationStatus: string
     public function canTransitionTo(self $next, ApplicationActor $actor): bool
     {
         return match ($actor) {
-            ApplicationActor::Candidate => match ($this) {
-                self::Pending => $next === self::Withdrawn,
-                self::Reviewed => in_array($next, [self::Withdrawn, self::Hired], true),
-                default => false,
-            },
+            ApplicationActor::Candidate => false,
             ApplicationActor::Employer => match ($this) {
                 self::Pending => $next === self::Reviewed,
                 self::Reviewed => in_array($next, [self::Rejected, self::Hired], true),

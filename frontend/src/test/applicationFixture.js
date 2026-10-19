@@ -14,7 +14,7 @@ export function applicationFixture(overrides = {}) {
     hire_confirmed_by: null,
     cover_note: 'I have three years of bookkeeping.\nI would love to learn.',
     interview_request: 'Online interview with captions, please.',
-    actions: ['withdraw'],
+    actions: [],
     feedback: null,
     job: {
       id: 2,
@@ -28,4 +28,4 @@ export function applicationFixture(overrides = {}) {
 }
 
 export const reviewedFixture = (overrides = {}) =>
-  applicationFixture({ status: 'reviewed', status_label: 'Reviewed', reviewed_at: '2026-10-14T03:00:00+00:00', actions: ['withdraw', 'confirm_hire'], ...overrides })
+  applicationFixture({ status: 'reviewed', status_label: 'Reviewed', reviewed_at: '2026-10-14T03:00:00+00:00', actions: [], ...overrides })

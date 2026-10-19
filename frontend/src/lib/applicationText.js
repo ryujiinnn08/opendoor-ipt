@@ -54,7 +54,7 @@ export const JOB_STATE_TEXT = {
   removed: 'This job was removed.',
 }
 
-export const ASK_EMPLOYER_FIRST = 'If you were hired, ask the employer to open your application on OpenDoor first.'
+export const ASK_EMPLOYER_FIRST = 'Only the employer can update your application status. Please wait for their decision.'
 
 const INTERVIEW_HINTS = {
   online: "This job's interview is online. For example: captions, a chat option or more time.",

@@ -6,7 +6,9 @@ use App\Http\Middleware\EnsurePasswordChanged;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\PreventBrowserStorage;
+use App\Rules\UniqueCompany;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -45,6 +47,14 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        $exceptions->render(function (UniqueConstraintViolationException $e, Request $request) {
+            if ($request->is('api/*') && (str_contains($e->getMessage(), 'employers_company_identity_unique')
+                || str_contains($e->getMessage(), 'employers.company_name_key'))) {
+                return response()->json(['message' => UniqueCompany::MESSAGE,
+                    'errors' => ['name' => [UniqueCompany::MESSAGE]]], 422);
+            }
+        });
 
         // A record that doesn't exist (or was deleted) gets a plain message instead of
         // Laravel's "No query results for model [App\Models\...]", which users would see.

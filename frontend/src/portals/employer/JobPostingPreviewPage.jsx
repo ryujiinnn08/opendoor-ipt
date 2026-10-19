@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import HiringCapacity from '../../components/postings/HiringCapacity.jsx'
 import { Link, useParams } from 'react-router-dom'
 import { generalErrorFrom } from '../../api/client.js'
 import { getJobPosting } from '../../api/jobPostings.js'
@@ -79,6 +80,7 @@ export default function JobPostingPreviewPage() {
         </Notice>
       )}
 
+      <HiringCapacity posting={posting} />
       <JobDetails posting={posting} />
 
     </>

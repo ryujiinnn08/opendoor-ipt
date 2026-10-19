@@ -1,5 +1,4 @@
 import { screen, waitFor, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { axe } from 'vitest-axe'
 import { applicationFixture, reviewedFixture } from '../../test/applicationFixture.js'
@@ -20,7 +19,7 @@ const page = (applications, extra = {}) => ({
 })
 
 describe('MyApplicationsPage', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => vi.resetAllMocks())
 
   it('lists applications with their status, next step and filters', async () => {
     listApplications.mockResolvedValue(page([reviewedFixture(), applicationFixture({ id: 8, job: { ...applicationFixture().job, id: 3, title: 'HR Assistant', state: 'removed' } })]))
@@ -37,6 +36,8 @@ describe('MyApplicationsPage', () => {
     expect(within(rows[1]).getByText('This job was removed.')).toBeInTheDocument()
     expect(screen.queryByText(/ask the employer to open/)).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Waiting for a reply (2)' })).toHaveAttribute('href', '/candidate/applications?status=waiting')
+    expect(screen.queryByRole('button', { name: /Withdraw application|I was hired/ })).not.toBeInTheDocument()
+    expect(changeApplicationStatus).not.toHaveBeenCalled()
     expect(await axe(container)).toHaveNoViolations()
   })
 
@@ -101,32 +102,7 @@ describe('MyApplicationsPage', () => {
     expect(screen.queryByText("You haven't applied for any jobs yet.")).not.toBeInTheDocument()
   })
 
-  it('moves focus to the count when a withdrawn application leaves the list', async () => {
-    listApplications
-      .mockResolvedValueOnce(page([reviewedFixture()], { counts: { all: 1, waiting: 1, hired: 0, closed: 0 } }))
-      .mockResolvedValueOnce(page([], { counts: { all: 1, waiting: 0, hired: 0, closed: 1 } }))
-    changeApplicationStatus.mockResolvedValue(reviewedFixture({ status: 'withdrawn', actions: [] }))
-    renderRoutes(routes, { path: '/candidate/applications?status=waiting', auth })
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Withdraw application for Junior Web Developer' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Withdraw application' }))
-
-    await waitFor(() => expect(screen.getByRole('heading', { level: 2, name: '0 applications' })).toHaveFocus())
-  })
-
-  it('reloads when an application changed elsewhere', async () => {
-    listApplications
-      .mockResolvedValueOnce(page([reviewedFixture()]))
-      .mockResolvedValueOnce(page([reviewedFixture({ status: 'hired', status_label: 'Hired', actions: [] })]))
-    changeApplicationStatus.mockRejectedValue({ response: { status: 409, data: { message: 'This application changed while you were looking at it. Reload to see its status.' } } })
-    renderRoutes(routes, { path: '/candidate/applications', auth })
-
-    await userEvent.click(await screen.findByRole('button', { name: 'Withdraw application for Junior Web Developer' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Withdraw application' }))
-
-    await waitFor(() => expect(listApplications).toHaveBeenCalledTimes(2))
-    expect(await screen.findByRole('alert')).toHaveTextContent('This application changed while you were looking at it.')
-  })
 
   it('invites a job seeker without applications to find jobs', async () => {
     listApplications.mockResolvedValue(page([], { counts: { all: 0, waiting: 0, hired: 0, closed: 0 } }))
@@ -154,18 +130,5 @@ describe('MyApplicationsPage', () => {
     expect(await screen.findByText('Your application was sent to Maria Cruz.')).toBeInTheDocument()
   })
 
-  it('reloads the list after a withdrawal', async () => {
-    listApplications
-      .mockResolvedValueOnce(page([reviewedFixture()]))
-      .mockResolvedValueOnce(page([reviewedFixture({ status: 'withdrawn', actions: [] })], { counts: { all: 1, waiting: 0, hired: 0, closed: 1 } }))
-    changeApplicationStatus.mockResolvedValue(reviewedFixture({ status: 'withdrawn', actions: [] }))
-    renderRoutes(routes, { path: '/candidate/applications', auth })
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Withdraw application for Junior Web Developer' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Withdraw application' }))
-
-    expect(await screen.findByRole('link', { name: 'Closed (1)' })).toBeInTheDocument()
-    expect(listApplications).toHaveBeenCalledTimes(2)
-    expect(screen.getByText('Withdrawn')).toBeInTheDocument()
-  })
 })

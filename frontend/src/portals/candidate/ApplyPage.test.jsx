@@ -75,23 +75,23 @@ describe('ApplyPage', () => {
     getJob.mockResolvedValue({ ...job, my_application: { id: 7, status: 'pending', status_label: 'Pending', applied_at: '2026-10-13T02:00:00+00:00' } })
     open()
 
-    expect(await screen.findByText("You've already applied for this job.")).toBeInTheDocument()
+    expect(await screen.findByText("You have already applied for this job. Please wait for confirmation.")).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'View your application' })).toHaveAttribute('href', '/candidate/applications/7')
     expect(screen.queryByRole('button', { name: 'Send application' })).not.toBeInTheDocument()
   })
 
   it('explains an application sent from another tab, keeping the text', async () => {
     const announce = vi.fn()
-    applyForJob.mockRejectedValue({ response: { status: 409, data: { message: "You've already applied for this job.", application_id: 9 } } })
+    applyForJob.mockRejectedValue({ response: { status: 409, data: { message: "You have already applied for this job. Please wait for confirmation.", application_id: 9 } } })
     renderRoutes(routes, { path: '/candidate/jobs/2/apply', auth, announce })
     await fillIn()
     await userEvent.click(screen.getByRole('button', { name: 'Send application' }))
 
-    expect(await screen.findByText("You've already applied for this job.")).toBeInTheDocument()
+    expect(await screen.findByText("You have already applied for this job. Please wait for confirmation.")).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'View your application' })).toHaveAttribute('href', '/candidate/applications/9')
     expect(screen.getByLabelText(/Cover note/)).toHaveValue('I have three years of bookkeeping.')
-    expect(announce).toHaveBeenCalledWith("You've already applied for this job.")
-    await waitFor(() => expect(screen.getByText("You've already applied for this job.").closest('[tabindex="-1"]')).toHaveFocus())
+    expect(announce).toHaveBeenCalledWith("You have already applied for this job. Please wait for confirmation.")
+    await waitFor(() => expect(screen.getByText("You have already applied for this job. Please wait for confirmation.").closest('[tabindex="-1"]')).toHaveFocus())
     expect(screen.queryByRole('button', { name: 'Send application' })).not.toBeInTheDocument()
   })
 
@@ -137,4 +137,23 @@ describe('ApplyPage', () => {
     expect(await screen.findByText("This job isn't taking applications.")).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Send application' })).not.toBeInTheDocument()
   })
+  it('shows a reached application limit distinctly from a duplicate', async () => {
+    applyForJob.mockRejectedValue({ response: { status: 409, data: { message: 'This job has reached its application limit.' } } })
+    open()
+    await fillIn()
+    await userEvent.click(screen.getByRole('button', { name: 'Send application' }))
+    expect(await screen.findByText('This job has reached its application limit.')).toBeInTheDocument()
+    expect(screen.queryByText(/You have already applied/)).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Send application' })).not.toBeInTheDocument()
+    expect(screen.getByLabelText(/Cover note/)).toHaveValue('I have three years of bookkeeping.')
+  })
+
+  it('does not offer submission when the server reports full capacity', async () => {
+    getJob.mockResolvedValue({ ...job, accepting_applications: false })
+    open()
+    expect(await screen.findByText('This job has reached its hiring or application limit.')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Send application' })).not.toBeInTheDocument()
+    expect(applyForJob).not.toHaveBeenCalled()
+  })
+
 })

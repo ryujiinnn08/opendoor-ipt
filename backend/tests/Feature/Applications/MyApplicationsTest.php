@@ -103,7 +103,7 @@ class MyApplicationsTest extends TestCase
             ->assertJsonPath('data.actions', []);
         $this->getJson("/api/applications/{$pending->id}")
             ->assertJsonPath('data.hired_accommodations', null)
-            ->assertJsonPath('data.actions', ['withdraw']);
+            ->assertJsonPath('data.actions', []);
     }
 
     public function test_only_the_owner_reads_an_application(): void

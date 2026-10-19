@@ -22,7 +22,7 @@ const accommodations = [
 const detailed = (application) => ({ ...application, job: { ...application.job, accommodations }, hired_accommodations: null })
 
 describe('ApplicationPage', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => vi.resetAllMocks())
 
   it('shows a Pending application: path, job, what was sent', async () => {
     getApplication.mockResolvedValue(detailed(applicationFixture()))
@@ -36,8 +36,9 @@ describe('ApplicationPage', () => {
     const sent = screen.getByRole('region', { name: 'What you sent' })
     expect(within(sent).getByText(/I have three years of bookkeeping/)).toBeInTheDocument()
     expect(within(sent).getByText('Online interview with captions, please.')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Withdraw application for Junior Web Developer' })).toBeInTheDocument()
-    expect(screen.getByText('If you were hired, ask the employer to open your application on OpenDoor first.')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Withdraw application|I was hired/ })).not.toBeInTheDocument()
+    expect(changeApplicationStatus).not.toHaveBeenCalled()
+    expect(screen.getByText('Only the employer can update your application status. Please wait for their decision.')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Back to My applications' })).toHaveAttribute('href', '/candidate/applications')
     expect(await axe(container)).toHaveNoViolations()
   })
@@ -111,32 +112,7 @@ describe('ApplicationPage', () => {
     expect(screen.queryByRole('link', { name: 'See the job' })).not.toBeInTheDocument()
   })
 
-  it('updates in place after an action', async () => {
-    getApplication.mockResolvedValue(detailed(reviewedFixture()))
-    changeApplicationStatus.mockResolvedValue(detailed(reviewedFixture({ status: 'withdrawn', status_label: 'Withdrawn', withdrawn_at: '2026-10-15T03:00:00+00:00', actions: [] })))
-    open()
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Withdraw application for Junior Web Developer' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Withdraw application' }))
-
-    expect(await screen.findByText('You withdrew this application.')).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /Withdraw application for/ })).not.toBeInTheDocument()
-    expect(getApplication).toHaveBeenCalledTimes(1)
-  })
-
-  it('reloads when the application changed elsewhere', async () => {
-    getApplication
-      .mockResolvedValueOnce(detailed(reviewedFixture()))
-      .mockResolvedValueOnce(detailed(reviewedFixture({ status: 'rejected', status_label: 'Rejected', rejected_at: '2026-10-15T03:00:00+00:00', actions: [] })))
-    changeApplicationStatus.mockRejectedValue({ response: { status: 409, data: { message: 'This application changed while you were looking at it. Reload to see its status.' } } })
-    open()
-
-    await userEvent.click(await screen.findByRole('button', { name: 'Withdraw application for Junior Web Developer' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Withdraw application' }))
-
-    expect(await screen.findByText(/The employer chose other applicants/)).toBeInTheDocument()
-    expect(getApplication).toHaveBeenCalledTimes(2)
-  })
 
   it("says it can't find someone else's or a missing application", async () => {
     getApplication.mockRejectedValue({ response: { status: 403, data: { message: "This application isn't yours." } } })

@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\Role;
 use App\Models\JobPosting;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
@@ -14,6 +15,9 @@ class JobPostingPolicy
      */
     public function manage(User $user, JobPosting $posting): Response
     {
+        if ($user->role !== Role::Employer || ! $user->is_active) {
+            return Response::deny('Only an active employer can manage job postings.');
+        }
         $member = $user->membership;
 
         if ($member === null || $member->employer_id !== $posting->employer_id) {

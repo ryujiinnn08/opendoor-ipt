@@ -8,11 +8,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Employer\JobPostingRequest;
 use App\Http\Resources\JobPostingResource;
 use App\Models\JobPosting;
+use App\Services\HiringAudit;
 use App\Services\JobPostingWorkflow;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
@@ -34,8 +36,8 @@ class JobPostingController extends Controller
         $ownsCompany = $member->isOwner() && $member->employer->isCompany();
 
         $postings = JobPosting::visibleTo($request->user())
-            ->with(JobPostingResource::RELATIONS)
-            ->withCount(['applications', 'applications as new_applications_count' => fn ($query) => $query->where('status', ApplicationStatus::Pending)])
+            ->with(JobPostingResource::RELATIONS)->withCapacityCounts()
+            ->withCount(['applications as new_applications_count' => fn ($query) => $query->where('status', ApplicationStatus::Pending)])
             // Removed by OpenDoor (Phase 6A): its own filter, with the reason.
             ->when($status === 'removed', fn ($query) => $query->onlyTrashed()->whereNotNull('removed_at'))
             ->when(! in_array($status, ['all', 'removed'], true), fn ($query) => $query->inDisplayStatus(PostingStatus::from($status)))
@@ -93,14 +95,20 @@ class JobPostingController extends Controller
     {
         Gate::authorize('manage', $posting);
 
-        // A waiting applicant would vanish from the employer's view and never get a decision (Q5).
-        $waiting = $posting->applications()->whereIn('status', ApplicationStatus::waiting())->count();
-        if ($waiting > 0) {
-            $who = $waiting === 1 ? '1 applicant is' : "{$waiting} applicants are";
-            abort(response()->json(['message' => "{$who} waiting for your decision. Decide on them or close the posting instead."], 422));
-        }
+        DB::transaction(function () use ($posting) {
+            $posting = JobPosting::whereKey($posting->id)->lockForUpdate()->firstOrFail();
+            Gate::authorize('manage', $posting);
+            // A waiting applicant would vanish from the employer's view and never get a decision (Q5).
+            $waiting = $posting->applications()->whereIn('status', ApplicationStatus::waiting())->count();
+            if ($waiting > 0) {
+                $who = $waiting === 1 ? '1 applicant is' : "{$waiting} applicants are";
+                abort(response()->json(['message' => "{$who} waiting for your decision. Decide on them or close the posting instead."], 422));
+            }
 
-        $posting->delete();
+            $posting->delete();
+
+            HiringAudit::record($posting, auth()->user(), 'posting_deleted', $posting->status->value);
+        });
 
         return response()->noContent();
     }

@@ -21,7 +21,7 @@ import { summaryFrom } from '../../lib/errorSummary.js'
 import { RECORD_ID } from '../../lib/recordId.js'
 
 const NOT_TAKING = "This job isn't taking applications."
-const ALREADY = "You've already applied for this job."
+const ALREADY = "You have already applied for this job. Please wait for confirmation."
 const UNVERIFIED = 'Please confirm your email address before you apply.'
 
 /**
@@ -73,12 +73,13 @@ export default function ApplyPage() {
   // A refusal is read out and takes focus, so nobody presses Send again without knowing why.
   useEffect(() => {
     if (!refusal) return
-    announce({ already: ALREADY, unverified: UNVERIFIED }[refusal.kind] ?? NOT_TAKING)
+    announce({ already: ALREADY, unverified: UNVERIFIED }[refusal.kind] ?? refusal.message ?? NOT_TAKING)
     refusalBox.current?.focus()
   }, [refusal, announce])
 
   async function handleSubmit(event) {
     event.preventDefault()
+    if (sending || job?.accepting_applications === false) return
     clear()
     setRefusal(null)
     setSending(true)
@@ -88,7 +89,7 @@ export default function ApplyPage() {
       navigate('/candidate/applications', { state: { sent: job.employer.name } })
     } catch (error) {
       const status = error?.response?.status
-      if (status === 409) setRefusal({ kind: 'already', applicationId: error.response.data?.application_id })
+      if (status === 409) setRefusal(error.response.data?.application_id ? { kind: 'already', applicationId: error.response.data.application_id } : { kind: 'closed', message: error.response.data?.message })
       else if (status === 404) setRefusal({ kind: 'closed' })
       else if (isEmailUnverified(error)) setRefusal({ kind: 'unverified' })
       else showApiError(error)
@@ -128,7 +129,8 @@ export default function ApplyPage() {
         </Notice>
       )}
 
-      {job && !applied && (
+      {job && !applied && job.accepting_applications === false && <Notice className="mt-6">This job has reached its hiring or application limit.</Notice>}
+      {job && !applied && job.accepting_applications !== false && (
         <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_22rem]">
           <form data-tour="apply-form" onSubmit={handleSubmit} noValidate className="max-w-prose">
             {refusal && (
@@ -137,7 +139,7 @@ export default function ApplyPage() {
                   <VerifyEmailNotice title={UNVERIFIED} />
                 ) : (
                   <Notice tone="info">
-                    <p>{refusal.kind === 'already' ? ALREADY : NOT_TAKING}</p>
+                    <p>{refusal.kind === 'already' ? ALREADY : (refusal.message ?? NOT_TAKING)}</p>
                     {refusal.kind === 'already' && refusal.applicationId && (
                       <Link to={`/candidate/applications/${refusal.applicationId}`} className={TEXT_LINK}>
                         View your application

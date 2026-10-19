@@ -17,7 +17,7 @@ export default function StickyApplyBar({ job }) {
   const allowed = settings.text < 150
 
   const applyPath = `/candidate/jobs/${job.id}/apply`
-  const action = !role
+  const action = job.accepting_applications === false && !job.my_application ? null : !role
     ? { to: `/login?next=${encodeURIComponent(applyPath)}`, label: 'Log in to apply' }
     : role === 'candidate' && job.my_application
       ? { to: `/candidate/applications/${job.my_application.id}`, label: 'View your application' }

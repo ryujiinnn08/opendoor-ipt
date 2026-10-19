@@ -58,7 +58,7 @@ export const chapters = [
   ] },
   { id: 'applications', title: 'Track applications', steps: [
     step('list', 'Follow your progress', 'Your applications appear here after you apply. Open one to see its status and next steps. Next opens the first available application, or an example.', applications, page, { capture: 'application' }),
-    step('detail', 'Read your application status', 'Check the status and progress shown on this page. Withdrawal is available only when the real application allows it; tour buttons never withdraw an application.', '@application', 'application-details', { example: 'Example — not a real application: Office assistant · Pending. An employer may review it and later record a decision.' }),
+    step('detail', 'Read your application status', 'Check the status and progress shown on this page. Only the employer can update your application status.', '@application', 'application-details', { example: 'Example — not a real application: Office assistant · Pending. An employer may review it and later record a decision.' }),
   ] },
   { id: 'notifications', title: 'Notifications', steps: [
     step('updates', 'Check for updates', 'Updates about applications and available feedback appear here. An empty list is normal for a new account. The header count refreshes when you navigate pages.', '/notifications', page),

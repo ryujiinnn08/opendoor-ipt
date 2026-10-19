@@ -33,6 +33,8 @@ class PublicJobPostingResource extends JsonResource
             'employment_type' => $this->employment_type?->value,
             'work_setup' => $this->work_setup?->value,
             'interview_format' => $this->interview_format?->value,
+            ...$this->resource->capacity(),
+            'closure_reason' => $this->closure_reason,
             'closes_on' => $this->closes_on?->toDateString(),
             // The day it went live in Manila (for "New" on job cards); the exact approval time stays private.
             'posted_on' => $this->approved_at?->timezone(config('opendoor.postings.timezone'))->toDateString(),

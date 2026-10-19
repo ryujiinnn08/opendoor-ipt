@@ -1,3 +1,5 @@
+import Icon from '../../../components/ui/Icon.jsx'
+import HiringCapacity from '../../../components/postings/HiringCapacity.jsx'
 import { Link } from 'react-router-dom'
 import PostingStatusBadge from '../../../components/postings/PostingStatusBadge.jsx'
 import Button from '../../../components/ui/Button.jsx'
@@ -5,10 +7,10 @@ import { SECONDARY_LINK } from '../../../components/ui/buttonLinkStyles.js'
 import { formatDate, formatDay } from '../../../lib/format.js'
 
 const BUTTONS = [
-  { action: 'change_closing_date', label: 'Change closing date' },
-  { action: 'close', label: 'Close' },
-  { action: 'reopen', label: 'Reopen' },
-  { action: 'delete', label: 'Delete' },
+  { action: 'change_closing_date', label: 'Change closing date', icon: 'calendar' },
+  { action: 'close', label: 'Close', icon: 'lock' },
+  { action: 'reopen', label: 'Reopen', icon: 'refresh' },
+  { action: 'delete', label: 'Delete', icon: 'trash' },
 ]
 
 /** "4 applicants, 2 new" linking to the posting's applicants, or plain "No applicants yet". */
@@ -21,9 +23,9 @@ function applicantsLink(posting) {
   return (
     <Link
       to={`/employer/job-postings/${posting.id}/applicants`}
-      className="inline-flex min-h-11 items-center font-bold text-primary underline underline-offset-4 hover:no-underline"
+      className="inline-flex min-h-11 items-center gap-2 font-bold text-primary underline underline-offset-4 hover:no-underline"
     >
-      {text}{' '}
+      <Icon name="people" />{text}{' '}
       <span className="sr-only">for {posting.title}</span>
     </Link>
   )
@@ -53,14 +55,15 @@ export default function PostingListItem({ posting, showDepartment, showCreator, 
         <PostingStatusBadge status={removal ? 'removed' : posting.status} />
       </div>
 
-      <ul className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-muted">
-        {showDepartment && posting.department && <li>Department: {posting.department.name}</li>}
-        {!removal && <li>{posting.closes_on ? `Closing date: ${formatDay(posting.closes_on)}` : 'No closing date yet'}</li>}
-        <li>{count === 1 ? '1 accommodation' : `${count} accommodations`}</li>
-        {showCreator && posting.created_by && <li>Created by {posting.created_by.name}</li>}
+      <ul className="mt-2 flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted [&>li]:flex [&>li]:items-center [&>li]:gap-2">
+        {showDepartment && posting.department && <li><Icon name="building" />Department: {posting.department.name}</li>}
+        {!removal && <li><Icon name="calendar" />{posting.closes_on ? `Closing date: ${formatDay(posting.closes_on)}` : 'No closing date yet'}</li>}
+        <li><Icon name="accessibility" />{count === 1 ? '1 accommodation' : `${count} accommodations`}</li>
+        {showCreator && posting.created_by && <li><Icon name="user" />Created by {posting.created_by.name}</li>}
         {posting.applicants && <li>{applicantsLink(posting)}</li>}
       </ul>
 
+      <HiringCapacity posting={posting} />
       {removal && (
         <p className="mt-3 max-w-prose border-l-4 border-text pl-4">
           Removed by OpenDoor on {formatDate(removal.removed_at)}: {removal.reason}
@@ -79,12 +82,13 @@ export default function PostingListItem({ posting, showDepartment, showCreator, 
         <div className="mt-4 flex flex-wrap gap-2">
           {posting.actions.includes('edit') && (
             <Link to={`/employer/job-postings/${posting.id}/edit`} aria-label={`Edit ${posting.title}`} className={SECONDARY_LINK}>
-              Edit
+              <Icon name="pencil" className="size-5" />Edit
             </Link>
           )}
-          {BUTTONS.filter(({ action }) => posting.actions.includes(action)).map(({ action, label }) => (
+          {BUTTONS.filter(({ action }) => posting.actions.includes(action)).map(({ action, label, icon }) => (
             <Button
               key={action}
+              icon={icon}
               variant="secondary"
               aria-label={`${label} ${posting.title}`}
               onClick={() => onAction(action, posting)}

@@ -8,6 +8,8 @@ use App\Models\Application;
 use App\Services\CandidateNeeds;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /**
  * An application as the job's employer sees it (plan PHASE_4 §6.2). Never the job seeker's own
@@ -70,8 +72,17 @@ class ApplicantResource extends JsonResource
         }
 
         if ($this->detailed) {
+            $data['history'] = DB::table('hiring_events')->leftJoin('users', 'users.id', '=', 'hiring_events.actor_user_id')
+                ->where('application_id', $this->id)->orderByDesc('hiring_events.id')->limit(100)
+                ->get(['hiring_events.id', 'action', 'previous_status', 'new_status', 'actor_user_id', 'users.name as actor_name', 'hiring_events.created_at'])
+                ->map(function ($event) {
+                    $event->created_at = Carbon::parse($event->created_at)->toIso8601String();
+
+                    return $event;
+                });
             $job = $this->jobPosting;
             $data['job'] = [
+                ...$job->capacity(),
                 'id' => $job->id,
                 'title' => $job->title,
                 'interview_format' => $job->interview_format?->value,
@@ -118,8 +129,8 @@ class ApplicantResource extends JsonResource
     private function actions(): array
     {
         return array_values(array_filter([
-            $this->status->canTransitionTo(ApplicationStatus::Hired, ApplicationActor::Employer) ? 'hire' : null,
-            $this->status->canTransitionTo(ApplicationStatus::Rejected, ApplicationActor::Employer) ? 'reject' : null,
+            $this->status->canTransitionTo(ApplicationStatus::Hired, ApplicationActor::Employer) && ! $this->jobPosting->trashed() && $this->jobPosting->capacity()['remaining_slots'] > 0 ? 'hire' : null,
+            $this->status->canTransitionTo(ApplicationStatus::Rejected, ApplicationActor::Employer) && ! $this->jobPosting->trashed() ? 'reject' : null,
         ]));
     }
 }

@@ -45,6 +45,7 @@ import {
   SlidersHorizontal,
   Sparkle,
   TriangleAlert,
+  Trash2,
   Type,
   User,
   Users,
@@ -98,6 +99,7 @@ export const ICONS = {
   sliders: SlidersHorizontal,
   sparkle: Sparkle,
   type: Type,
+  trash: Trash2,
   user: User,
   volume: Volume2,
 }

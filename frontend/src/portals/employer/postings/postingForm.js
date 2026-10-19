@@ -12,6 +12,8 @@ export const FORM_FIELDS = [
   'employment_type',
   'interview_format',
   'accommodations',
+  'hiring_slots',
+  'application_limit',
   'closes_on',
 ]
 
@@ -48,6 +50,8 @@ export function emptyValues({ location = '', departmentId = '' } = {}) {
     work_setup: '',
     employment_type: '',
     interview_format: '',
+    hiring_slots: '1',
+    application_limit: '',
     closes_on: '',
     accommodations: [],
   }
@@ -64,6 +68,8 @@ export function valuesFrom(posting) {
     work_setup: posting.work_setup ?? '',
     employment_type: posting.employment_type ?? '',
     interview_format: posting.interview_format ?? '',
+    hiring_slots: String(posting.hiring_slots ?? 1),
+    application_limit: posting.application_limit == null ? '' : String(posting.application_limit),
     closes_on: posting.closes_on ?? '',
     accommodations: posting.accommodations.map(({ id, note }) => ({ id, note: note ?? '' })),
   }
@@ -113,6 +119,13 @@ export function validatePosting(values, { submitting, needsDepartment, range }) 
     }
   }
 
+  for (const key of ['hiring_slots', 'application_limit']) {
+    const value = String(values[key] ?? '').trim()
+    if (key === 'application_limit' && value === '') continue
+    if (!/^\d+$/.test(value) || Number(value) < 1 || Number(value) > 1000000) {
+      errors[key] = 'Enter a whole number between 1 and 1,000,000.'
+    }
+  }
   return errors
 }
 
@@ -131,6 +144,8 @@ export function payloadFrom(values, { submit, needsDepartment }) {
     work_setup: blankToNull(values.work_setup),
     employment_type: blankToNull(values.employment_type),
     interview_format: blankToNull(values.interview_format),
+    hiring_slots: Number(values.hiring_slots),
+    application_limit: String(values.application_limit ?? '').trim() === '' ? null : Number(values.application_limit),
     closes_on: blankToNull(values.closes_on),
     accommodations: values.accommodations.map(({ id, note }) => ({ id, note: note?.trim() ? note.trim() : null })),
     submit,
@@ -186,6 +201,7 @@ export function pickerErrors(errors, values) {
 export function savedMessage({ before, saved }) {
   const title = `"${saved.title}"`
 
+  if (saved.status === 'closed' && saved.closure_reason === 'slots_filled') return `${title} was saved. It is closed because all hiring slots are filled.`
   if (before === 'open' || before === 'closed') {
     return `${title} was sent for approval again. Job seekers won't see it until it is approved.`
   }

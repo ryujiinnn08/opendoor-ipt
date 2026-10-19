@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\RemovePostingRequest;
 use App\Models\JobPosting;
 use App\Notifications\PostingRemoved;
+use App\Services\HiringAudit;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -34,6 +35,7 @@ class JobPostingRemovalController extends Controller
                 'removal_reason' => $request->validated('reason'),
             ])->save();
             $posting->delete();
+            HiringAudit::record($posting, $request->user(), 'posting_removed', $posting->status->value, details: ['reason' => $request->validated('reason')]);
 
             // Its managers hear about it; the reason is on their Removed list (Phase 6B).
             DB::afterCommit(fn () => Notification::send($posting->managers(), new PostingRemoved($posting)));

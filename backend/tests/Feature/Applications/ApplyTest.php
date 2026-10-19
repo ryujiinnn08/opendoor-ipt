@@ -5,6 +5,7 @@ namespace Tests\Feature\Applications;
 use App\Models\Application;
 use App\Models\JobPosting;
 use App\Models\User;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
@@ -15,7 +16,7 @@ class ApplyTest extends TestCase
 
     private const NOT_TAKING = "This job isn't taking applications.";
 
-    private const ALREADY = "You've already applied for this job.";
+    private const ALREADY = 'You have already applied for this job. Please wait for confirmation.';
 
     public function test_a_job_seeker_applies_with_optional_texts(): void
     {
@@ -31,7 +32,7 @@ class ApplyTest extends TestCase
             ->assertJsonPath('data.status_label', 'Pending')
             ->assertJsonPath('data.cover_note', "I have three years of bookkeeping.\nI'd love to learn.")
             ->assertJsonPath('data.interview_request', 'Online interview with captions, please.')
-            ->assertJsonPath('data.actions', ['withdraw'])
+            ->assertJsonPath('data.actions', [])
             ->assertJsonPath('data.job.id', $job->id)
             ->assertJsonPath('data.job.title', $job->title)
             ->assertJsonPath('data.job.state', 'open')
@@ -82,26 +83,11 @@ class ApplyTest extends TestCase
             ->assertStatus(409)->assertJsonPath('application_id', $withdrawn->id);
     }
 
-    public function test_the_unique_index_answers_like_the_check(): void
+    public function test_database_rejects_duplicate_applications_without_the_workflow(): void
     {
-        $seeker = User::factory()->create();
-        $job = JobPosting::factory()->open()->create();
-        $winner = null;
-        Application::creating(function () use ($seeker, $job, &$winner) {
-            if ($winner === null) {
-                $winner = DB::table('applications')->insertGetId([
-                    'job_posting_id' => $job->id,
-                    'user_id' => $seeker->id,
-                    'status' => 'pending',
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
-        });
-
-        $this->actingAs($seeker, 'web')->postJson("/api/job-postings/{$job->id}/applications", [])
-            ->assertStatus(409)->assertJsonPath('message', self::ALREADY)->assertJsonPath('application_id', $winner);
-        $this->assertSame(1, Application::count());
+        $application = Application::factory()->create();
+        $this->expectException(UniqueConstraintViolationException::class);
+        DB::table('applications')->insert(['job_posting_id' => $application->job_posting_id, 'user_id' => $application->user_id]);
     }
 
     public function test_texts_are_limited_and_status_cannot_be_sent(): void

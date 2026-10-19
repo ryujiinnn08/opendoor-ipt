@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources;
 
-use App\Enums\ApplicationActor;
 use App\Enums\ApplicationStatus;
 use App\Enums\PostingStatus;
 use App\Models\Accommodation;
@@ -111,21 +110,9 @@ class CandidateApplicationResource extends JsonResource
         ])->values()->all();
     }
 
-    /**
-     * What the job seeker may do now: withdraw, confirm a hire.
-     *
-     * @return list<string>
-     */
+    /** Applicants may only view their status. */
     private function actions(): array
     {
-        $actions = [];
-        if ($this->status->canTransitionTo(ApplicationStatus::Withdrawn, ApplicationActor::Candidate)) {
-            $actions[] = 'withdraw';
-        }
-        if ($this->status->canTransitionTo(ApplicationStatus::Hired, ApplicationActor::Candidate)) {
-            $actions[] = 'confirm_hire';
-        }
-
-        return $actions;
+        return [];
     }
 }

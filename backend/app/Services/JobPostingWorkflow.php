@@ -7,6 +7,7 @@ use App\Models\JobPosting;
 use App\Models\User;
 use App\Notifications\PostingDecided;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
 use LogicException;
@@ -38,6 +39,7 @@ class JobPostingWorkflow
 
             $posting->save();
             $this->syncAccommodations($posting, $accommodations ?? []);
+            HiringAudit::record($posting, $author, 'posting_created', null, $posting->status->value, details: $this->capacityFields($posting));
 
             return $posting;
         });
@@ -57,16 +59,29 @@ class JobPostingWorkflow
             // the save must see the new status (an approved posting goes back for review).
             $posting = JobPosting::whereKey($posting->id)->lockForUpdate()->firstOrFail();
 
+            Gate::forUser($editor)->authorize('manage', $posting);
+            $before = $posting->status->value;
+            $previousCapacity = $this->capacityFields($posting);
             $posting->fill($fields)->forceFill([
                 'department_id' => $this->departmentFor($editor, $fields['department_id'] ?? $posting->department_id),
             ]);
+
+            $capacity = $posting->capacity();
+            if ($posting->hiring_slots < $capacity['hired_count']) {
+                throw ValidationException::withMessages(['hiring_slots' => 'Hiring slots cannot be fewer than the number already hired.']);
+            }
+            if ($posting->application_limit !== null && $posting->application_limit < $capacity['application_count']) {
+                throw ValidationException::withMessages(['application_limit' => 'The application limit cannot be fewer than the applications already received.']);
+            }
 
             $next = match ($posting->status) {
                 PostingStatus::Draft, PostingStatus::Rejected => $submit ? PostingStatus::Pending : $posting->status,
                 PostingStatus::Pending, PostingStatus::Open, PostingStatus::Closed => PostingStatus::Pending,
             };
 
-            if ($next !== $posting->status) {
+            if ($capacity['remaining_slots'] === 0) {
+                $posting->forceFill(['status' => PostingStatus::Closed, 'closure_reason' => 'slots_filled']);
+            } elseif ($next !== $posting->status) {
                 $this->moveTo($posting, $next);
             }
 
@@ -75,6 +90,9 @@ class JobPostingWorkflow
             if ($accommodations !== null) {
                 $this->syncAccommodations($posting, $accommodations);
             }
+
+            HiringAudit::record($posting, $editor, 'posting_updated', $before, $posting->status->value,
+                details: ['previous_capacity' => $previousCapacity, 'capacity' => $this->capacityFields($posting)]);
 
             return $posting;
         });
@@ -88,6 +106,7 @@ class JobPostingWorkflow
             }
 
             $this->moveTo($posting, PostingStatus::Closed);
+            $posting->closure_reason = 'employer_closed';
             $posting->save();
         });
     }
@@ -103,6 +122,8 @@ class JobPostingWorkflow
                 throw ValidationException::withMessages(['action' => 'Only closed postings can be reopened.']);
             }
 
+            $this->requireAvailableCapacity($posting);
+            $posting->closure_reason = null;
             if ($posting->status !== PostingStatus::Open) {
                 $this->moveTo($posting, PostingStatus::Open);
             }
@@ -139,7 +160,12 @@ class JobPostingWorkflow
     {
         return DB::transaction(function () use ($posting, $change) {
             $locked = JobPosting::whereKey($posting->id)->lockForUpdate()->first() ?? abort(404);
+            Gate::authorize('manage', $locked);
+            $before = $locked->status->value;
+            $previousDate = $locked->closes_on?->toDateString();
             $change($locked);
+            HiringAudit::record($locked, auth()->user(), 'posting_status_changed', $before, $locked->status->value,
+                details: ['previous_closes_on' => $previousDate, 'closes_on' => $locked->closes_on?->toDateString(), 'closure_reason' => $locked->closure_reason]);
 
             return $locked;
         });
@@ -164,12 +190,17 @@ class JobPostingWorkflow
             }
 
             if ($decision === 'approve') {
+                $this->requireAvailableCapacity($posting);
+                $posting->closure_reason = null;
                 $this->moveTo($posting, PostingStatus::Open);
                 $posting->forceFill(['approved_at' => now(), 'rejection_reason' => null])->save();
             } else {
                 $this->moveTo($posting, PostingStatus::Rejected);
                 $posting->forceFill(['rejection_reason' => $reason])->save();
             }
+
+            HiringAudit::record($posting, auth()->user(), 'posting_'.$decision, 'pending', $posting->status->value,
+                details: ['reason' => $reason]);
 
             // The department's managers hear the result (M9, Phase 6B). Its creator is one of them
             // while they still manage it; someone who left or moved hears nothing (review CR-01).
@@ -194,7 +225,7 @@ class JobPostingWorkflow
 
         return match ($posting->displayStatus()) {
             PostingStatus::Open => ['edit', 'close', 'change_closing_date', 'delete'],
-            PostingStatus::Closed => ['edit', 'reopen', 'delete'],
+            PostingStatus::Closed => $posting->capacity()['remaining_slots'] > 0 && ($posting->application_limit === null || $posting->capacity()['application_count'] < $posting->application_limit) ? ['edit', 'reopen', 'delete'] : ['edit', 'delete'],
             default => ['edit', 'delete'],
         };
     }
@@ -214,6 +245,22 @@ class JobPostingWorkflow
         return $member->isOwner() ? (int) $requested : $member->department_id;
     }
 
+    private function capacityFields(JobPosting $posting): array
+    {
+        return ['hiring_slots' => $posting->hiring_slots, 'application_limit' => $posting->application_limit];
+    }
+
+    private function requireAvailableCapacity(JobPosting $posting): void
+    {
+        $capacity = $posting->capacity();
+        if ($capacity['remaining_slots'] === 0) {
+            throw ValidationException::withMessages(['hiring_slots' => 'All hiring slots are filled. Increase hiring slots before reopening.']);
+        }
+        if ($posting->application_limit !== null && $capacity['application_count'] >= $posting->application_limit) {
+            throw ValidationException::withMessages(['application_limit' => 'The application limit has been reached. Increase it before reopening.']);
+        }
+    }
+
     private function moveTo(JobPosting $posting, PostingStatus $next): void
     {
         if (! $posting->status->canTransitionTo($next)) {
@@ -221,6 +268,9 @@ class JobPostingWorkflow
         }
 
         $posting->status = $next;
+        if ($next !== PostingStatus::Closed) {
+            $posting->closure_reason = null;
+        }
 
         if ($next === PostingStatus::Pending) {
             $posting->forceFill(['submitted_at' => now(), 'rejection_reason' => null]);

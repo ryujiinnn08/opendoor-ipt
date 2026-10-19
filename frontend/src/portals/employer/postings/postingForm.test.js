@@ -191,3 +191,17 @@ describe('savedMessage', () => {
     )
   })
 })
+
+
+describe('hiring capacity', () => {
+  it.each(['0', '-1', '1.5', '1000001', 'abc'])('refuses invalid capacity %s', (value) => {
+    const errors = validatePosting({ ...completeValues, hiring_slots: value, application_limit: value }, { submitting: true, needsDepartment: false, range })
+    expect(errors.hiring_slots).toBeDefined()
+    expect(errors.application_limit).toBeDefined()
+  })
+  it('sends distinct hiring and application limits and preserves unlimited applications', () => {
+    expect(payloadFrom({ ...completeValues, hiring_slots: '5', application_limit: '100' }, { submit: true })).toMatchObject({ hiring_slots: 5, application_limit: 100 })
+    expect(payloadFrom({ ...completeValues, application_limit: '' }, { submit: true }).application_limit).toBeNull()
+    expect(valuesFrom({ ...completeValues, accommodations: [], hiring_slots: 5, application_limit: null })).toMatchObject({ hiring_slots: '5', application_limit: '' })
+  })
+})

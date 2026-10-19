@@ -55,7 +55,7 @@ class ApplicationController extends Controller
      */
     private function applicants(ApplicationListRequest $request): AnonymousResourceCollection
     {
-        $posting = JobPosting::withTrashed()->with(['accommodations', 'department'])->findOrFail($request->validated('job_posting'));
+        $posting = JobPosting::withTrashed()->with(['accommodations', 'department'])->withCapacityCounts()->findOrFail($request->validated('job_posting'));
         Gate::authorize('manage', $posting);
         $status = $request->validated('status') ?? 'all';
 
@@ -77,6 +77,7 @@ class ApplicationController extends Controller
         return ApplicantResource::collection($applicants)->additional([
             'counts' => $counts,
             'job' => [
+                ...$posting->capacity(),
                 'id' => $posting->id,
                 'title' => $posting->title,
                 'status' => $posting->displayStatus()->value,

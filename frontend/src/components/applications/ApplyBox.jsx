@@ -18,7 +18,8 @@ export default function ApplyBox({ job }) {
       <h2 id="apply-heading" className="text-2xl font-bold">
         Apply
       </h2>
-      {!role && (
+      {!applied && job.accepting_applications === false && <p className="mt-3">This job has reached its hiring or application limit.</p>}
+      {!role && job.accepting_applications !== false && (
         <>
           <Link to={`/login?next=${encodeURIComponent(applyPath)}`} className={`mt-3 ${PRIMARY_LINK}`}>
             Log in to apply
@@ -39,7 +40,7 @@ export default function ApplyBox({ job }) {
           </Link>
         </>
       )}
-      {role === 'candidate' && !applied && (
+      {role === 'candidate' && !applied && job.accepting_applications !== false && (
         <Link data-tour-record="apply" to={applyPath} className={`mt-3 ${PRIMARY_LINK}`}>
           Apply for this job
         </Link>

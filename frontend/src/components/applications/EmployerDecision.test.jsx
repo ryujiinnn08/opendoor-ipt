@@ -76,7 +76,7 @@ describe('EmployerDecision', () => {
     unmount()
 
     const { unmount: second } = render(applicantDetailFixture({ status: 'hired', hired_at: '2026-10-13', hire_confirmed_by: 'candidate', actions: [] }))
-    expect(screen.getByText('Hired on October 13, 2026. Confirmed by the applicant.')).toBeInTheDocument()
+    expect(screen.getByText('Hired on October 13, 2026. Legacy applicant-confirmed hire. Employer review required.')).toBeInTheDocument()
     second()
 
     render(applicantDetailFixture({ status: 'rejected', rejected_at: '2026-10-14T00:00:00+00:00', actions: [] }))

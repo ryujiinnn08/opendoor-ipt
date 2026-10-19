@@ -150,6 +150,6 @@ class ApplicantDetailTest extends TestCase
 
         $seekerView = $this->actingAs($application->candidate, 'web')->getJson("/api/applications/{$application->id}")->json('data');
         $this->assertArrayNotHasKey('profile', $seekerView);
-        $this->assertSame(['withdraw', 'confirm_hire'], $seekerView['actions']);
+        $this->assertSame([], $seekerView['actions']);
     }
 }

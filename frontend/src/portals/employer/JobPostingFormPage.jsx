@@ -1,3 +1,5 @@
+import Icon from '../../components/ui/Icon.jsx'
+import HiringCapacity from '../../components/postings/HiringCapacity.jsx'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { generalErrorFrom, isEmailUnverified } from '../../api/client.js'
@@ -89,10 +91,11 @@ function StatusNotice({ posting }) {
   }
 }
 
-function FormSection({ id, title, children }) {
+function FormSection({ id, title, icon, children }) {
   return (
     <section aria-labelledby={id} className="border-t border-border pt-8 first:border-t-0 first:pt-0">
-      <h2 id={id} className="mb-6 text-2xl font-bold">
+      <h2 id={id} className="mb-6 flex items-center gap-2 text-2xl font-bold">
+        {icon && <Icon name={icon} className="size-5 text-primary" />}
         {title}
       </h2>
       {children}
@@ -342,6 +345,25 @@ export default function JobPostingFormPage() {
               error={picker.error}
               noteErrors={picker.noteErrors}
             />
+          </FormSection>
+
+          <FormSection id="section-capacity" title="Hiring capacity" icon="people">
+            <div className="grid gap-6 sm:grid-cols-2">
+            <FormField id="hiring_slots" type="number" label="Hiring slots"
+              hint="How many people do you need? The posting closes when all slots are filled."
+              min={1} max={1000000} step={1} value={values.hiring_slots}
+              onChange={update('hiring_slots')} error={errors.hiring_slots} inputClassName="max-w-xs" />
+            <FormField id="application_limit" type="number" label="Application limit" optional
+              hint="Leave blank for unlimited applications. All received applications count, including rejected applications."
+              min={1} max={1000000} step={1} value={values.application_limit}
+              onChange={update('application_limit')} error={errors.application_limit} inputClassName="max-w-xs" />
+            </div>
+            {posting?.hiring_slots != null && (
+              <>
+                <HiringCapacity posting={posting} />
+                <p className="mt-3 flex items-start gap-2 text-sm text-muted"><Icon name="info" className="mt-0.5 size-4" />Limits cannot be lower than the current hired or application totals.</p>
+              </>
+            )}
           </FormSection>
 
           <FormSection id="section-closing" title="When applications close">

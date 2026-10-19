@@ -55,16 +55,21 @@ class JobPosting extends Model
         'interview_format',
         'closes_on',
         'category_id',
+        'hiring_slots',
+        'application_limit',
     ];
 
     protected $attributes = [
         'status' => 'draft',
+        'hiring_slots' => 1,
     ];
 
     protected function casts(): array
     {
         return [
             'status' => PostingStatus::class,
+            'hiring_slots' => 'integer',
+            'application_limit' => 'integer',
             'employment_type' => EmploymentType::class,
             'work_setup' => WorkSetup::class,
             'interview_format' => InterviewFormat::class,
@@ -112,6 +117,24 @@ class JobPosting extends Model
     public function applications(): HasMany
     {
         return $this->hasMany(Application::class);
+    }
+
+    public function capacity(): array
+    {
+        // Aggregate subqueries are preferred on lists. Decisions must query again under the job lock.
+        $hired = $this->hired_applications_count ?? $this->applications()->where('status', 'hired')->count();
+        $total = $this->applications_count ?? $this->applications()->count();
+
+        return ['hiring_slots' => $this->hiring_slots, 'hired_count' => (int) $hired,
+            'remaining_slots' => max(0, $this->hiring_slots - $hired),
+            'application_limit' => $this->application_limit, 'application_count' => (int) $total,
+            'accepting_applications' => ! $this->trashed() && $this->displayStatus() === PostingStatus::Open
+                && $hired < $this->hiring_slots && ($this->application_limit === null || $total < $this->application_limit)];
+    }
+
+    public function scopeWithCapacityCounts(Builder $query): void
+    {
+        $query->withCount(['applications', 'applications as hired_applications_count' => fn ($query) => $query->where('status', 'hired')]);
     }
 
     /**

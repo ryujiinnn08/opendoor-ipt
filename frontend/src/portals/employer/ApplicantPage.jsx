@@ -1,3 +1,4 @@
+import Icon from '../../components/ui/Icon.jsx'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { getApplicantPhoto, getApplicantResume, getApplication } from '../../api/applications.js'
@@ -134,6 +135,21 @@ export default function ApplicantPage() {
               </div>
 
               <div className="lg:col-start-1 lg:row-start-1">
+                {applicant.history?.length > 0 && (
+                  <section aria-labelledby="history-heading" className="mb-10">
+                    <h2 id="history-heading" className="flex items-center gap-2 text-2xl font-bold"><Icon name="clock" className="size-5 text-primary" />Application history</h2>
+                    <ol className="mt-4 divide-y divide-border rounded-md border border-border bg-surface px-4">
+                      {applicant.history.map((event) => (
+                        <li key={event.id} className="flex items-start gap-3 py-4">
+                          <Icon name={event.new_status === 'hired' ? 'clipboard-check' : 'clock'} className="mt-0.5 size-5 text-primary" />
+                          <div className="min-w-0"><p className="font-bold">
+                          {event.action === 'legacy_status_recorded' ? 'Previous record' : event.previous_status ? `${event.previous_status} → ${event.new_status}` : `Submitted as ${event.new_status}`}
+                          </p><p className="mt-1 text-sm text-muted"><time dateTime={event.created_at}>{formatDate(event.created_at)}</time>{' · '}{event.actor_name ?? 'Account unavailable'}</p></div>
+                        </li>
+                      ))}
+                    </ol>
+                  </section>
+                )}
                 <section aria-labelledby="cover-heading">
                   <h2 id="cover-heading" className="text-2xl font-bold">
                     Cover note

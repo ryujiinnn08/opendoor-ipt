@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Employer;
 
 use App\Enums\EmployerType;
+use App\Rules\UniqueCompany;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -20,7 +21,7 @@ class SetupRequest extends FormRequest
     {
         return [
             'type' => ['required', Rule::enum(EmployerType::class)],
-            'name' => ['required', 'string', 'max:200'],
+            'name' => ['required', 'string', 'max:200', ...($this->input('type') === 'company' ? [new UniqueCompany($this->input('address'))] : [])],
             'industry' => ['nullable', 'required_if:type,company', 'string', 'max:100'],
             'address' => ['required', 'string', 'max:255'],
         ];

@@ -2,130 +2,66 @@
 
 namespace Tests\Feature\Applications;
 
-use App\Models\Accommodation;
+use App\Enums\ApplicationActor;
+use App\Enums\ApplicationStatus;
 use App\Models\Application;
-use App\Models\JobPosting;
 use App\Models\User;
+use App\Services\ApplicationWorkflow;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Carbon;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+use Tests\Concerns\BuildsApplications;
 use Tests\TestCase;
 
 class ApplicationStatusChangeTest extends TestCase
 {
-    use RefreshDatabase;
+    use BuildsApplications, RefreshDatabase;
 
-    private const STALE = 'This application changed while you were looking at it. Reload to see its status.';
-
-    private function change(Application $application, string $status, ?string $expected = null)
-    {
-        return $this->patchJson("/api/applications/{$application->id}/status", [
-            'status' => $status,
-            'expected_status' => $expected ?? $application->status->value,
-        ]);
-    }
-
-    public function test_withdraw_from_pending_and_reviewed(): void
-    {
-        $seeker = User::factory()->create();
-        $pending = Application::factory()->create(['user_id' => $seeker->id]);
-        $reviewed = Application::factory()->reviewed()->create(['user_id' => $seeker->id]);
-        $this->actingAs($seeker, 'web');
-
-        foreach ([$pending, $reviewed] as $application) {
-            $this->change($application, 'withdrawn')
-                ->assertOk()
-                ->assertJsonPath('data.status', 'withdrawn')
-                ->assertJsonPath('data.actions', []);
-            $this->assertNotNull($application->fresh()->withdrawn_at);
-        }
-    }
-
-    public function test_confirm_hire_only_from_reviewed(): void
-    {
-        Carbon::setTestNow('2026-10-12 17:30:00');
-        $seeker = User::factory()->create();
-        $ramp = Accommodation::factory()->create(['name' => 'Ramp']);
-        $lift = Accommodation::factory()->create(['name' => 'Lift']);
-        $job = JobPosting::factory()->open()->create();
-        $job->accommodations()->attach([$ramp->id => ['note' => 'Side door'], $lift->id => ['note' => null]]);
-        $reviewed = Application::factory()->reviewed()->create(['user_id' => $seeker->id, 'job_posting_id' => $job->id]);
-        $pending = Application::factory()->create(['user_id' => $seeker->id]);
-        $this->actingAs($seeker, 'web');
-
-        $this->change($reviewed, 'hired')
-            ->assertOk()
-            ->assertJsonPath('data.status', 'hired')
-            ->assertJsonPath('data.hired_at', '2026-10-13')
-            ->assertJsonPath('data.hire_confirmed_by', 'candidate')
-            ->assertJsonPath('data.actions', []);
-        $copy = $reviewed->fresh()->hiredAccommodations->mapWithKeys(fn (Accommodation $item) => [$item->name => $item->pivot->note])->all();
-        $this->assertEquals(['Ramp' => 'Side door', 'Lift' => null], $copy);
-        $this->assertSame($seeker->id, $reviewed->fresh()->decided_by);
-
-        $this->change($pending, 'hired')
-            ->assertStatus(422)
-            ->assertJsonPath('message', 'If you were hired, ask the employer to open your application on OpenDoor first.');
-        $this->assertSame('pending', $pending->fresh()->status->value);
-        Carbon::setTestNow();
-    }
-
-    public function test_final_statuses_never_move(): void
+    public function test_applicant_statuses_are_read_only_even_with_forged_role_and_decision_fields(): void
     {
         $seeker = User::factory()->create();
         $this->actingAs($seeker, 'web');
-
-        foreach (['withdrawn', 'rejected', 'hired'] as $state) {
-            $application = Application::factory()->{$state}()->create(['user_id' => $seeker->id]);
-            foreach (['withdrawn', 'hired'] as $next) {
-                $this->change($application, $next)->assertStatus(422);
+        foreach (ApplicationStatus::cases() as $state) {
+            $application = Application::factory()->create(['user_id' => $seeker->id, 'status' => $state]);
+            foreach (ApplicationStatus::cases() as $next) {
+                $this->patchJson("/api/applications/{$application->id}/status", [
+                    'status' => $next->value, 'expected_status' => $state->value,
+                    'role' => 'employer', 'actor' => 'employer', 'decided_by' => 1,
+                ])->assertForbidden();
             }
-            $this->assertSame($state, $application->fresh()->status->value);
+            $this->assertSame($state, $application->fresh()->status);
+            $this->getJson("/api/applications/{$application->id}")->assertOk()->assertJsonPath('data.actions', []);
         }
-        $this->change(Application::factory()->rejected()->create(['user_id' => $seeker->id]), 'withdrawn')
-            ->assertJsonPath('message', "This application can't be changed to Withdrawn.");
+        $this->assertDatabaseCount('hiring_events', 0);
+        $this->assertDatabaseCount('notifications', 0);
     }
 
-    public function test_a_stale_change_is_refused(): void
+    public function test_unauthenticated_and_unrelated_people_cannot_change_status(): void
     {
         $application = Application::factory()->reviewed()->create();
-
-        $this->actingAs($application->candidate, 'web');
-        $this->change($application, 'withdrawn', 'pending')->assertStatus(409)->assertJsonPath('message', self::STALE);
-        $this->assertSame('reviewed', $application->fresh()->status->value);
+        $url = "/api/applications/{$application->id}/status";
+        $body = ['status' => 'hired', 'expected_status' => 'reviewed'];
+        $this->patchJson($url, $body)->assertUnauthorized();
+        foreach ([User::factory()->create(), User::factory()->employer()->create(), User::factory()->admin()->create()] as $user) {
+            $this->actingAs($user, 'web')->patchJson($url, $body)->assertForbidden();
+        }
+        $this->assertSame(ApplicationStatus::Reviewed, $application->fresh()->status);
     }
 
-    public function test_the_hire_copy_keeps_what_was_advertised(): void
-    {
-        $ramp = Accommodation::factory()->create();
-        $job = JobPosting::factory()->open()->create();
-        $job->accommodations()->attach($ramp->id, ['note' => 'Side door']);
-        $application = Application::factory()->reviewed()->create(['job_posting_id' => $job->id]);
-
-        $this->actingAs($application->candidate, 'web');
-        $this->change($application, 'hired')->assertOk();
-        $job->accommodations()->sync([Accommodation::factory()->create()->id]);
-
-        $this->assertSame([$ramp->id], $application->fresh()->hiredAccommodations->pluck('id')->all());
-        $this->assertSame('Side door', $application->fresh()->hiredAccommodations->first()->pivot->note);
-    }
-
-    public function test_only_the_owner_changes_it(): void
+    public function test_workflow_itself_refuses_a_candidate_claiming_to_be_the_employer(): void
     {
         $application = Application::factory()->reviewed()->create();
+        $this->expectException(HttpException::class);
+        app(ApplicationWorkflow::class)->changeStatus($application, ApplicationStatus::Hired,
+            ApplicationActor::Employer, ApplicationStatus::Reviewed, $application->candidate);
+    }
 
-        $this->change($application, 'withdrawn')->assertUnauthorized();
-        $this->actingAs(User::factory()->create(), 'web');
-        $this->change($application, 'withdrawn')->assertForbidden()->assertJsonPath('message', "This application isn't yours.");
-        // An employer of another job may only send hired/rejected, and is refused those too.
-        $this->actingAs(User::factory()->employer()->create(), 'web');
-        $this->change($application, 'hired')->assertForbidden();
-        $this->actingAs(User::factory()->admin()->create(), 'web');
-        $this->change($application, 'withdrawn')->assertForbidden();
-
-        $this->actingAs($application->candidate, 'web');
-        $this->change($application, 'rejected')->assertJsonValidationErrors('status');
-        $this->change($application, 'reviewed')->assertJsonValidationErrors('status');
-        $this->patchJson("/api/applications/{$application->id}/status", ['status' => 'withdrawn'])->assertJsonValidationErrors('expected_status');
-        $this->assertSame('reviewed', $application->fresh()->status->value);
+    public function test_workflow_itself_refuses_an_unrelated_employer(): void
+    {
+        $team = $this->hiringCompany();
+        $application = $this->applicantTo($team['itJob'], 'reviewed');
+        $this->expectException(AuthorizationException::class);
+        app(ApplicationWorkflow::class)->changeStatus($application, ApplicationStatus::Hired,
+            ApplicationActor::Employer, ApplicationStatus::Reviewed, $team['hr']);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Employer;
 
+use App\Rules\UniqueCompany;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ProfileRequest extends FormRequest
@@ -22,7 +23,7 @@ class ProfileRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:200'],
+            'name' => ['required', 'string', 'max:200', ...($this->isCompany() ? [new UniqueCompany($this->input('address'), $this->user()->membership->employer_id)] : [])],
             'industry' => [$this->isCompany() ? 'required' : 'nullable', 'string', 'max:100'],
             'address' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:2000'],

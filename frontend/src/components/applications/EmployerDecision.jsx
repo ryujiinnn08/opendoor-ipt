@@ -31,7 +31,7 @@ const DECISIONS = {
 function decidedText(applicant) {
   if (applicant.status === 'hired') {
     return applicant.hire_confirmed_by === 'candidate'
-      ? `Hired on ${formatDay(applicant.hired_at)}. Confirmed by the applicant.`
+      ? `Hired on ${formatDay(applicant.hired_at)}. Legacy applicant-confirmed hire. Employer review required.`
       : `You marked them as hired on ${formatDay(applicant.hired_at)}.`
   }
   if (applicant.status === 'rejected') return 'You marked them as rejected.'
@@ -85,6 +85,7 @@ export default function EmployerDecision({ applicant, onChanged, onStale, focusA
       <h2 id="decision-heading" className="text-2xl font-bold">
         Your decision
       </h2>
+      {applicant.job?.hiring_slots != null && <p className="mt-2 text-muted">{applicant.job.remaining_slots} hiring slots remaining.</p>}
       {keys.length > 0 ? (
         <div className="mt-3 flex flex-wrap gap-2">
           {keys.map((key) => (

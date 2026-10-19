@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import HiringCapacity from '../../components/postings/HiringCapacity.jsx'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { listApplicants } from '../../api/applications.js'
 import { generalErrorFrom } from '../../api/client.js'
@@ -107,6 +108,7 @@ export default function ApplicantsPage() {
             <PostingStatusBadge status={job.status} />
             {job.department && <p>Department: {job.department.name}</p>}
           </div>
+          <HiringCapacity posting={job} />
           <div className="mt-8">
             <FilterTabs label="Show" items={tabs} current={status} resetParams={['page']} />
           </div>
@@ -143,6 +145,7 @@ export default function ApplicantsPage() {
               ))}
             </ul>
           )}
+          <HiringCapacity posting={job} />
           <div className="mt-8">
             <Pagination page={current.meta.current_page} lastPage={current.meta.last_page} hrefForPage={hrefForPage} label="Pages of applicants" />
           </div>

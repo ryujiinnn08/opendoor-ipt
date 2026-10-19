@@ -90,7 +90,7 @@ class ApplicantDecisionTest extends TestCase
         $this->actingAs(User::factory()->admin()->create(), 'web');
         $this->decide($application, 'hired')->assertForbidden();
         $this->actingAs($application->candidate, 'web');
-        $this->decide($application, 'rejected')->assertJsonValidationErrors('status');
+        $this->decide($application, 'rejected')->assertForbidden();
         $this->actingAs($team['owner'], 'web');
         $this->decide($application, 'withdrawn')->assertJsonValidationErrors('status');
         $this->decide($application, 'reviewed')->assertJsonValidationErrors('status');
@@ -102,14 +102,14 @@ class ApplicantDecisionTest extends TestCase
         $team = $this->hiringCompany();
         $application = $this->applicantTo($team['itJob'], 'reviewed');
 
-        $this->actingAs($application->candidate, 'web');
-        $this->decide($application, 'withdrawn', 'reviewed')->assertOk();
+        // Another manager already decided while this tab still showed Reviewed.
+        $application->forceFill(['status' => 'rejected'])->save();
         $this->actingAs($team['owner'], 'web');
         $this->decide($application, 'hired', 'reviewed')
             ->assertStatus(409)
             ->assertJsonPath('message', 'This application changed while you were looking at it. Reload to see its status.');
 
-        $this->assertSame('withdrawn', $application->fresh()->status->value);
+        $this->assertSame('rejected', $application->fresh()->status->value);
         $this->assertSame(0, $application->candidate->notifications()->count());
     }
 }

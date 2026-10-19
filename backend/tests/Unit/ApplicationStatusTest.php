@@ -15,11 +15,8 @@ class ApplicationStatusTest extends TestCase
     {
         $allowed = [
             'pending>reviewed>employer',
-            'pending>withdrawn>candidate',
-            'reviewed>withdrawn>candidate',
             'reviewed>rejected>employer',
             'reviewed>hired>employer',
-            'reviewed>hired>candidate',
         ];
 
         foreach (ApplicationStatus::cases() as $from) {

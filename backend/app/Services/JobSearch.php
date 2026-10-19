@@ -22,7 +22,7 @@ class JobSearch
     public function paginate(array $filters, ?CandidateNeeds $needs = null, ?int $excludeApplicantId = null): LengthAwarePaginator
     {
         $query = JobPosting::publiclyVisible()
-            ->with(PublicJobPostingResource::RELATIONS)
+            ->with(PublicJobPostingResource::RELATIONS)->withCapacityCounts()
             ->search($filters['q'])
             ->when($filters['category'], fn ($query, int $category) => $query->where('category_id', $category))
             ->when($filters['work_setup'] ?? [], fn ($query, array $setups) => $query->whereIn('work_setup', $setups))

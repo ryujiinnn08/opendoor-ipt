@@ -9,6 +9,7 @@ use App\Http\Requests\Employer\SetupRequest;
 use App\Http\Resources\UserResource;
 use App\Models\Employer;
 use App\Models\EmployerMember;
+use App\Models\User;
 use App\Services\TeamCapacity;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -28,6 +29,11 @@ class SetupController extends Controller
         }
 
         DB::transaction(function () use ($request, $user, $capacity) {
+            User::whereKey($user->id)->lockForUpdate()->firstOrFail();
+            if ($user->membership()->exists()) {
+                abort(409, 'You already have an employer profile.');
+            }
+
             $type = $request->enum('type', EmployerType::class);
 
             $employer = Employer::create([

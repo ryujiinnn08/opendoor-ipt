@@ -28,7 +28,7 @@ class JobPostingRequest extends FormRequest
 
     private const FIELDS = [
         'title', 'department_id', 'category_id', 'description', 'location',
-        'employment_type', 'work_setup', 'interview_format', 'closes_on',
+        'employment_type', 'work_setup', 'interview_format', 'closes_on', 'hiring_slots', 'application_limit',
     ];
 
     /**
@@ -56,6 +56,8 @@ class JobPostingRequest extends FormRequest
         $member = $this->user()->membership;
 
         $rules = [
+            'hiring_slots' => ['sometimes', 'required', 'integer', 'min:1', 'max:1000000'],
+            'application_limit' => ['nullable', 'integer', 'min:1', 'max:1000000'],
             'title' => ['required', 'string', 'max:150'],
             'category_id' => [$required, 'integer', 'exists:categories,id'],
             'description' => [$required, 'string', 'max:5000'],
